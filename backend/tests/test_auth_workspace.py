@@ -50,3 +50,9 @@ def test_duplicate_registration_and_bad_login_are_rejected():
     register("duplicate@example.com")
     assert client.post("/api/auth/register", json={"email": "duplicate@example.com", "password": "another password"}).status_code == 409
     assert client.post("/api/auth/login", json={"email": "duplicate@example.com", "password": "wrong password"}).status_code == 401
+
+
+def test_workspace_name_must_contain_non_whitespace_text():
+    account = register("workspace-name@example.com")
+    headers = {"Authorization": f"Bearer {account['token']}"}
+    assert client.post("/api/workspaces", headers=headers, json={"name": "   "}).status_code == 422

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class Credentials(BaseModel):
@@ -8,12 +8,24 @@ class Credentials(BaseModel):
     password: str = Field(min_length=8, max_length=128)
 
 
-class WorkspaceCreate(BaseModel):
+class WorkspaceName(BaseModel):
     name: str = Field(min_length=1, max_length=120)
 
+    @field_validator("name")
+    @classmethod
+    def trim_and_require_text(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("工作区名称不能为空")
+        return value
 
-class WorkspaceUpdate(BaseModel):
-    name: str = Field(min_length=1, max_length=120)
+
+class WorkspaceCreate(WorkspaceName):
+    pass
+
+
+class WorkspaceUpdate(WorkspaceName):
+    pass
 
 
 class UserView(BaseModel):

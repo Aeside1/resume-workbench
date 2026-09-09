@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { api } from './api'
 
@@ -8,6 +8,7 @@ vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.f
 const mocked = vi.mocked(api)
 
 beforeEach(() => { localStorage.clear(); vi.resetAllMocks() })
+afterEach(cleanup)
 
 describe('认证后的工作台', () => {
   it('登录后显示工作区并可切换和创建', async () => {
@@ -31,5 +32,22 @@ describe('认证后的工作台', () => {
     fireEvent.click(defaultOption)
     await waitFor(() => expect(screen.getByRole('heading', { name: '默认工作区' })).toBeInTheDocument())
     expect(screen.getByText('这是你的基础工作台。接下来可以创建经历分组，逐步沉淀具体工作内容。')).toBeInTheDocument()
+  })
+
+  it('注册后可以进入默认工作区并退出登录', async () => {
+    const workspace = { id: 1, name: '默认工作区', created_at: '', updated_at: '' }
+    mocked.register.mockResolvedValue({ token: 'token', user: { id: 1, email: 'new@example.com' }, workspaces: [workspace] })
+    mocked.logout.mockResolvedValue(undefined)
+
+    render(<App />)
+    fireEvent.click(screen.getByRole('button', { name: '还没有账号？注册' }))
+    fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'new@example.com' } })
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: '注册' }))
+
+    await waitFor(() => expect(screen.getByRole('heading', { name: '默认工作区' })).toBeInTheDocument())
+    fireEvent.click(screen.getByRole('button', { name: '退出' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: '登录工作台' })).toBeInTheDocument())
+    expect(mocked.logout).toHaveBeenCalledWith('token')
   })
 })
