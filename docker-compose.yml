@@ -17,6 +17,7 @@ services:
     environment:
       ENVIRONMENT: development
       DATABASE_URL: postgresql+psycopg://resume:resume_dev_password@db:5432/resume_workbench
+      TEST_DATABASE_URL: postgresql+psycopg://resume:resume_dev_password@db:5432/resume_workbench
       SECRET_KEY: local-compose-secret-change-me
     ports: ["8000:8000"]
     depends_on:
