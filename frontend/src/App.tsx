@@ -18,5 +18,5 @@ export function App() {
     if (!session) return
     api.me(session.token).catch(() => persist(null))
   }, [])
-  return session ? <WorkbenchShell session={session} onSessionChange={persist} /> : <AuthPage onAuthenticated={authenticated} />
+  return session ? <WorkbenchShell session={session} onLogout={() => persist(null)} /> : <AuthPage onAuthenticated={authenticated} />
 }

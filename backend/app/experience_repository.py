@@ -34,11 +34,11 @@ class ExperienceRepository:
     def max_content_position(self, group_id: int) -> int | None:
         return self.db.scalar(select(WorkContent.position).where(WorkContent.experience_group_id == group_id).order_by(WorkContent.position.desc()).limit(1))
 
-    def add(self, entity):
+    def save(self, entity):
         self.db.add(entity)
+        self.db.commit()
+        self.db.refresh(entity)
+        return entity
 
     def commit(self):
         self.db.commit()
-
-    def refresh(self, entity):
-        self.db.refresh(entity)

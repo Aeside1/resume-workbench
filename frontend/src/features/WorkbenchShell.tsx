@@ -4,13 +4,11 @@ import type { Session } from '../session'
 import { ExperienceGroupsPanel } from './ExperienceGroupsPanel'
 import { AppShell } from './AppShell'
 
-type Props = { session: Session; onSessionChange: (session: Session | null) => void }
+type Props = { session: Session; onLogout: () => void }
 type View = 'dashboard' | 'experiences' | 'plans'
 
-export function WorkbenchShell({ session, onSessionChange }: Props) {
+export function WorkbenchShell({ session, onLogout }: Props) {
   const [view, setView] = useState<View>('experiences')
-
-  const signOut = async () => { onSessionChange(null) }
 
   const navigationButtons = (
     <>
@@ -59,14 +57,13 @@ export function WorkbenchShell({ session, onSessionChange }: Props) {
   return (
     <AppShell
       session={session}
-      onSessionChange={onSessionChange}
-      onLogout={signOut}
+      onLogout={onLogout}
       navigationButtons={navigationButtons}
     >
       <div className="page-heading">
         <div>
           <p className="eyebrow">个人职业工作台</p>
-          <h2 className="workbench-title workspace-title">{session.user.email}</h2>
+          <h2 className="workbench-title">{session.user.email}</h2>
         </div>
         <p className="page-context">
           {view === 'dashboard' ? '查看最近编辑的内容' : view === 'experiences' ? '管理经历分组与具体工作内容' : '组合目标岗位的简历内容'}
@@ -108,5 +105,3 @@ export function WorkbenchShell({ session, onSessionChange }: Props) {
     </AppShell>
   )
 }
-
-export { WorkbenchShell as WorkspaceShell }

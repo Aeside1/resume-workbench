@@ -24,7 +24,7 @@ describe('AppShell 侧边栏', () => {
     render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
-    expect(within(sidebar).getByText('个人工作台')).toBeInTheDocument()
+    expect(within(sidebar).getByText('个人职业工作台')).toBeInTheDocument()
     expect(within(sidebar).getByText('user@example.com')).toBeInTheDocument()
     expect(within(sidebar).queryByRole('combobox')).not.toBeInTheDocument()
   })
@@ -48,7 +48,6 @@ describe('AppShell 侧边栏', () => {
     render(
       <AppShell
         session={mockSession}
-        onSessionChange={vi.fn()}
         onLogout={vi.fn()}
         navigationButtons={navigationButtons}
       >
@@ -66,7 +65,7 @@ describe('AppShell 侧边栏', () => {
 
   it('点击退出登录按钮触发 onLogout 回调', () => {
     const handleLogout = vi.fn()
-    render(<AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={handleLogout}><div>主内容</div></AppShell>)
+    render(<AppShell session={mockSession} onLogout={handleLogout}><div>主内容</div></AppShell>)
 
     const logoutButton = screen.getByRole('button', { name: '退出登录' })
     fireEvent.click(logoutButton)
@@ -77,7 +76,7 @@ describe('AppShell 侧边栏', () => {
 
 describe('AppShell 专注模式切换', () => {
   it('默认处于 hub 模式，侧边栏可见', () => {
-    render(<AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()}><div>主内容</div></AppShell>)
+    render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
@@ -85,7 +84,7 @@ describe('AppShell 专注模式切换', () => {
 
   it('进入 focus 模式后隐藏侧边栏', () => {
     const { rerender } = render(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="hub">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="hub">
         <div>主内容</div>
       </AppShell>
     )
@@ -93,7 +92,7 @@ describe('AppShell 专注模式切换', () => {
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
 
     rerender(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="focus">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus">
         <div>主内容</div>
       </AppShell>
     )
@@ -103,7 +102,7 @@ describe('AppShell 专注模式切换', () => {
 
   it('支持 focus-canvas 模式并隐藏侧边栏与显示顶栏', () => {
     render(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="focus-canvas" breadcrumb="经历内容 / 蚂蚁集团">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus-canvas" breadcrumb="经历内容 / 蚂蚁集团">
         <div>主内容</div>
       </AppShell>
     )
@@ -116,7 +115,7 @@ describe('AppShell 专注模式切换', () => {
 
   it('focus 模式显示轻量面包屑顶栏', () => {
     render(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="focus" breadcrumb="经历内容 / 测试经历">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" breadcrumb="经历内容 / 测试经历">
         <div>主内容</div>
       </AppShell>
     )
@@ -131,7 +130,6 @@ describe('AppShell 专注模式切换', () => {
     render(
       <AppShell
         session={mockSession}
-        onSessionChange={vi.fn()}
         onLogout={vi.fn()}
         mode="focus"
         breadcrumb="经历内容 / 测试经历"
@@ -150,7 +148,7 @@ describe('AppShell 专注模式切换', () => {
   it('focus 模式顶栏显示退出专注按钮', () => {
     const handleExitFocus = vi.fn()
     render(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="focus" onExitFocus={handleExitFocus}>
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" onExitFocus={handleExitFocus}>
         <div>主内容</div>
       </AppShell>
     )
@@ -163,7 +161,7 @@ describe('AppShell 专注模式切换', () => {
 
   it('focus 模式顶栏显示保存状态微指示器', () => {
     const { rerender } = render(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="focus" saveStatus="saving">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" saveStatus="saving">
         <div>主内容</div>
       </AppShell>
     )
@@ -171,7 +169,7 @@ describe('AppShell 专注模式切换', () => {
     expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('保存中...')
 
     rerender(
-      <AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()} mode="focus" saveStatus="saved">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" saveStatus="saved">
         <div>主内容</div>
       </AppShell>
     )

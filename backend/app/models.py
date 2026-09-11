@@ -11,12 +11,14 @@ def now_utc() -> datetime:
 
 
 class User(Base):
+    """个人用户账号：遵循 ADR 002，账号本身即为唯一工作空间，经历资产与简历方案均直连 user_id。"""
     __tablename__ = "users"
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(256))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     experience_groups: Mapped[list["ExperienceGroup"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    # 注：ResumePlan（简历方案）将在工单 04 中实现，外键直连 users.id 并在此关联 back_populates
 
 
 class ExperienceGroup(Base):

@@ -6,7 +6,6 @@ export type AppShellMode = 'hub' | 'focus' | 'focus-canvas'
 
 type Props = {
   session: Session
-  onSessionChange?: (session: Session) => void
   onLogout: () => void
   children: ReactNode
   mode?: AppShellMode
@@ -50,7 +49,7 @@ export function AppShell({
                 </svg>
               </div>
               <div className="user-card-info">
-                <span className="user-title">个人工作台</span>
+                <span className="user-title">个人职业工作台</span>
                 <span className="user-email">{session.user.email}</span>
               </div>
             </div>

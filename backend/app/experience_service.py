@@ -29,10 +29,7 @@ class ExperienceGroupService:
 
     def create_group(self, values: dict) -> ExperienceGroup:
         group = ExperienceGroup(user_id=self.user.id, **values)
-        self.repository.add(group)
-        self.repository.commit()
-        self.repository.refresh(group)
-        return group
+        return self.repository.save(group)
 
     def update_group(self, group_id: int, values: dict) -> ExperienceGroup:
         group = self.group(group_id)
@@ -42,16 +39,12 @@ class ExperienceGroupService:
             raise HTTPException(status_code=422, detail="结束日期不能早于开始日期")
         for key, value in values.items():
             setattr(group, key, value)
-        self.repository.commit()
-        self.repository.refresh(group)
-        return group
+        return self.repository.save(group)
 
     def set_group_archived(self, group_id: int, archived: bool) -> ExperienceGroup:
         group = self.group(group_id)
         group.archived = archived
-        self.repository.commit()
-        self.repository.refresh(group)
-        return group
+        return self.repository.save(group)
 
     def list_contents(self, group_id: int, include_archived: bool) -> list[WorkContent]:
         group = self.group(group_id)
@@ -65,18 +58,13 @@ class ExperienceGroupService:
             position=max_position + 1 if max_position is not None else 0,
             **values,
         )
-        self.repository.add(content)
-        self.repository.commit()
-        self.repository.refresh(content)
-        return content
+        return self.repository.save(content)
 
     def update_content(self, content_id: int, values: dict) -> WorkContent:
         content = self.content(content_id)
         for key, value in values.items():
             setattr(content, key, value)
-        self.repository.commit()
-        self.repository.refresh(content)
-        return content
+        return self.repository.save(content)
 
     def reorder_contents(self, group_id: int, content_ids: list[int]) -> list[WorkContent]:
         group = self.group(group_id)
@@ -92,6 +80,4 @@ class ExperienceGroupService:
     def set_content_archived(self, content_id: int, archived: bool) -> WorkContent:
         content = self.content(content_id)
         content.archived = archived
-        self.repository.commit()
-        self.repository.refresh(content)
-        return content
+        return self.repository.save(content)
