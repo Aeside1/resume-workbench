@@ -6,12 +6,7 @@ import type { Session } from '../session'
 
 const mockSession: Session = {
   token: 'test-token',
-  user: { id: 1, email: 'user@example.com' },
-  workspaces: [
-    { id: 1, name: '工作区A', created_at: '', updated_at: '' },
-    { id: 2, name: '工作区B', created_at: '', updated_at: '' }
-  ],
-  selectedWorkspaceId: 1
+  user: { id: 1, email: 'user@example.com' }
 }
 
 beforeEach(() => vi.resetAllMocks())
@@ -19,22 +14,23 @@ afterEach(cleanup)
 
 describe('AppShell 侧边栏', () => {
   it('渲染紧凑的左侧侧边栏', () => {
-    render(<AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()}><div>主内容</div></AppShell>)
+    render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
     expect(sidebar).toBeInTheDocument()
   })
 
-  it('侧边栏显示工作区切换下拉控件', () => {
-    render(<AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()}><div>主内容</div></AppShell>)
+  it('侧边栏展示用户身份静态名片', () => {
+    render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
-    const workspaceSelect = within(sidebar).getByRole('combobox', { name: '当前工作区' })
-    expect(workspaceSelect).toHaveTextContent('工作区A')
+    expect(within(sidebar).getByText('个人工作台')).toBeInTheDocument()
+    expect(within(sidebar).getByText('user@example.com')).toBeInTheDocument()
+    expect(within(sidebar).queryByRole('combobox')).not.toBeInTheDocument()
   })
 
   it('侧边栏显示用户信息与退出登录按钮', () => {
-    render(<AppShell session={mockSession} onSessionChange={vi.fn()} onLogout={vi.fn()}><div>主内容</div></AppShell>)
+    render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
     expect(within(sidebar).getByText('user@example.com')).toBeInTheDocument()
@@ -76,19 +72,6 @@ describe('AppShell 侧边栏', () => {
     fireEvent.click(logoutButton)
 
     expect(handleLogout).toHaveBeenCalledOnce()
-  })
-
-  it('切换工作区下拉选项触发 onSessionChange', () => {
-    const handleSessionChange = vi.fn()
-    render(<AppShell session={mockSession} onSessionChange={handleSessionChange} onLogout={vi.fn()}><div>主内容</div></AppShell>)
-
-    const workspaceSelect = screen.getByRole('combobox', { name: '当前工作区' })
-    fireEvent.change(workspaceSelect, { target: { value: '2' } })
-
-    expect(handleSessionChange).toHaveBeenCalledWith({
-      ...mockSession,
-      selectedWorkspaceId: 2
-    })
   })
 })
 

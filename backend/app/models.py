@@ -16,24 +16,13 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(320), unique=True, index=True)
     password_hash: Mapped[str] = mapped_column(String(256))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
-    workspaces: Mapped[list["Workspace"]] = relationship(back_populates="owner", cascade="all, delete-orphan")
-
-
-class Workspace(Base):
-    __tablename__ = "workspaces"
-    id: Mapped[int] = mapped_column(primary_key=True)
-    owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
-    name: Mapped[str] = mapped_column(String(120))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
-    owner: Mapped[User] = relationship(back_populates="workspaces")
-    experience_groups: Mapped[list["ExperienceGroup"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+    experience_groups: Mapped[list["ExperienceGroup"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
 
 class ExperienceGroup(Base):
     __tablename__ = "experience_groups"
     id: Mapped[int] = mapped_column(primary_key=True)
-    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     name: Mapped[str] = mapped_column(String(200))
     type: Mapped[str] = mapped_column(String(32))
     organization: Mapped[str | None] = mapped_column(String(200), nullable=True)
@@ -43,7 +32,7 @@ class ExperienceGroup(Base):
     archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
-    workspace: Mapped[Workspace] = relationship(back_populates="experience_groups")
+    user: Mapped[User] = relationship(back_populates="experience_groups")
     work_contents: Mapped[list["WorkContent"]] = relationship(back_populates="experience_group", cascade="all, delete-orphan", order_by="WorkContent.position")
 
 

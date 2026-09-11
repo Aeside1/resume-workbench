@@ -6,7 +6,7 @@ export type AppShellMode = 'hub' | 'focus' | 'focus-canvas'
 
 type Props = {
   session: Session
-  onSessionChange: (session: Session) => void
+  onSessionChange?: (session: Session) => void
   onLogout: () => void
   children: ReactNode
   mode?: AppShellMode
@@ -18,7 +18,6 @@ type Props = {
 
 export function AppShell({
   session,
-  onSessionChange,
   onLogout,
   children,
   mode = 'hub',
@@ -28,21 +27,14 @@ export function AppShell({
   navigationButtons
 }: Props) {
   const isFocus = mode === 'focus' || mode === 'focus-canvas'
-  const currentWorkspace =
-    session.workspaces.find(ws => ws.id === session.selectedWorkspaceId) ?? session.workspaces[0]
-
-  const handleWorkspaceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedId = Number(e.target.value)
-    onSessionChange({ ...session, selectedWorkspaceId: selectedId })
-  }
 
   return (
     <div className={`app-shell ${isFocus ? 'app-shell--focus' : 'app-shell--hub'}`}>
       {!isFocus && (
         <aside role="complementary" aria-label="主导航" className="app-sidebar">
           <div className="sidebar-header">
-            <div className="sidebar-workspace-card">
-              <div className="workspace-card-avatar" aria-hidden="true">
+            <div className="sidebar-user-card">
+              <div className="user-card-avatar" aria-hidden="true">
                 <svg
                   width="18"
                   height="18"
@@ -57,36 +49,10 @@ export function AppShell({
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               </div>
-              <div className="workspace-card-info">
-                <div className="workspace-name-wrapper">
-                  <span className="workspace-name">{currentWorkspace?.name || '默认工作区'}</span>
-                  <svg
-                    className="workspace-chevron-icon"
-                    aria-hidden="true"
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                  >
-                    <path d="m6 9 6 6 6-6" />
-                  </svg>
-                </div>
+              <div className="user-card-info">
+                <span className="user-title">个人工作台</span>
                 <span className="user-email">{session.user.email}</span>
               </div>
-              <select
-                aria-label="当前工作区"
-                className="workspace-native-select"
-                value={session.selectedWorkspaceId}
-                onChange={handleWorkspaceChange}
-              >
-                {session.workspaces.map(ws => (
-                  <option key={ws.id} value={ws.id}>
-                    {ws.name}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 

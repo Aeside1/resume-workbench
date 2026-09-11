@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from .experience_repository import ExperienceRepository
-from .models import ExperienceGroup, User, WorkContent, Workspace
+from .models import ExperienceGroup, User, WorkContent
 
 
 class ExperienceGroupService:
@@ -11,12 +11,6 @@ class ExperienceGroupService:
     def __init__(self, db: Session, user: User):
         self.repository = ExperienceRepository(db)
         self.user = user
-
-    def _workspace(self, workspace_id: int) -> Workspace:
-        workspace = self.repository.workspace_for_owner(workspace_id, self.user.id)
-        if workspace is None:
-            raise HTTPException(status_code=404, detail="工作区不存在")
-        return workspace
 
     def group(self, group_id: int) -> ExperienceGroup:
         group = self.repository.group_for_owner(group_id, self.user.id)
@@ -30,13 +24,11 @@ class ExperienceGroupService:
             raise HTTPException(status_code=404, detail="具体工作内容不存在")
         return content
 
-    def list_groups(self, workspace_id: int, include_archived: bool) -> list[ExperienceGroup]:
-        self._workspace(workspace_id)
-        return self.repository.list_groups(workspace_id, include_archived)
+    def list_groups(self, include_archived: bool) -> list[ExperienceGroup]:
+        return self.repository.list_groups(self.user.id, include_archived)
 
-    def create_group(self, workspace_id: int, values: dict) -> ExperienceGroup:
-        self._workspace(workspace_id)
-        group = ExperienceGroup(workspace_id=workspace_id, **values)
+    def create_group(self, values: dict) -> ExperienceGroup:
+        group = ExperienceGroup(user_id=self.user.id, **values)
         self.repository.add(group)
         self.repository.commit()
         self.repository.refresh(group)

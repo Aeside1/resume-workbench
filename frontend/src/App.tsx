@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api, AuthResponse } from './api'
 import { AuthPage } from './features/AuthPage'
-import { WorkspaceShell } from './features/WorkspaceShell'
+import { WorkbenchShell } from './features/WorkbenchShell'
 import type { Session } from './session'
 
 export function App() {
@@ -12,16 +12,11 @@ export function App() {
     else localStorage.removeItem('resume-session')
   }
   const authenticated = (response: AuthResponse) => {
-    persist({ ...response, selectedWorkspaceId: response.workspaces[0].id })
+    persist(response)
   }
   useEffect(() => {
     if (!session) return
-    api.workspaces(session.token).then(workspaces => {
-      if (workspaces.length) {
-        const selectedWorkspaceId = workspaces.some(w => w.id === session.selectedWorkspaceId) ? session.selectedWorkspaceId : workspaces[0].id
-        persist({ ...session, workspaces, selectedWorkspaceId })
-      }
-    }).catch(() => persist(null))
+    api.me(session.token).catch(() => persist(null))
   }, [])
-  return session ? <WorkspaceShell session={session} onSessionChange={persist} /> : <AuthPage onAuthenticated={authenticated} />
+  return session ? <WorkbenchShell session={session} onSessionChange={persist} /> : <AuthPage onAuthenticated={authenticated} />
 }

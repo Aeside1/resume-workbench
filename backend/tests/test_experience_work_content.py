@@ -22,10 +22,9 @@ def headers(token: str):
 def test_experience_group_and_work_contents_lifecycle_is_persistent():
     account = register("experience@example.com")
     auth = headers(account["token"])
-    workspace_id = account["workspaces"][0]["id"]
 
     group_response = client.post(
-        f"/api/workspaces/{workspace_id}/experience-groups",
+        "/api/experience-groups",
         headers=auth,
         json={
             "name": "支付平台实习",
@@ -41,6 +40,7 @@ def test_experience_group_and_work_contents_lifecycle_is_persistent():
     assert group["type"] == "internship"
     assert group["organization"] == "示例科技"
     assert group["archived"] is False
+    assert group["user_id"] == account["user"]["id"]
 
     first = client.post(
         f"/api/experience-groups/{group['id']}/work-contents",
@@ -82,10 +82,10 @@ def test_experience_group_and_work_contents_lifecycle_is_persistent():
     assert [item["id"] for item in reorder.json()] == [second_content["id"], first_content["id"]]
 
     assert client.post(f"/api/experience-groups/{group['id']}/archive", headers=auth).status_code == 200
-    assert client.get(f"/api/workspaces/{workspace_id}/experience-groups", headers=auth).json() == []
-    assert client.get(f"/api/workspaces/{workspace_id}/experience-groups?include_archived=true", headers=auth).json()[0]["archived"] is True
+    assert client.get("/api/experience-groups", headers=auth).json() == []
+    assert client.get("/api/experience-groups?include_archived=true", headers=auth).json()[0]["archived"] is True
     assert client.post(f"/api/experience-groups/{group['id']}/restore", headers=auth).status_code == 200
-    assert client.get(f"/api/workspaces/{workspace_id}/experience-groups", headers=auth).json()[0]["id"] == group["id"]
+    assert client.get("/api/experience-groups", headers=auth).json()[0]["id"] == group["id"]
 
     assert client.post(f"/api/work-contents/{first_content['id']}/archive", headers=auth).status_code == 200
     assert client.get(f"/api/experience-groups/{group['id']}/work-contents", headers=auth).json()[0]["id"] == second_content["id"]
@@ -99,13 +99,12 @@ def test_experience_group_and_work_contents_lifecycle_is_persistent():
     assert restored["result_data"].endswith("99.9%")
 
 
-def test_experience_data_is_isolated_by_workspace_owner():
+def test_experience_data_is_isolated_by_user():
     alice = register("experience-alice@example.com")
     bob = register("experience-bob@example.com")
     alice_auth, bob_auth = headers(alice["token"]), headers(bob["token"])
-    workspace_id = alice["workspaces"][0]["id"]
     group = client.post(
-        f"/api/workspaces/{workspace_id}/experience-groups",
+        "/api/experience-groups",
         headers=alice_auth,
         json={"name": "Alice 项目", "type": "project"},
     ).json()
@@ -115,7 +114,7 @@ def test_experience_data_is_isolated_by_workspace_owner():
         json={"title": "仅 Alice 可见的具体工作内容"},
     ).json()
 
-    assert client.get(f"/api/workspaces/{workspace_id}/experience-groups", headers=bob_auth).status_code == 404
+    assert client.get("/api/experience-groups", headers=bob_auth).json() == []
     assert client.get(f"/api/experience-groups/{group['id']}", headers=bob_auth).status_code == 404
     assert client.patch(f"/api/experience-groups/{group['id']}", headers=bob_auth, json={"name": "越权"}).status_code == 404
     assert client.post(f"/api/experience-groups/{group['id']}/work-contents", headers=bob_auth, json={"title": "越权"}).status_code == 404
@@ -135,15 +134,14 @@ def test_experience_data_is_isolated_by_workspace_owner():
 def test_experience_group_validation_rejects_invalid_type_and_range():
     account = register("experience-validation@example.com")
     auth = headers(account["token"])
-    workspace_id = account["workspaces"][0]["id"]
     invalid_type = client.post(
-        f"/api/workspaces/{workspace_id}/experience-groups",
+        "/api/experience-groups",
         headers=auth,
         json={"name": "未知", "type": "other"},
     )
     assert invalid_type.status_code == 422
     invalid_range = client.post(
-        f"/api/workspaces/{workspace_id}/experience-groups",
+        "/api/experience-groups",
         headers=auth,
         json={"name": "日期错误", "type": "project", "start_date": "2025-02-01", "end_date": "2024-01-01"},
     )

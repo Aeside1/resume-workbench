@@ -29,7 +29,7 @@ def _configure_test_database() -> tuple[str, str]:
 TEST_DATABASE_URL, TEST_SCHEMA = _configure_test_database()
 
 from app.database import Base, SessionLocal, engine  # noqa: E402
-from app.models import User, Workspace  # noqa: E402
+from app.models import ExperienceGroup, User  # noqa: E402
 
 Base.metadata.create_all(bind=engine)
 
@@ -37,7 +37,7 @@ Base.metadata.create_all(bind=engine)
 @pytest.fixture(autouse=True)
 def clean_database():
     db = SessionLocal()
-    db.query(Workspace).delete()
+    db.query(ExperienceGroup).delete()
     db.query(User).delete()
     db.commit()
     db.close()

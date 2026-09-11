@@ -23,14 +23,14 @@ def service(user: User, db: Session) -> ExperienceGroupService:
     return ExperienceGroupService(db, user)
 
 
-@router.get("/api/workspaces/{workspace_id}/experience-groups", response_model=list[ExperienceGroupView])
-def list_experience_groups(workspace_id: int, include_archived: bool = Query(default=False), user: User = Depends(current_user), db: Session = Depends(get_db)):
-    return service(user, db).list_groups(workspace_id, include_archived)
+@router.get("/api/experience-groups", response_model=list[ExperienceGroupView])
+def list_experience_groups(include_archived: bool = Query(default=False), user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return service(user, db).list_groups(include_archived)
 
 
-@router.post("/api/workspaces/{workspace_id}/experience-groups", response_model=ExperienceGroupView, status_code=201)
-def create_experience_group(workspace_id: int, payload: ExperienceGroupCreate, user: User = Depends(current_user), db: Session = Depends(get_db)):
-    return service(user, db).create_group(workspace_id, payload.model_dump())
+@router.post("/api/experience-groups", response_model=ExperienceGroupView, status_code=201)
+def create_experience_group(payload: ExperienceGroupCreate, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return service(user, db).create_group(payload.model_dump())
 
 
 @router.get("/api/experience-groups/{group_id}", response_model=ExperienceGroupView)

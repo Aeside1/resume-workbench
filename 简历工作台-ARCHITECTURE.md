@@ -18,7 +18,7 @@
 Web 前端（React + TypeScript + Vite）
   ↓
 应用 API（Python + FastAPI，模块化单体）
-  ├── 身份与工作区模块
+  ├── 用户身份模块
   ├── 经历内容模块
   ├── 简历方案模块
   └── 导出模块
@@ -34,24 +34,23 @@ Web 前端（React + TypeScript + Vite）
 
 ```text
 User
-└── Workspace
-    ├── ExperienceGroup
-    │   └── WorkContent[*]
-    │       └── ResumeDescription[*]
-    └── ResumePlan
-        ├── ResumeItemReference[*]
-        └── ExportSnapshot[*]
+├── ExperienceGroup[*]
+│   └── WorkContent[*]
+│       └── ResumeDescription[*]
+└── ResumePlan[*]
+    ├── ResumeItemReference[*] -> ResumeDescription
+    └── ExportSnapshot[*]
 ```
 
 建议的关系表边界：
 
 | 领域对象 | 持久化集合 | 关键职责 |
 | --- | --- | --- |
-| User / Workspace | `users`, `workspaces` | 身份和数据隔离边界 |
-| ExperienceGroup | `experience_groups` | 一段实习或一个项目的元数据 |
+| User | `users` | 身份和数据隔离边界，账号即为个人唯一经历工作台 |
+| ExperienceGroup | `experience_groups` | 一段实习或一个项目的元数据，直属于用户 |
 | WorkContent | `work_contents` | 具体工作内容及其详细记录 |
 | ResumeDescription | `resume_descriptions` | 可独立编辑、归档、恢复和回滚的简历描述 |
-| ResumePlan | `resume_plans` | 一套可编辑的简历组合 |
+| ResumePlan | `resume_plans` | 一套可编辑的简历组合，直属于用户 |
 | ResumeItemReference | `resume_items` | 具体工作内容与简历描述的引用及排序 |
 | ExportSnapshot | `export_snapshots` | 导出时的不可变完整内容 |
 
@@ -61,7 +60,7 @@ User
 
 ### 4.1 API 层
 
-- 解析身份、工作区和资源 ID。
+- 解析当前登录用户身份和资源 ID。
 - 校验输入格式和并发版本。
 - HTTP handler 调用应用服务，业务规则集中在应用服务和领域模块。
 - 将领域错误映射为稳定的 API 错误码。
@@ -87,7 +86,6 @@ User
 app/
   ├── AppShell / 路由 / 全局错误
 features/
-  ├── workspace
   ├── experience-groups
   ├── work-contents
   ├── resume-descriptions
@@ -108,7 +106,7 @@ lib/
 
 ### 6.1 数据隔离
 
-所有业务查询都从当前认证用户可访问的工作区开始。客户端传入的 `workspaceId` 用于定位请求，服务端同步校验资源归属。
+所有业务查询都直接以当前认证的登录用户（User）为上下文。系统按个人用户账号进行独立数据隔离，服务端同步校验资源归属。
 
 ### 6.2 简历描述与引用
 
@@ -127,11 +125,19 @@ lib/
 ## 7. API 资源边界（草案）
 
 ```text
-GET/POST   /api/workspaces
-GET/POST   /api/workspaces/:id/experience-groups
+POST       /api/auth/register
+POST       /api/auth/login
+POST       /api/auth/logout
+GET        /api/auth/me
+GET/POST   /api/experience-groups
 GET/PATCH  /api/experience-groups/:id
-POST       /api/experience-groups/:id/work-contents
+POST       /api/experience-groups/:id/archive
+POST       /api/experience-groups/:id/restore
+GET/POST   /api/experience-groups/:id/work-contents
+POST       /api/experience-groups/:id/work-contents/reorder
 PATCH      /api/work-contents/:id
+POST       /api/work-contents/:id/archive
+POST       /api/work-contents/:id/restore
 POST       /api/work-contents/:id/resume-descriptions
 PATCH      /api/resume-descriptions/:id
 POST       /api/resume-plans
@@ -155,6 +161,6 @@ GET        /api/resume-plans/:id/exports
 | 本地原型数据库 | Docker PostgreSQL | 让本地环境与在线数据库保持一致 |
 | 部署形态 | 单台云服务器 + Docker Compose | 适配 100～1000 用户的小规模在线服务 |
 | 导出 | 独立适配器 | 避免导出工具侵入简历领域 |
-| 多用户隔离 | 第一阶段必须具备 | 所有用户数据按工作区隔离 |
+| 多用户隔离 | 第一阶段必须具备 | 所有用户数据按用户账号进行隔离 |
 
 这些是架构建议，不会反向改变 PRD 的产品范围；最终技术选型需在项目初始化前单独确认。

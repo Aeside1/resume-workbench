@@ -22,8 +22,8 @@ export function ExperienceGroupsPanel({ session }: Props) {
   const selectedGroup = useMemo(() => groups.find(group => group.id === selectedId) ?? null, [groups, selectedId])
 
   useEffect(() => {
-    api.experienceGroups(session.token, session.selectedWorkspaceId, showArchived).then(result => { setGroups(result); setSelectedId(current => current && result.some(group => group.id === current) ? current : result[0]?.id ?? null) }).catch(e => setError((e as Error).message))
-  }, [session.token, session.selectedWorkspaceId, showArchived])
+    api.experienceGroups(session.token, showArchived).then(result => { setGroups(result); setSelectedId(current => current && result.some(group => group.id === current) ? current : result[0]?.id ?? null) }).catch(e => setError((e as Error).message))
+  }, [session.token, showArchived])
   useEffect(() => {
     if (!selectedId) { setContents([]); return }
     api.workContents(session.token, selectedId, showArchived).then(setContents).catch(e => setError((e as Error).message))
@@ -31,7 +31,7 @@ export function ExperienceGroupsPanel({ session }: Props) {
 
   const createGroup = async (event: FormEvent) => {
     event.preventDefault(); if (!groupDraft.name.trim()) return
-    try { const group = await api.createExperienceGroup(session.token, session.selectedWorkspaceId, { ...groupDraft, name: groupDraft.name.trim(), organization: groupDraft.organization || null, start_date: groupDraft.start_date || null, end_date: groupDraft.end_date || null, description: groupDraft.description || null }); setGroups(current => [group, ...current]); setSelectedId(group.id); setGroupDraft(emptyGroup) } catch (e) { setError((e as Error).message) }
+    try { const group = await api.createExperienceGroup(session.token, { ...groupDraft, name: groupDraft.name.trim(), organization: groupDraft.organization || null, start_date: groupDraft.start_date || null, end_date: groupDraft.end_date || null, description: groupDraft.description || null }); setGroups(current => [group, ...current]); setSelectedId(group.id); setGroupDraft(emptyGroup) } catch (e) { setError((e as Error).message) }
   }
   const startEditContent = (item: WorkContent) => { setEditingContentId(item.id); setContentDraft({ title: item.title, detailed_record: item.detailed_record ?? '', technical_materials: item.technical_materials ?? '', result_data: item.result_data ?? '', supplementary_notes: item.supplementary_notes ?? '' }) }
   const saveContent = async (event: FormEvent) => {
