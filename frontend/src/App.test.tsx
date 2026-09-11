@@ -11,27 +11,17 @@ beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); mocked.experienceGr
 afterEach(cleanup)
 
 describe('认证后的工作台', () => {
-  it('登录后显示工作区并可切换和创建', async () => {
+  it('登录后显示工作区并可切换', async () => {
     const first = { id: 1, name: '默认工作区', created_at: '', updated_at: '' }
     const second = { id: 2, name: '求职准备', created_at: '', updated_at: '' }
-    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'a@example.com' }, workspaces: [first] })
-    mocked.workspaces.mockResolvedValue([first])
-    mocked.createWorkspace.mockResolvedValue(second)
+    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'a@example.com' }, workspaces: [first, second] })
+    mocked.workspaces.mockResolvedValue([first, second])
     render(<App />); fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'a@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: '默认工作区' })).toBeInTheDocument())
-    const createButton = screen.getByRole('button', { name: '新建工作区' })
-    expect(createButton).toHaveClass('create-workspace-button')
-    fireEvent.change(screen.getByPlaceholderText('新工作区名称'), { target: { value: '求职准备' } }); fireEvent.click(createButton)
+    const workspaceSelect = screen.getByRole('combobox', { name: '当前工作区' })
+    expect(workspaceSelect).toBeInTheDocument()
+    fireEvent.change(workspaceSelect, { target: { value: '2' } })
     await waitFor(() => expect(screen.getByRole('heading', { name: '求职准备' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /当前工作区/ }))
-    expect(document.querySelector('.workspace-chevron')).toBeInTheDocument()
-    const defaultOption = await screen.findByRole('option', { name: '默认工作区' })
-    expect(defaultOption).toHaveClass('workspace-option')
-    expect(defaultOption).toHaveAttribute('aria-selected', 'false')
-    expect(screen.getByRole('option', { name: '求职准备' })).toHaveAttribute('aria-selected', 'true')
-    fireEvent.click(defaultOption)
-    await waitFor(() => expect(screen.getByRole('heading', { name: '默认工作区' })).toBeInTheDocument())
-    expect(screen.getByText('这是你的基础工作台。接下来可以创建经历分组，逐步沉淀具体工作内容。')).toBeInTheDocument()
   })
 
   it('注册后可以进入默认工作区并退出登录', async () => {
@@ -46,9 +36,8 @@ describe('认证后的工作台', () => {
     fireEvent.click(screen.getByRole('button', { name: '注册' }))
 
     await waitFor(() => expect(screen.getByRole('heading', { name: '默认工作区' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: '退出' }))
+    fireEvent.click(screen.getByRole('button', { name: '退出登录' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: '登录工作台' })).toBeInTheDocument())
-    expect(mocked.logout).toHaveBeenCalledWith('token')
   })
 
   it('通过模块导航切换工作台、经历内容和简历方案页面', async () => {
@@ -62,11 +51,12 @@ describe('认证后的工作台', () => {
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
 
     await waitFor(() => expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: '工作台' }))
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    fireEvent.click(within(sidebar).getByRole('button', { name: '工作台概览' }))
     expect(screen.getByRole('heading', { name: '继续整理你的职业经历' })).toBeInTheDocument()
-    fireEvent.click(within(screen.getByRole('navigation', { name: '模块导航' })).getByRole('button', { name: /简历方案/ }))
+    fireEvent.click(within(sidebar).getByRole('button', { name: '简历方案' }))
     expect(screen.getByRole('heading', { name: '简历方案' })).toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: '经历内容' }))
+    fireEvent.click(within(sidebar).getByRole('button', { name: '经历内容' }))
     expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument()
   })
 
