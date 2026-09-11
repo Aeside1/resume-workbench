@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { api } from './api'
 
-vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn() } }))
+vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn() } }))
 const mocked = vi.mocked(api)
 
 beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]) })
@@ -118,13 +118,14 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(mocked.reorderWorkContents).toHaveBeenCalledWith('token', 10, [21, 22, 20]))
   })
 
-  it('归档经历分组后保留恢复入口，避免内容看起来被删除', async () => {
+  it('归档经历分组后进入归档箱，支持恢复与彻底删除', async () => {
     const group = { id: 10, user_id: 1, name: '平台项目', type: 'project' as const, organization: null, start_date: null, end_date: null, description: null, archived: false, created_at: '', updated_at: '' }
     const archivedGroup = { ...group, archived: true }
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'archive-group@example.com' } })
-    mocked.experienceGroups.mockImplementation(async (_token, includeArchived) => includeArchived ? [archivedGroup] : [group])
+    mocked.experienceGroups.mockResolvedValue([group])
     mocked.workContents.mockResolvedValue([])
     mocked.archiveExperienceGroup.mockResolvedValue(archivedGroup)
+    mocked.deleteExperienceGroup.mockResolvedValue(undefined as any)
 
     render(<App />)
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'archive-group@example.com' } })
@@ -134,8 +135,24 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: '归档经历分组' })).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: '归档经历分组' }))
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('经历分组已归档'))
-    expect(screen.getByText('显示已归档')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('已移至归档箱'))
+    expect(screen.queryByRole('button', { name: '归档经历分组' })).not.toBeInTheDocument()
+
+    // 切换到归档箱，可以恢复或彻底删除
+    fireEvent.click(screen.getByRole('tab', { name: /归档箱/ }))
     expect(screen.getByRole('button', { name: '恢复经历分组' })).toBeInTheDocument()
+    const deleteBtn = screen.getByRole('button', { name: '彻底删除经历分组' })
+    expect(deleteBtn).toBeInTheDocument()
+
+    fireEvent.click(deleteBtn)
+    const modalConfirmBtn = screen.getByRole('button', { name: '确认彻底删除' })
+    fireEvent.click(modalConfirmBtn)
+
+    await waitFor(() => {
+      expect(mocked.deleteExperienceGroup).toHaveBeenCalledWith('token', 10)
+      expect(screen.getByRole('status')).toHaveTextContent('已彻底删除')
+    })
   })
 })
+
+

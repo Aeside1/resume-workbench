@@ -53,6 +53,11 @@ def restore_experience_group(group_id: int, user: User = Depends(current_user), 
     return service(user, db).set_group_archived(group_id, False)
 
 
+@router.delete("/api/experience-groups/{group_id}", status_code=204)
+def delete_experience_group(group_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    service(user, db).delete_group(group_id)
+
+
 @router.get("/api/experience-groups/{group_id}/work-contents", response_model=list[WorkContentView])
 def list_work_contents(group_id: int, include_archived: bool = Query(default=False), user: User = Depends(current_user), db: Session = Depends(get_db)):
     return service(user, db).list_contents(group_id, include_archived)

@@ -370,8 +370,66 @@ button { cursor: pointer; }
   flex-shrink: 0;
 }
 
+.hub-tabs-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.hub-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 7px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.hub-tab-btn:hover {
+  color: #0f172a;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.hub-tab-btn--active {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.tab-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.hub-tab-btn--active .tab-count-badge {
+  background: #e0f2fe;
+  color: #0284c7;
+}
+
+
 /* ==========================================================================
    Global Button Components (HeroUI / React Aria)
+
    ========================================================================== */
 button[data-slot="button"],
 .button {
@@ -478,6 +536,52 @@ button[data-slot="button"].button--sm,
   padding: 4px 10px !important;
   font-size: 13px !important;
 }
+
+/* Danger / Destructive Variant (Highest Specificity) */
+button[data-slot="button"].btn-danger-solid,
+button[data-slot="button"][data-variant="danger"],
+button[data-slot="button"].btn-delete,
+button[data-slot="button"].btn-destructive,
+button.btn-danger-solid,
+button.btn-delete,
+.btn-danger-solid,
+.btn-delete {
+  background: #dc2626 !important;
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #dc2626 !important;
+  border-color: #dc2626 !important;
+  font-weight: 600 !important;
+  font-size: 12px !important;
+  height: 28px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.25) !important;
+}
+
+button[data-slot="button"].btn-danger-solid:hover:not(:disabled),
+button[data-slot="button"][data-variant="danger"]:hover:not(:disabled),
+button[data-slot="button"].btn-delete:hover:not(:disabled),
+button[data-slot="button"].btn-destructive:hover:not(:disabled),
+button.btn-danger-solid:hover:not(:disabled),
+button.btn-delete:hover:not(:disabled),
+.btn-danger-solid:hover:not(:disabled),
+.btn-delete:hover:not(:disabled) {
+  background: #b91c1c !important;
+  background-color: #b91c1c !important;
+  border-color: #b91c1c !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 10px rgba(185, 28, 28, 0.35) !important;
+}
+
+button[data-slot="button"].btn-danger-solid:active:not(:disabled),
+button.btn-danger-solid:active:not(:disabled),
+.btn-danger-solid:active:not(:disabled) {
+  background: #991b1b !important;
+  background-color: #991b1b !important;
+  border-color: #991b1b !important;
+}
+
 
 /* ==========================================================================
    Global Select Component (HeroUI / React Aria)
@@ -752,7 +856,9 @@ button[data-slot="button"].button--sm,
 .group-card-actions {
   display: flex;
   align-items: center;
+  gap: 10px;
 }
+
 
 .group-action-btn {
   font-size: 12px !important;
@@ -936,3 +1042,116 @@ button[data-slot="button"].button--sm,
   padding: 28px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
+
+/* Delete Confirmation Modal */
+.delete-confirm-dialog {
+  max-width: 440px !important;
+}
+
+.delete-title {
+  color: #b91c1c !important;
+}
+
+.delete-dialog-body {
+  padding: 16px 24px !important;
+}
+
+.delete-warning-box {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delete-warning-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.delete-warning-subtext {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+  line-height: 1.5;
+}
+
+.modal-btn-delete-confirm {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+.modal-btn-delete-confirm:hover:not(:disabled) {
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
+}
+
+/* Empty State Card Component */
+.empty-state-card {
+  border: 1px dashed #cbd5e1 !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  padding: 48px 24px !important;
+  text-align: center !important;
+  box-shadow: none !important;
+  margin: 12px 0 !important;
+}
+
+.empty-state-content {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  max-width: 460px !important;
+  margin: 0 auto !important;
+  padding: 0 !important;
+}
+
+.empty-state-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #e0f2fe;
+  color: #0284c7;
+  margin-bottom: 4px;
+}
+
+.empty-state-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 650;
+  color: #0f172a;
+}
+
+.empty-state-desc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #64748b;
+}
+
+.empty-state-action-box {
+  margin-top: 8px;
+}
+
+.empty-state-action-btn {
+  height: 36px !important;
+  padding: 0 18px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+

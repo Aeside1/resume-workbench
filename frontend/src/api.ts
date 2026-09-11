@@ -26,6 +26,7 @@ export const api = {
   updateExperienceGroup: (token: string, id: number, payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => request<ExperienceGroup>(`/api/experience-groups/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
   archiveExperienceGroup: (token: string, id: number) => request<ExperienceGroup>(`/api/experience-groups/${id}/archive`, { method: 'POST' }, token),
   restoreExperienceGroup: (token: string, id: number) => request<ExperienceGroup>(`/api/experience-groups/${id}/restore`, { method: 'POST' }, token),
+  deleteExperienceGroup: (token: string, id: number) => request<void>(`/api/experience-groups/${id}`, { method: 'DELETE' }, token),
   workContents: (token: string, groupId: number, includeArchived = false) => request<WorkContent[]>(`/api/experience-groups/${groupId}/work-contents?include_archived=${includeArchived}`, {}, token),
   createWorkContent: (token: string, groupId: number, payload: Omit<WorkContent, 'id' | 'experience_group_id' | 'position' | 'archived' | 'created_at' | 'updated_at'>) => request<WorkContent>(`/api/experience-groups/${groupId}/work-contents`, { method: 'POST', body: JSON.stringify(payload) }, token),
   updateWorkContent: (token: string, id: number, payload: Partial<Pick<WorkContent, 'title' | 'detailed_record' | 'technical_materials' | 'result_data' | 'supplementary_notes'>>) => request<WorkContent>(`/api/work-contents/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),

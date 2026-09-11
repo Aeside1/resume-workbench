@@ -25,3 +25,9 @@
 3. **基础组件显式维护全局 CSS 样式**：
    在 Tailwind 4 与当前打包环境下，HeroUI 默认变体（如 `.button--primary`、`.button--ghost`、`[data-slot="select-trigger"]`）不能仅依赖局部容器 class（如 `.stack-form`）。必须在 `styles.css` 中声明完备的全局基础组件样式（按钮所有 variant、输入框、下拉选择器及其 Popover 高 z-index），杜绝组件在 Modal 等新容器内退化为无样式的裸元素。
 
+## Git 协作规范
+
+1. **Commit Message 统一使用中文**：
+   本仓库的所有 Git 提交信息（commit message）必须统一使用中文编写，采用清晰的 `类型(模块): 简述` 格式，正文列明关键变更点，严禁使用纯英文 commit。
+
+

@@ -6,8 +6,9 @@ export type ExperienceGroupCardProps = {
   group: ExperienceGroup
   workContentCount?: number
   onSelect: (group: ExperienceGroup) => void
-  onArchive: (group: ExperienceGroup) => void
-  onRestore: (group: ExperienceGroup) => void
+  onArchive?: (group: ExperienceGroup) => void
+  onRestore?: (group: ExperienceGroup) => void
+  onDelete?: (group: ExperienceGroup) => void
 }
 
 export function ExperienceGroupCard({
@@ -15,7 +16,8 @@ export function ExperienceGroupCard({
   workContentCount = 0,
   onSelect,
   onArchive,
-  onRestore
+  onRestore,
+  onDelete
 }: ExperienceGroupCardProps) {
   const isArchived = group.archived
   const dateText = group.start_date || group.end_date
@@ -30,14 +32,21 @@ export function ExperienceGroupCard({
     if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
       (e as MouseEvent).stopPropagation()
     }
-    onArchive(group)
+    onArchive?.(group)
   }
 
   const handleRestore = (e?: MouseEvent | unknown) => {
     if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
       (e as MouseEvent).stopPropagation()
     }
-    onRestore(group)
+    onRestore?.(group)
+  }
+
+  const handleDelete = (e?: MouseEvent | unknown) => {
+    if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
+      (e as MouseEvent).stopPropagation()
+    }
+    onDelete?.(group)
   }
 
   return (
@@ -105,18 +114,29 @@ export function ExperienceGroupCard({
           <span>{workContentCount} 项具体工作</span>
         </div>
 
-        <div className="group-card-actions">
+        <div className="group-card-actions" style={{ gap: '10px' }}>
           {isArchived ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="group-action-btn btn-restore"
-              aria-label="恢复经历分组"
-              onPress={handleRestore}
-              onClick={handleRestore}
-            >
-              恢复经历分组
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                className="group-action-btn btn-restore"
+                aria-label="恢复经历分组"
+                onPress={handleRestore}
+              >
+                恢复经历分组
+              </Button>
+              <Button
+                size="sm"
+                className="btn-danger-solid btn-delete"
+                style={{ backgroundColor: '#dc2626', color: '#ffffff', borderColor: '#dc2626' }}
+                aria-label="彻底删除经历分组"
+                onPress={handleDelete}
+              >
+                彻底删除
+              </Button>
+            </>
+
           ) : (
             <Button
               size="sm"
@@ -124,7 +144,6 @@ export function ExperienceGroupCard({
               className="group-action-btn btn-archive"
               aria-label="归档经历分组"
               onPress={handleArchive}
-              onClick={handleArchive}
             >
               归档经历分组
             </Button>

@@ -132,4 +132,29 @@ describe('ExperienceGroupCard', () => {
     expect(handleRestore).toHaveBeenCalledWith(archivedGroup)
     expect(handleSelect).not.toHaveBeenCalled()
   })
+
+  it('已归档经历展示彻底删除按钮，点击触发 onDelete 且不触发 onSelect', () => {
+    const archivedGroup: ExperienceGroup = { ...baseGroup, archived: true }
+    const handleSelect = vi.fn()
+    const handleDelete = vi.fn()
+
+    render(
+      <ExperienceGroupCard
+        group={archivedGroup}
+        workContentCount={2}
+        onSelect={handleSelect}
+        onArchive={vi.fn()}
+        onRestore={vi.fn()}
+        onDelete={handleDelete}
+      />
+    )
+
+    const deleteBtn = screen.getByRole('button', { name: '彻底删除经历分组' })
+    expect(deleteBtn).toBeInTheDocument()
+    fireEvent.click(deleteBtn)
+
+    expect(handleDelete).toHaveBeenCalledWith(archivedGroup)
+    expect(handleSelect).not.toHaveBeenCalled()
+  })
 })
+

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ExperienceHubPanel } from './ExperienceHubPanel'
 import { api } from '../../api'
@@ -11,6 +11,7 @@ vi.mock('../../api', () => ({
     createExperienceGroup: vi.fn(),
     archiveExperienceGroup: vi.fn(),
     restoreExperienceGroup: vi.fn(),
+    deleteExperienceGroup: vi.fn(),
     workContents: vi.fn()
   }
 }))
@@ -63,12 +64,13 @@ beforeEach(() => {
 afterEach(cleanup)
 
 describe('ExperienceHubPanel 经历管理 Hub', () => {
-  it('正确渲染顶部操作栏（标题、新建经历分组按钮、显示已归档开关）与卡片流', async () => {
+  it('正确渲染顶部操作栏（标题、新建经历分组按钮、在用经历与归档箱 Tab）与卡片流', async () => {
     render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
 
     expect(screen.getByRole('heading', { name: /经历/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /新建经历分组/ })).toBeInTheDocument()
-    expect(screen.getByText('显示已归档')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /在用经历/ })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /归档箱/ })).toBeInTheDocument()
 
     await waitFor(() => {
       expect(screen.getByText('微信支付平台实习')).toBeInTheDocument()
@@ -85,8 +87,11 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
     render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
 
     await waitFor(() => {
-      expect(screen.getByText(/还没有经历分组/)).toBeInTheDocument()
+      expect(screen.getByText(/还没有在用经历分组/)).toBeInTheDocument()
     })
+
+    fireEvent.click(screen.getByRole('tab', { name: /归档箱/ }))
+    expect(screen.getByText(/归档箱是空的/)).toBeInTheDocument()
   })
 
   it('点击卡片触发 onSelectExperience 回调进入沉浸长画布', async () => {
@@ -133,17 +138,25 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
     })
   })
 
-  it('点击显示已归档开关拉取并展示归档经历', async () => {
+  it('通过 Tab 切换在用经历列表与归档箱回收站', async () => {
+    const mixedGroups = [
+      mockGroups[0],
+      { ...mockGroups[1], archived: true }
+    ]
+    mocked.experienceGroups.mockResolvedValue(mixedGroups)
+
     render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
 
     await waitFor(() => expect(screen.getByText('微信支付平台实习')).toBeInTheDocument())
+    // 初始处于在用经历 Tab，不展示归档的“开源配置中心”
+    expect(screen.queryByText('开源配置中心')).not.toBeInTheDocument()
 
-    const archiveToggle = screen.getByLabelText('显示已归档')
-    fireEvent.click(archiveToggle)
-
-    await waitFor(() => {
-      expect(mocked.experienceGroups).toHaveBeenCalledWith('test-token', true)
-    })
+    // 切换到归档箱 Tab
+    fireEvent.click(screen.getByRole('tab', { name: /归档箱/ }))
+    expect(screen.getByText('开源配置中心')).toBeInTheDocument()
+    expect(screen.queryByText('微信支付平台实习')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '恢复经历分组' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '彻底删除经历分组' })).toBeInTheDocument()
   })
 
   it('直接在卡片上归档经历分组，更新状态并展示提示', async () => {
@@ -159,11 +172,18 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     await waitFor(() => {
       expect(mocked.archiveExperienceGroup).toHaveBeenCalledWith('test-token', 101)
-      expect(screen.getByRole('status')).toHaveTextContent(/经历分组已归档/)
+      expect(screen.getByRole('status')).toHaveTextContent(/已移至归档箱/)
     })
+
+    // 归档后离开在用经历列表
+    expect(screen.queryByText('微信支付平台实习')).not.toBeInTheDocument()
+
+    // 切换到归档箱可以查看到该项
+    fireEvent.click(screen.getByRole('tab', { name: /归档箱/ }))
+    expect(screen.getByText('微信支付平台实习')).toBeInTheDocument()
   })
 
-  it('已归档卡片上一键恢复经历分组', async () => {
+  it('在归档箱中一键恢复经历分组', async () => {
     const archivedGroup = { ...mockGroups[0], archived: true }
     mocked.experienceGroups.mockResolvedValue([archivedGroup])
     const restored = { ...archivedGroup, archived: false }
@@ -171,6 +191,8 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
 
+    // 切换至归档箱
+    fireEvent.click(screen.getByRole('tab', { name: /归档箱/ }))
     await waitFor(() => expect(screen.getByText('已归档')).toBeInTheDocument())
 
     const restoreBtn = screen.getByRole('button', { name: '恢复经历分组' })
@@ -178,7 +200,54 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     await waitFor(() => {
       expect(mocked.restoreExperienceGroup).toHaveBeenCalledWith('test-token', 101)
-      expect(screen.getByRole('status')).toHaveTextContent(/经历分组已恢复/)
+      expect(screen.getByRole('status')).toHaveTextContent(/已恢复到在用经历列表/)
     })
+
+    // 恢复后离开归档箱
+    expect(screen.queryByText('微信支付平台实习')).not.toBeInTheDocument()
+
+    // 切换回在用经历可见
+    fireEvent.click(screen.getByRole('tab', { name: /在用经历/ }))
+    expect(screen.getByText('微信支付平台实习')).toBeInTheDocument()
+  })
+
+  it('在归档箱中点击彻底删除经历分组，支持弹窗确认与取消', async () => {
+    const archivedGroup = { ...mockGroups[0], archived: true }
+    mocked.experienceGroups.mockResolvedValue([archivedGroup])
+    mocked.deleteExperienceGroup.mockResolvedValue(undefined as any)
+
+    render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
+
+    // 切换至归档箱
+    fireEvent.click(screen.getByRole('tab', { name: /归档箱/ }))
+    await waitFor(() => expect(screen.getByText('微信支付平台实习')).toBeInTheDocument())
+
+    // 点击卡片上的彻底删除按钮，弹出确认弹窗
+    const cardDeleteBtn = screen.getByRole('button', { name: '彻底删除经历分组' })
+    fireEvent.click(cardDeleteBtn)
+
+    expect(screen.getByRole('heading', { name: '确认彻底删除经历分组' })).toBeInTheDocument()
+    expect(screen.getByText(/数据无法恢复/)).toBeInTheDocument()
+
+    // 点击取消，不执行删除
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
+    expect(screen.queryByRole('heading', { name: '确认彻底删除经历分组' })).not.toBeInTheDocument()
+    expect(mocked.deleteExperienceGroup).not.toHaveBeenCalled()
+    expect(screen.getByText('微信支付平台实习')).toBeInTheDocument()
+
+    // 再次点击彻底删除并确认
+    fireEvent.click(cardDeleteBtn)
+    const modalConfirmBtn = screen.getByRole('button', { name: '确认彻底删除' })
+    fireEvent.click(modalConfirmBtn)
+
+    await waitFor(() => {
+      expect(mocked.deleteExperienceGroup).toHaveBeenCalledWith('test-token', 101)
+      expect(screen.getByRole('status')).toHaveTextContent(/已彻底删除/)
+    })
+
+    expect(screen.queryByText('微信支付平台实习')).not.toBeInTheDocument()
+    expect(screen.getByText(/归档箱是空的/)).toBeInTheDocument()
   })
 })
+
+

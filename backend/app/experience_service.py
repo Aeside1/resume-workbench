@@ -46,6 +46,10 @@ class ExperienceGroupService:
         group.archived = archived
         return self.repository.save(group)
 
+    def delete_group(self, group_id: int) -> None:
+        group = self.group(group_id)
+        self.repository.delete(group)
+
     def list_contents(self, group_id: int, include_archived: bool) -> list[WorkContent]:
         group = self.group(group_id)
         return self.repository.list_contents(group.id, include_archived)

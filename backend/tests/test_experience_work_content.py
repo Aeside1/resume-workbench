@@ -129,6 +129,8 @@ def test_experience_data_is_isolated_by_user():
     assert client.post(f"/api/work-contents/{content['id']}/restore", headers=bob_auth).status_code == 404
     assert client.post(f"/api/experience-groups/{group['id']}/archive", headers=bob_auth).status_code == 404
     assert client.post(f"/api/experience-groups/{group['id']}/restore", headers=bob_auth).status_code == 404
+    assert client.delete(f"/api/experience-groups/{group['id']}", headers=bob_auth).status_code == 404
+
 
 
 def test_experience_group_validation_rejects_invalid_type_and_range():
@@ -146,3 +148,30 @@ def test_experience_group_validation_rejects_invalid_type_and_range():
         json={"name": "日期错误", "type": "project", "start_date": "2025-02-01", "end_date": "2024-01-01"},
     )
     assert invalid_range.status_code == 422
+
+
+def test_delete_experience_group_cascades_work_contents():
+    account = register("experience-delete@example.com")
+    auth = headers(account["token"])
+    group = client.post(
+        "/api/experience-groups",
+        headers=auth,
+        json={"name": "待删除项目", "type": "project"},
+    ).json()
+    content = client.post(
+        f"/api/experience-groups/{group['id']}/work-contents",
+        headers=auth,
+        json={"title": "待级联删除工作项"},
+    ).json()
+
+    delete_resp = client.delete(f"/api/experience-groups/{group['id']}", headers=auth)
+    assert delete_resp.status_code == 204
+
+    # 再次查询经历分组应返回 404
+    assert client.get(f"/api/experience-groups/{group['id']}", headers=auth).status_code == 404
+    # 再次查询经历分组关联的工作项列表应返回 404
+    assert client.get(f"/api/experience-groups/{group['id']}/work-contents", headers=auth).status_code == 404
+    # 对已被级联删除的单条工作内容操作应返回 404
+    assert client.patch(f"/api/work-contents/{content['id']}", headers=auth, json={"title": "新标题"}).status_code == 404
+
+

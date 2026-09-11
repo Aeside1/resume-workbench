@@ -40,5 +40,9 @@ class ExperienceRepository:
         self.db.refresh(entity)
         return entity
 
+    def delete(self, entity):
+        self.db.delete(entity)
+        self.db.commit()
+
     def commit(self):
         self.db.commit()
