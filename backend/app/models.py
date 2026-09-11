@@ -1,6 +1,6 @@
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
-from sqlalchemy import DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -27,3 +27,37 @@ class Workspace(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
     owner: Mapped[User] = relationship(back_populates="workspaces")
+    experience_groups: Mapped[list["ExperienceGroup"]] = relationship(back_populates="workspace", cascade="all, delete-orphan")
+
+
+class ExperienceGroup(Base):
+    __tablename__ = "experience_groups"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    workspace_id: Mapped[int] = mapped_column(ForeignKey("workspaces.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(200))
+    type: Mapped[str] = mapped_column(String(32))
+    organization: Mapped[str | None] = mapped_column(String(200), nullable=True)
+    start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
+    workspace: Mapped[Workspace] = relationship(back_populates="experience_groups")
+    work_contents: Mapped[list["WorkContent"]] = relationship(back_populates="experience_group", cascade="all, delete-orphan", order_by="WorkContent.position")
+
+
+class WorkContent(Base):
+    __tablename__ = "work_contents"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    experience_group_id: Mapped[int] = mapped_column(ForeignKey("experience_groups.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String(200))
+    detailed_record: Mapped[str | None] = mapped_column(Text, nullable=True)
+    technical_materials: Mapped[str | None] = mapped_column(Text, nullable=True)
+    result_data: Mapped[str | None] = mapped_column(Text, nullable=True)
+    supplementary_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    position: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
+    experience_group: Mapped[ExperienceGroup] = relationship(back_populates="work_contents")
