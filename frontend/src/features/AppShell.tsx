@@ -2,12 +2,14 @@ import { ReactNode } from 'react'
 import { Button } from '@heroui/react'
 import type { Session } from '../session'
 
+export type AppShellMode = 'hub' | 'focus' | 'focus-canvas'
+
 type Props = {
   session: Session
   onSessionChange: (session: Session) => void
   onLogout: () => void
   children: ReactNode
-  mode?: 'hub' | 'focus'
+  mode?: AppShellMode
   breadcrumb?: string
   onExitFocus?: () => void
   saveStatus?: 'idle' | 'saving' | 'saved'
@@ -25,27 +27,67 @@ export function AppShell({
   saveStatus,
   navigationButtons
 }: Props) {
+  const isFocus = mode === 'focus' || mode === 'focus-canvas'
+  const currentWorkspace =
+    session.workspaces.find(ws => ws.id === session.selectedWorkspaceId) ?? session.workspaces[0]
+
   const handleWorkspaceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedId = Number(e.target.value)
     onSessionChange({ ...session, selectedWorkspaceId: selectedId })
   }
 
   return (
-    <div className="app-shell">
-      {mode === 'hub' && (
+    <div className={`app-shell ${isFocus ? 'app-shell--focus' : 'app-shell--hub'}`}>
+      {!isFocus && (
         <aside role="complementary" aria-label="主导航" className="app-sidebar">
           <div className="sidebar-header">
-            <select
-              aria-label="当前工作区"
-              value={session.selectedWorkspaceId}
-              onChange={handleWorkspaceChange}
-            >
-              {session.workspaces.map(ws => (
-                <option key={ws.id} value={ws.id}>
-                  {ws.name}
-                </option>
-              ))}
-            </select>
+            <div className="sidebar-workspace-card">
+              <div className="workspace-card-avatar" aria-hidden="true">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <div className="workspace-card-info">
+                <div className="workspace-name-wrapper">
+                  <span className="workspace-name">{currentWorkspace?.name || '默认工作区'}</span>
+                  <svg
+                    className="workspace-chevron-icon"
+                    aria-hidden="true"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="m6 9 6 6 6-6" />
+                  </svg>
+                </div>
+                <span className="user-email">{session.user.email}</span>
+              </div>
+              <select
+                aria-label="当前工作区"
+                className="workspace-native-select"
+                value={session.selectedWorkspaceId}
+                onChange={handleWorkspaceChange}
+              >
+                {session.workspaces.map(ws => (
+                  <option key={ws.id} value={ws.id}>
+                    {ws.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <nav role="navigation" aria-label="主要模块" className="sidebar-nav">
@@ -53,27 +95,59 @@ export function AppShell({
           </nav>
 
           <div className="sidebar-footer">
-            <span>{session.user.email}</span>
-            <Button onClick={onLogout}>退出登录</Button>
+            <Button
+              variant="ghost"
+              className="sidebar-logout-btn"
+              onPress={onLogout}
+            >
+              退出登录
+            </Button>
           </div>
         </aside>
       )}
 
-      {mode === 'focus' && (
+      {isFocus && (
         <nav role="navigation" aria-label="面包屑导航" className="focus-topbar">
-          {breadcrumb && <span>{breadcrumb}</span>}
-          {onExitFocus && <Button onClick={onExitFocus}>退出专注模式</Button>}
-          {saveStatus && (
-            <span role="status" aria-label="保存状态">
-              {saveStatus === 'saving' && '保存中...'}
-              {saveStatus === 'saved' && '已保存'}
-              {saveStatus === 'idle' && ''}
-            </span>
-          )}
+          <div className="focus-breadcrumb-group">
+            {onExitFocus && (
+              <button
+                type="button"
+                className="focus-back-btn"
+                aria-label="返回经历内容"
+                onClick={onExitFocus}
+              >
+                <span aria-hidden="true">←</span>
+              </button>
+            )}
+            <span className="focus-breadcrumb-text">{breadcrumb || '经历内容'}</span>
+          </div>
+
+          <div className="focus-status-center">
+            {saveStatus && saveStatus !== 'idle' && (
+              <span role="status" aria-label="保存状态" className={`focus-status-pill ${saveStatus}`}>
+                {saveStatus === 'saving' && '保存中...'}
+                {saveStatus === 'saved' && '✓ 所有修改已保存'}
+              </span>
+            )}
+          </div>
+
+          <div className="focus-actions-right">
+            {onExitFocus && (
+              <Button
+                variant="outline"
+                className="focus-exit-btn"
+                onPress={onExitFocus}
+              >
+                退出专注模式
+              </Button>
+            )}
+          </div>
         </nav>
       )}
 
-      <main className="app-main">{children}</main>
+      <main className={`app-main ${isFocus ? 'app-main--focus' : 'app-main--hub'}`}>
+        {children}
+      </main>
     </div>
   )
 }
