@@ -1,5 +1,7 @@
 export type Workspace = { id: number; name: string; created_at: string; updated_at: string }
 export type AuthResponse = { token: string; user: { id: number; email: string }; workspaces: Workspace[] }
+export type ExperienceGroup = { id: number; workspace_id: number; name: string; type: 'internship' | 'project'; organization: string | null; start_date: string | null; end_date: string | null; description: string | null; archived: boolean; created_at: string; updated_at: string }
+export type WorkContent = { id: number; experience_group_id: number; title: string; detailed_record: string | null; technical_materials: string | null; result_data: string | null; supplementary_notes: string | null; position: number; archived: boolean; created_at: string; updated_at: string }
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
@@ -21,4 +23,15 @@ export const api = {
   logout: (token: string) => request<void>('/api/auth/logout', { method: 'POST' }, token),
   workspaces: (token: string) => request<Workspace[]>('/api/workspaces', {}, token),
   createWorkspace: (token: string, name: string) => request<Workspace>('/api/workspaces', { method: 'POST', body: JSON.stringify({ name }) }, token),
+  experienceGroups: (token: string, workspaceId: number, includeArchived = false) => request<ExperienceGroup[]>(`/api/workspaces/${workspaceId}/experience-groups?include_archived=${includeArchived}`, {}, token),
+  createExperienceGroup: (token: string, workspaceId: number, payload: Omit<ExperienceGroup, 'id' | 'workspace_id' | 'archived' | 'created_at' | 'updated_at'>) => request<ExperienceGroup>(`/api/workspaces/${workspaceId}/experience-groups`, { method: 'POST', body: JSON.stringify(payload) }, token),
+  updateExperienceGroup: (token: string, id: number, payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => request<ExperienceGroup>(`/api/experience-groups/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
+  archiveExperienceGroup: (token: string, id: number) => request<ExperienceGroup>(`/api/experience-groups/${id}/archive`, { method: 'POST' }, token),
+  restoreExperienceGroup: (token: string, id: number) => request<ExperienceGroup>(`/api/experience-groups/${id}/restore`, { method: 'POST' }, token),
+  workContents: (token: string, groupId: number, includeArchived = false) => request<WorkContent[]>(`/api/experience-groups/${groupId}/work-contents?include_archived=${includeArchived}`, {}, token),
+  createWorkContent: (token: string, groupId: number, payload: Omit<WorkContent, 'id' | 'experience_group_id' | 'position' | 'archived' | 'created_at' | 'updated_at'>) => request<WorkContent>(`/api/experience-groups/${groupId}/work-contents`, { method: 'POST', body: JSON.stringify(payload) }, token),
+  updateWorkContent: (token: string, id: number, payload: Partial<Pick<WorkContent, 'title' | 'detailed_record' | 'technical_materials' | 'result_data' | 'supplementary_notes'>>) => request<WorkContent>(`/api/work-contents/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
+  reorderWorkContents: (token: string, groupId: number, ids: number[]) => request<WorkContent[]>(`/api/experience-groups/${groupId}/work-contents/reorder`, { method: 'POST', body: JSON.stringify({ work_content_ids: ids }) }, token),
+  archiveWorkContent: (token: string, id: number) => request<WorkContent>(`/api/work-contents/${id}/archive`, { method: 'POST' }, token),
+  restoreWorkContent: (token: string, id: number) => request<WorkContent>(`/api/work-contents/${id}/restore`, { method: 'POST' }, token),
 }
