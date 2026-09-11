@@ -1,20 +1,41 @@
 import { useState } from 'react'
 import { Button, Card } from '@heroui/react'
+import type { ExperienceGroup } from '../api'
 import type { Session } from '../session'
-import { ExperienceGroupsPanel } from './ExperienceGroupsPanel'
-import { AppShell } from './AppShell'
+import { AppShell, AppShellMode } from './AppShell'
+import { ExperienceHubPanel } from './hub/ExperienceHubPanel'
+import { FocusCanvasContainer } from './canvas/FocusCanvasContainer'
 
 type Props = { session: Session; onLogout: () => void }
 type View = 'dashboard' | 'experiences' | 'plans'
 
 export function WorkbenchShell({ session, onLogout }: Props) {
   const [view, setView] = useState<View>('experiences')
+  const [mode, setMode] = useState<AppShellMode>('hub')
+  const [activeExperience, setActiveExperience] = useState<ExperienceGroup | null>(null)
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+
+  const handleSelectExperience = (group: ExperienceGroup) => {
+    setActiveExperience(group)
+    setMode('focus-canvas')
+  }
+
+  const handleExitFocus = () => {
+    setMode('hub')
+    setActiveExperience(null)
+  }
+
+  const handleNavClick = (nextView: View) => {
+    setView(nextView)
+    setMode('hub')
+    setActiveExperience(null)
+  }
 
   const navigationButtons = (
     <>
       <Button
         variant="ghost"
-        onPress={() => setView('dashboard')}
+        onPress={() => handleNavClick('dashboard')}
         className={`sidebar-nav-item ${view === 'dashboard' ? 'active' : ''}`}
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -27,7 +48,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       </Button>
       <Button
         variant="ghost"
-        onPress={() => setView('experiences')}
+        onPress={() => handleNavClick('experiences')}
         className={`sidebar-nav-item ${view === 'experiences' ? 'active' : ''}`}
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -39,7 +60,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       </Button>
       <Button
         variant="ghost"
-        onPress={() => setView('plans')}
+        onPress={() => handleNavClick('plans')}
         className={`sidebar-nav-item ${view === 'plans' ? 'active' : ''}`}
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,22 +75,46 @@ export function WorkbenchShell({ session, onLogout }: Props) {
     </>
   )
 
+  const isFocus = mode === 'focus-canvas' || mode === 'focus'
+
   return (
     <AppShell
       session={session}
       onLogout={onLogout}
       navigationButtons={navigationButtons}
+      mode={mode}
+      breadcrumb={activeExperience ? `经历内容 / ${activeExperience.name}` : '经历内容'}
+      onExitFocus={handleExitFocus}
+      saveStatus={saveStatus}
     >
-      <div className="page-heading">
-        <div>
-          <p className="eyebrow">个人职业工作台</p>
-          <h2 className="workbench-title">{session.user.email}</h2>
+      {!isFocus && (
+        <div className="page-heading">
+          <div>
+            <p className="eyebrow">个人职业工作台</p>
+            <h2 className="workbench-title">{session.user.email}</h2>
+          </div>
+          <p className="page-context">
+            {view === 'dashboard' ? '查看最近编辑的内容' : view === 'experiences' ? '管理经历分组与具体工作内容' : '组合目标岗位的简历内容'}
+          </p>
         </div>
-        <p className="page-context">
-          {view === 'dashboard' ? '查看最近编辑的内容' : view === 'experiences' ? '管理经历分组与具体工作内容' : '组合目标岗位的简历内容'}
-        </p>
-      </div>
-      {view === 'experiences' && <ExperienceGroupsPanel session={session} />}
+      )}
+
+      {view === 'experiences' && (
+        isFocus && activeExperience ? (
+          <FocusCanvasContainer
+            session={session}
+            group={activeExperience}
+            onExitFocus={handleExitFocus}
+            onSaveStatusChange={setSaveStatus}
+          />
+        ) : (
+          <ExperienceHubPanel
+            session={session}
+            onSelectExperience={handleSelectExperience}
+          />
+        )
+      )}
+
       {view === 'dashboard' && (
         <Card className="dashboard-empty">
           <Card.Header>
@@ -78,13 +123,13 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           </Card.Header>
           <Card.Content>
             <div className="dashboard-grid">
-              <button className="dashboard-entry" onClick={() => setView('experiences')}>
+              <button className="dashboard-entry" onClick={() => handleNavClick('experiences')}>
                 <span className="entry-kicker">内容资产</span>
                 <strong>经历内容</strong>
                 <p>创建实习或项目经历，记录工作贡献。</p>
                 <span className="entry-action">进入经历内容 →</span>
               </button>
-              <button className="dashboard-entry muted-entry" onClick={() => setView('plans')}>
+              <button className="dashboard-entry muted-entry" onClick={() => handleNavClick('plans')}>
                 <span className="entry-kicker">组合输出</span>
                 <strong>简历方案</strong>
                 <p>后续可按目标岗位组合简历描述。</p>
@@ -94,6 +139,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           </Card.Content>
         </Card>
       )}
+
       {view === 'plans' && (
         <Card className="dashboard-empty">
           <Card.Header>
