@@ -22,17 +22,21 @@ export function ExperienceGroupCard({
     ? `${group.start_date || '至今'} — ${group.end_date || '至今'}`
     : '未设置起止时间'
 
-  const handleCardClick = () => {
+  const handleBodyClick = () => {
     onSelect(group)
   }
 
-  const handleArchiveClick = (e: MouseEvent) => {
-    e.stopPropagation()
+  const handleArchive = (e?: MouseEvent | unknown) => {
+    if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
+      (e as MouseEvent).stopPropagation()
+    }
     onArchive(group)
   }
 
-  const handleRestoreClick = (e: MouseEvent) => {
-    e.stopPropagation()
+  const handleRestore = (e?: MouseEvent | unknown) => {
+    if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
+      (e as MouseEvent).stopPropagation()
+    }
     onRestore(group)
   }
 
@@ -40,42 +44,56 @@ export function ExperienceGroupCard({
     <Card
       role="article"
       className={`experience-group-card ${isArchived ? 'experience-group-card--archived' : ''}`}
-      onClick={handleCardClick}
     >
-      <Card.Header className="group-card-header">
-        <div className="group-card-title-group">
-          <div className="group-card-top-row">
-            <h3 className="group-card-name">{group.name}</h3>
-            <div className="group-card-badges">
-              <span className={`group-type-badge type-${group.type}`}>
-                {group.type === 'internship' ? '实习经历' : '项目经历'}
-              </span>
-              {isArchived && (
-                <span className="group-archived-badge">已归档</span>
-              )}
+      <div
+        className="group-card-clickable-area"
+        onClick={handleBodyClick}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            handleBodyClick()
+          }
+        }}
+      >
+        <Card.Header className="group-card-header">
+          <div className="group-card-title-group">
+            <div className="group-card-top-row">
+              <h3 className="group-card-name">{group.name}</h3>
+              <div className="group-card-badges">
+                <span className={`group-type-badge type-${group.type}`}>
+                  {group.type === 'internship' ? '实习经历' : '项目经历'}
+                </span>
+                {isArchived && (
+                  <span className="group-archived-badge">已归档</span>
+                )}
+              </div>
             </div>
+            <p className="group-card-org">{group.organization || '未填写归属'}</p>
           </div>
-          <p className="group-card-org">{group.organization || '未填写归属'}</p>
-        </div>
-      </Card.Header>
+        </Card.Header>
 
-      <Card.Content className="group-card-content">
-        <div className="group-card-date">
-          <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-            <line x1="16" x2="16" y1="2" y2="6" />
-            <line x1="8" x2="8" y1="2" y2="6" />
-            <line x1="3" x2="21" y1="10" y2="10" />
-          </svg>
-          <span>{dateText}</span>
-        </div>
+        <Card.Content className="group-card-content">
+          <div className="group-card-date">
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+              <line x1="16" x2="16" y1="2" y2="6" />
+              <line x1="8" x2="8" y1="2" y2="6" />
+              <line x1="3" x2="21" y1="10" y2="10" />
+            </svg>
+            <span>{dateText}</span>
+          </div>
 
-        <p className="group-card-description">
-          {group.description || '还没有整体说明。'}
-        </p>
-      </Card.Content>
+          <p className="group-card-description">
+            {group.description || '还没有整体说明。'}
+          </p>
+        </Card.Content>
+      </div>
 
-      <Card.Footer className="group-card-footer">
+      <Card.Footer
+        className="group-card-footer"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="group-card-count">
           <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -92,9 +110,10 @@ export function ExperienceGroupCard({
             <Button
               size="sm"
               variant="outline"
-              className="group-action-btn"
+              className="group-action-btn btn-restore"
               aria-label="恢复经历分组"
-              onClick={handleRestoreClick}
+              onPress={handleRestore}
+              onClick={handleRestore}
             >
               恢复经历分组
             </Button>
@@ -102,9 +121,10 @@ export function ExperienceGroupCard({
             <Button
               size="sm"
               variant="ghost"
-              className="group-action-btn"
+              className="group-action-btn btn-archive"
               aria-label="归档经历分组"
-              onClick={handleArchiveClick}
+              onPress={handleArchive}
+              onClick={handleArchive}
             >
               归档经历分组
             </Button>

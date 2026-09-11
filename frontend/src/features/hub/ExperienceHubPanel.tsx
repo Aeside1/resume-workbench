@@ -75,7 +75,6 @@ export function ExperienceHubPanel({
       setGroups((current) => [created, ...current])
       setCounts((prev) => ({ ...prev, [created.id]: 0 }))
       setIsCreateOpen(false)
-      // 成功创建经历分组后，自动调度进入该新经历的沉浸长画布
       onSelectExperience(created)
     } catch (e) {
       setError((e as Error).message)
@@ -88,7 +87,7 @@ export function ExperienceHubPanel({
       const updated = await api.archiveExperienceGroup(session.token, group.id)
       setGroups((items) => items.map((g) => (g.id === updated.id ? updated : g)))
       setShowArchived(true)
-      setNotice('经历分组已归档，已开启显示已归档内容，可在列表中恢复。')
+      setNotice('经历分组已归档，已显示已归档内容，可在列表中恢复。')
     } catch (e) {
       setError((e as Error).message)
     }
@@ -113,7 +112,7 @@ export function ExperienceHubPanel({
             <span className="hub-badge-count">{groups.length} 个经历分组</span>
           </div>
           <p className="hub-subtitle">
-            整理过往实习经历与项目经历，沉淀可复用的具体工作记录与简历素材。
+            整理过往实习经历与项目经历，沉淀可复用的具体工作内容与简历素材。
           </p>
         </div>
 
@@ -131,7 +130,7 @@ export function ExperienceHubPanel({
           <Button
             variant="primary"
             className="btn-create-experience"
-            onClick={() => setIsCreateOpen(true)}
+            onPress={() => setIsCreateOpen(true)}
           >
             + 新建经历分组
           </Button>

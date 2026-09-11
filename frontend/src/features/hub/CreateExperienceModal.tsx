@@ -88,7 +88,7 @@ export function CreateExperienceModal({
                 type="button"
                 className="modal-close-btn"
                 aria-label="关闭弹窗"
-                onClick={handleClose}
+                onPress={handleClose}
               >
                 ✕
               </Button>
@@ -117,10 +117,25 @@ export function CreateExperienceModal({
                   onSelectionChange={(key) =>
                     setDraft({ ...draft, type: String(key) as CreateExperienceDraft['type'] })
                   }
+                  className="modal-select-type"
                 >
-                  <Select.Trigger>
+                  <Select.Trigger className="select-trigger-box">
                     <Select.Value />
-                    <Select.Indicator />
+                    <Select.Indicator>
+                      <svg
+                        aria-hidden="true"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="6 9 12 15 18 9" />
+                      </svg>
+                    </Select.Indicator>
                   </Select.Trigger>
                   <Select.Popover className="experience-type-popover">
                     <ListBox>
@@ -182,7 +197,8 @@ export function CreateExperienceModal({
               <Button
                 type="button"
                 variant="ghost"
-                onClick={handleClose}
+                className="modal-btn-cancel"
+                onPress={handleClose}
                 isDisabled={submitting}
               >
                 取消
@@ -190,6 +206,7 @@ export function CreateExperienceModal({
               <Button
                 type="submit"
                 variant="primary"
+                className="modal-btn-submit"
                 isDisabled={submitting || !draft.name.trim()}
               >
                 {submitting ? '创建中...' : '创建经历分组'}

@@ -87,18 +87,6 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       onExitFocus={handleExitFocus}
       saveStatus={saveStatus}
     >
-      {!isFocus && (
-        <div className="page-heading">
-          <div>
-            <p className="eyebrow">个人职业工作台</p>
-            <h2 className="workbench-title">{session.user.email}</h2>
-          </div>
-          <p className="page-context">
-            {view === 'dashboard' ? '查看最近编辑的内容' : view === 'experiences' ? '管理经历分组与具体工作内容' : '组合目标岗位的简历内容'}
-          </p>
-        </div>
-      )}
-
       {view === 'experiences' && (
         isFocus && activeExperience ? (
           <FocusCanvasContainer
@@ -116,28 +104,37 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       )}
 
       {view === 'dashboard' && (
-        <Card className="dashboard-empty">
-          <Card.Header>
-            <Card.Title>继续整理你的职业经历</Card.Title>
-            <Card.Description>从经历内容开始，沉淀可复用的具体工作内容。</Card.Description>
-          </Card.Header>
-          <Card.Content>
-            <div className="dashboard-grid">
-              <button className="dashboard-entry" onClick={() => handleNavClick('experiences')}>
-                <span className="entry-kicker">内容资产</span>
-                <strong>经历内容</strong>
-                <p>创建实习或项目经历，记录工作贡献。</p>
-                <span className="entry-action">进入经历内容 →</span>
-              </button>
-              <button className="dashboard-entry muted-entry" onClick={() => handleNavClick('plans')}>
-                <span className="entry-kicker">组合输出</span>
-                <strong>简历方案</strong>
-                <p>后续可按目标岗位组合简历描述。</p>
-                <span className="entry-action">即将开始</span>
-              </button>
+        <>
+          <div className="page-heading">
+            <div>
+              <p className="eyebrow">个人职业工作台</p>
+              <h2 className="workbench-title">{session.user.email}</h2>
             </div>
-          </Card.Content>
-        </Card>
+            <p className="page-context">查看最近编辑的内容</p>
+          </div>
+          <Card className="dashboard-empty">
+            <Card.Header>
+              <Card.Title>继续整理你的职业经历</Card.Title>
+              <Card.Description>从经历内容开始，沉淀可复用的具体工作内容。</Card.Description>
+            </Card.Header>
+            <Card.Content>
+              <div className="dashboard-grid">
+                <button className="dashboard-entry" onClick={() => handleNavClick('experiences')}>
+                  <span className="entry-kicker">内容资产</span>
+                  <strong>经历内容</strong>
+                  <p>创建实习或项目经历，记录工作贡献。</p>
+                  <span className="entry-action">进入经历内容 →</span>
+                </button>
+                <button className="dashboard-entry muted-entry" onClick={() => handleNavClick('plans')}>
+                  <span className="entry-kicker">组合输出</span>
+                  <strong>简历方案</strong>
+                  <p>后续可按目标岗位组合简历描述。</p>
+                  <span className="entry-action">即将开始</span>
+                </button>
+              </div>
+            </Card.Content>
+          </Card>
+        </>
       )}
 
       {view === 'plans' && (

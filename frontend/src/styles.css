@@ -370,21 +370,214 @@ button { cursor: pointer; }
   flex-shrink: 0;
 }
 
+/* ==========================================================================
+   Global Button Components (HeroUI / React Aria)
+   ========================================================================== */
+button[data-slot="button"],
+.button {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  font-family: inherit !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  border-radius: 8px !important;
+  padding: 8px 16px !important;
+  border: 1px solid transparent !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  user-select: none !important;
+  white-space: nowrap !important;
+  text-decoration: none !important;
+  box-sizing: border-box !important;
+}
+
+button[data-slot="button"]:disabled,
+button[data-slot="button"][data-disabled="true"],
+.button[data-disabled="true"] {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Primary Variant */
+button[data-slot="button"][data-variant="primary"],
+button[data-slot="button"].button--primary,
+.button.button--primary,
+.btn-create-experience,
+.modal-btn-submit {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3) !important;
+}
+button[data-slot="button"][data-variant="primary"]:hover:not(:disabled),
+button[data-slot="button"].button--primary:hover:not(:disabled),
+.btn-create-experience:hover:not(:disabled),
+.modal-btn-submit:hover:not(:disabled) {
+  background: #0369a1 !important;
+  border-color: #0369a1 !important;
+  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4) !important;
+}
+
+/* Ghost Variant */
+button[data-slot="button"][data-variant="ghost"],
+button[data-slot="button"].button--ghost,
+.button.button--ghost,
+.modal-btn-cancel {
+  background: transparent !important;
+  color: #475569 !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+button[data-slot="button"][data-variant="ghost"]:hover:not(:disabled),
+button[data-slot="button"].button--ghost:hover:not(:disabled),
+.modal-btn-cancel:hover:not(:disabled) {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Outline Variant */
+button[data-slot="button"][data-variant="outline"],
+button[data-slot="button"].button--outline,
+.button.button--outline,
+.btn-restore {
+  background: #ffffff !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
+}
+button[data-slot="button"][data-variant="outline"]:hover:not(:disabled),
+button[data-slot="button"].button--outline:hover:not(:disabled),
+.btn-restore:hover:not(:disabled) {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+/* Secondary Variant */
+button[data-slot="button"][data-variant="secondary"],
+button[data-slot="button"].button--secondary,
+.button.button--secondary {
+  background: #f1f5f9 !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
+}
+button[data-slot="button"][data-variant="secondary"]:hover:not(:disabled),
+button[data-slot="button"].button--secondary:hover:not(:disabled) {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Size sm */
+button[data-slot="button"].button--sm,
+.button.button--sm {
+  height: 30px !important;
+  padding: 4px 10px !important;
+  font-size: 13px !important;
+}
+
+/* ==========================================================================
+   Global Select Component (HeroUI / React Aria)
+   ========================================================================== */
+[data-slot="select-trigger"],
+.select-trigger,
+.select-trigger-box {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 9px 12px !important;
+  border: 1px solid #c7d2e1 !important;
+  border-radius: 10px !important;
+  color: #172033 !important;
+  background: #ffffff !important;
+  font-size: 14px !important;
+  text-align: left !important;
+  box-shadow: inset 0 1px 2px rgba(31, 55, 86, 0.04) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-slot="select-trigger"]:hover,
+.select-trigger-box:hover {
+  border-color: #94a3b8 !important;
+}
+
+[data-slot="select-trigger"]:focus-visible,
+[data-slot="select-trigger"][data-focused="true"],
+.select-trigger-box:focus-visible {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.16) !important;
+}
+
+[data-slot="select-value"] {
+  flex: 1 !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: inherit !important;
+}
+
+[data-slot="select-indicator"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #64748b !important;
+  flex-shrink: 0 !important;
+}
+
+.experience-type-popover {
+  z-index: 9999 !important;
+  min-width: 220px !important;
+  padding: 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16) !important;
+}
+
+.experience-type-popover [data-slot="listbox-item"] {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+  transition: all 0.1s ease !important;
+}
+
+.experience-type-popover [data-slot="listbox-item"]:hover,
+.experience-type-popover [data-slot="listbox-item"][data-focused="true"],
+.experience-type-popover [data-slot="listbox-item"][data-selected="true"] {
+  background: #e0f2fe !important;
+  color: #0284c7 !important;
+}
+
+/* Card layout & Clickable area */
+.group-card-clickable-area {
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 .btn-create-experience {
   font-weight: 600 !important;
   border-radius: 8px !important;
   padding: 0 18px !important;
   height: 38px !important;
   font-size: 14px !important;
-  background: #0284c7 !important;
-  color: #ffffff !important;
-  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.3) !important;
-  transition: all 0.15s ease !important;
-}
-
-.btn-create-experience:hover {
-  background: #0369a1 !important;
-  box-shadow: 0 4px 10px rgba(2, 132, 199, 0.4) !important;
 }
 
 /* Experience Card Grid & Flow */

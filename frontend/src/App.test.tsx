@@ -14,7 +14,8 @@ describe('认证后的工作台', () => {
   it('登录后直接进入个人职业工作台', async () => {
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'a@example.com' } })
     render(<App />); fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'a@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'a@example.com' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('a@example.com')).toBeInTheDocument())
+    expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: '当前工作区' })).not.toBeInTheDocument()
   })
 
@@ -28,7 +29,7 @@ describe('认证后的工作台', () => {
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '注册' }))
 
-    await waitFor(() => expect(screen.getByRole('heading', { name: 'new@example.com' })).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('new@example.com')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: '退出登录' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: '登录工作台' })).toBeInTheDocument())
   })
@@ -44,9 +45,11 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument())
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
     fireEvent.click(within(sidebar).getByRole('button', { name: '工作台概览' }))
+    expect(screen.getByRole('heading', { name: 'navigation@example.com' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '继续整理你的职业经历' })).toBeInTheDocument()
     fireEvent.click(within(sidebar).getByRole('button', { name: '简历方案' }))
     expect(screen.getByRole('heading', { name: '简历方案' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'navigation@example.com' })).not.toBeInTheDocument()
     fireEvent.click(within(sidebar).getByRole('button', { name: '经历内容' }))
     expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument()
   })
