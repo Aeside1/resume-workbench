@@ -14,7 +14,12 @@ describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）',
     detailed_record: '旧渲染器全量 re-render 导致大页面卡顿，帧率掉至 20fps。',
     technical_materials: '采用 React 18 并发机制与自定义虚拟滚动容器。',
     result_data: '平均渲染耗时降低 75%，内存占用减少 40%，FPS 稳定在 58+。',
-    supplementary_notes: '产出专利 1 篇并在中台技术沙龙进行架构分享。',
+    supplementary_notes: JSON.stringify({
+      note: '产出专利 1 篇并在中台技术沙龙进行架构分享。',
+      descriptions: [
+        { id: 'desc-1', tag: '技术深度版', bullets: ['深入剖析虚拟滚动与渲染性能'] }
+      ]
+    }),
     position: 0,
     archived: false,
     created_at: '2024-03-01T00:00:00Z',
@@ -177,5 +182,42 @@ describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）',
     const cancelBtn = screen.getByRole('button', { name: '取消' })
     fireEvent.click(cancelBtn)
     expect(handleCancel).toHaveBeenCalledTimes(1)
+  })
+
+  it('当没有简历描述时展示空提示，新增描述后触发 onSave 将 JSON 序列化数据持久化', () => {
+    const handleSave = vi.fn()
+    const emptyItem = { ...mockWorkItem, supplementary_notes: null }
+
+    render(
+      <WorkContentBlock
+        item={emptyItem}
+        index={0}
+        totalCount={1}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={handleSave}
+        onMove={vi.fn()}
+        onArchive={vi.fn()}
+      />
+    )
+
+    expect(screen.getByText('暂无针对不同岗位的简历描述写法')).toBeInTheDocument()
+
+    // 点击“+ 立即新增版本写法”
+    fireEvent.click(screen.getByRole('button', { name: '+ 立即新增版本写法' }))
+    const tagInput = screen.getByLabelText('版本标签')
+    fireEvent.change(tagInput, { target: { value: '业务导向版' } })
+    const bulletsInput = screen.getByPlaceholderText('输入该版本的 bullet points，每行一条...')
+    fireEvent.change(bulletsInput, { target: { value: '业务指标翻倍提升\n支持千万级调用' } })
+
+    fireEvent.click(screen.getByRole('button', { name: '保存新写法' }))
+
+    expect(handleSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: emptyItem.title,
+        supplementary_notes: expect.stringContaining('业务导向版')
+      })
+    )
   })
 })

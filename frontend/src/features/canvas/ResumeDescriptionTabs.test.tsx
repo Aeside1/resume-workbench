@@ -5,7 +5,7 @@ import { ResumeDescriptionTabs, type ResumeDescriptionItem } from './ResumeDescr
 
 afterEach(cleanup)
 
-describe('ResumeDescriptionTabs 多版本简历描述横向 Tab 栏', () => {
+describe('ResumeDescriptionTabs 多版本简历描述与完整 CRUD', () => {
   const mockDescriptions: ResumeDescriptionItem[] = [
     {
       id: 'desc-1',
@@ -25,7 +25,19 @@ describe('ResumeDescriptionTabs 多版本简历描述横向 Tab 栏', () => {
     }
   ]
 
-  it('正确渲染所有版本 Tab 选项卡并默认激活第一个版本的内容', () => {
+  it('默认无传入版本时彻底移除假数据，展示空态引导并支持立即新增', () => {
+    render(<ResumeDescriptionTabs workContentId={101} />)
+
+    // 不再默认含有硬编码假数据
+    expect(screen.queryByRole('tab', { name: '技术深度版' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: '业务结果版' })).not.toBeInTheDocument()
+
+    // 展示空态
+    expect(screen.getByText(/暂无针对不同岗位的简历描述写法/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '+ 立即新增版本写法' })).toBeInTheDocument()
+  })
+
+  it('正确渲染所有传入版本 Tab 并默认激活第一个版本', () => {
     render(<ResumeDescriptionTabs workContentId={101} descriptions={mockDescriptions} />)
 
     expect(screen.getByRole('tab', { name: '技术深度版' })).toBeInTheDocument()
@@ -46,7 +58,7 @@ describe('ResumeDescriptionTabs 多版本简历描述横向 Tab 栏', () => {
     expect(screen.queryByText(/主导底层渲染引擎重构/)).not.toBeInTheDocument()
   })
 
-  it('支持点击“+ 新增写法”按钮就地展开添加表单并保存新版本', () => {
+  it('支持点击“+ 新增写法”按钮展开添加表单并保存新版本 (Create)', () => {
     const handleChange = vi.fn()
     render(
       <ResumeDescriptionTabs
@@ -60,10 +72,10 @@ describe('ResumeDescriptionTabs 多版本简历描述横向 Tab 栏', () => {
     fireEvent.click(addBtn)
 
     expect(screen.getByLabelText('版本标签')).toBeInTheDocument()
-    expect(screen.getByLabelText('简历描述要点 (每行一条)')).toBeInTheDocument()
+    expect(screen.getByLabelText(/简历描述要点/)).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('版本标签'), { target: { value: '管理与协同版' } })
-    fireEvent.change(screen.getByLabelText('简历描述要点 (每行一条)'), {
+    fireEvent.change(screen.getByPlaceholderText('输入该版本的 bullet points，每行一条...'), {
       target: { value: '协同跨部门 5 人团队完成交付\n推进敏捷迭代流程' }
     })
 
@@ -76,20 +88,62 @@ describe('ResumeDescriptionTabs 多版本简历描述横向 Tab 栏', () => {
     expect(handleChange).toHaveBeenCalledTimes(1)
   })
 
-  it('点击取消新增收起表单且不改变已有版本', () => {
+  it('支持编辑当前选中的版本写法并更新 (Update)', () => {
+    const handleChange = vi.fn()
+    render(
+      <ResumeDescriptionTabs
+        workContentId={101}
+        descriptions={mockDescriptions}
+        onChange={handleChange}
+      />
+    )
+
+    const editBtn = screen.getByRole('button', { name: '编辑写法' })
+    fireEvent.click(editBtn)
+
+    expect(screen.getByDisplayValue('技术深度版')).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('版本标签'), { target: { value: '架构演进深度版' } })
+
+    const saveBtn = screen.getByRole('button', { name: '保存修改' })
+    fireEvent.click(saveBtn)
+
+    expect(screen.getByRole('tab', { name: '架构演进深度版' })).toBeInTheDocument()
+    expect(handleChange).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ tag: '架构演进深度版' })
+      ])
+    )
+  })
+
+  it('支持删除当前版本写法并触发确认与回调 (Delete)', () => {
+    const handleChange = vi.fn()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(
+      <ResumeDescriptionTabs
+        workContentId={101}
+        descriptions={mockDescriptions}
+        onChange={handleChange}
+      />
+    )
+
+    const deleteBtn = screen.getByRole('button', { name: '删除' })
+    fireEvent.click(deleteBtn)
+
+    expect(window.confirm).toHaveBeenCalledWith(expect.stringContaining('技术深度版'))
+    expect(handleChange).toHaveBeenCalledTimes(1)
+    expect(screen.queryByRole('tab', { name: '技术深度版' })).not.toBeInTheDocument()
+    // 自动切换至剩余版本
+    expect(screen.getByRole('tab', { name: '业务量化版' })).toBeInTheDocument()
+  })
+
+  it('点击取消收起表单且不改变已有版本', () => {
     render(<ResumeDescriptionTabs workContentId={101} descriptions={mockDescriptions} />)
 
     fireEvent.click(screen.getByRole('button', { name: '+ 新增写法' }))
     expect(screen.getByLabelText('版本标签')).toBeInTheDocument()
 
-    fireEvent.click(screen.getByRole('button', { name: '取消新增' }))
+    fireEvent.click(screen.getByRole('button', { name: '取消' }))
     expect(screen.queryByLabelText('版本标签')).not.toBeInTheDocument()
-  })
-
-  it('界面整洁不展示多余的 demo 注释徽章，不出现无意义的复制到剪贴板按钮', () => {
-    render(<ResumeDescriptionTabs workContentId={101} descriptions={mockDescriptions} />)
-
-    expect(screen.queryByText(/简历内容资产/)).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /复制/ })).not.toBeInTheDocument()
   })
 })

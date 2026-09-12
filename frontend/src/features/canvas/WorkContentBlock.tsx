@@ -1,7 +1,8 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { FormEvent, useEffect, useState, useMemo } from 'react'
 import { Button } from '@heroui/react'
 import type { WorkContent } from '../../api'
-import { ResumeDescriptionTabs } from './ResumeDescriptionTabs'
+import { MilkdownView } from '../../components/ui/MilkdownView'
+import { ResumeDescriptionTabs, type ResumeDescriptionItem } from './ResumeDescriptionTabs'
 import { WorkContentFormFields } from './WorkContentFormFields'
 
 export type ContentDraft = {
@@ -24,6 +25,47 @@ export type WorkContentBlockProps = {
   onArchive: () => void
 }
 
+export function parseSupplementaryNotes(raw: string | null | undefined): {
+  note: string
+  descriptions: ResumeDescriptionItem[]
+} {
+  if (!raw || !raw.trim()) {
+    return { note: '', descriptions: [] }
+  }
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) {
+      return { note: '', descriptions: parsed }
+    }
+    if (parsed && typeof parsed === 'object') {
+      return {
+        note: typeof parsed.note === 'string' ? parsed.note : '',
+        descriptions: Array.isArray(parsed.descriptions) ? parsed.descriptions : []
+      }
+    }
+  } catch {
+    return { note: raw, descriptions: [] }
+  }
+  return { note: '', descriptions: [] }
+}
+
+export function serializeSupplementaryNotes(
+  note: string,
+  descriptions: ResumeDescriptionItem[]
+): string {
+  const trimmedNote = note.trim()
+  if (!trimmedNote && descriptions.length === 0) {
+    return ''
+  }
+  if (descriptions.length === 0) {
+    return trimmedNote
+  }
+  return JSON.stringify({
+    note: trimmedNote,
+    descriptions
+  })
+}
+
 export function WorkContentBlock({
   item,
   index,
@@ -35,28 +77,41 @@ export function WorkContentBlock({
   onMove,
   onArchive
 }: WorkContentBlockProps) {
+  const parsedData = useMemo(
+    () => parseSupplementaryNotes(item.supplementary_notes),
+    [item.supplementary_notes]
+  )
+
   const [draft, setDraft] = useState<ContentDraft>({
     title: item.title,
     detailed_record: item.detailed_record ?? '',
     technical_materials: item.technical_materials ?? '',
     result_data: item.result_data ?? '',
-    supplementary_notes: item.supplementary_notes ?? ''
+    supplementary_notes: parsedData.note
   })
 
   useEffect(() => {
+    const parsed = parseSupplementaryNotes(item.supplementary_notes)
     setDraft({
       title: item.title,
       detailed_record: item.detailed_record ?? '',
       technical_materials: item.technical_materials ?? '',
       result_data: item.result_data ?? '',
-      supplementary_notes: item.supplementary_notes ?? ''
+      supplementary_notes: parsed.note
     })
   }, [item])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!draft.title.trim()) return
-    onSave(draft)
+    const serializedNotes = serializeSupplementaryNotes(
+      draft.supplementary_notes,
+      parsedData.descriptions
+    )
+    onSave({
+      ...draft,
+      supplementary_notes: serializedNotes
+    })
   }
 
   const handleCancel = () => {
@@ -65,9 +120,20 @@ export function WorkContentBlock({
       detailed_record: item.detailed_record ?? '',
       technical_materials: item.technical_materials ?? '',
       result_data: item.result_data ?? '',
-      supplementary_notes: item.supplementary_notes ?? ''
+      supplementary_notes: parsedData.note
     })
     onCancelEdit()
+  }
+
+  const handleDescriptionsChange = (newDescriptions: ResumeDescriptionItem[]) => {
+    const serializedNotes = serializeSupplementaryNotes(parsedData.note, newDescriptions)
+    onSave({
+      title: item.title,
+      detailed_record: item.detailed_record ?? '',
+      technical_materials: item.technical_materials ?? '',
+      result_data: item.result_data ?? '',
+      supplementary_notes: serializedNotes
+    })
   }
 
   return (
@@ -159,29 +225,46 @@ export function WorkContentBlock({
           <div className="work-content-typography-body">
             <div className="typography-section">
               <h4 className="typography-label">背景与难点</h4>
-              <p className="typography-text">{item.detailed_record || '暂无背景与难点记录'}</p>
+              <MilkdownView
+                content={item.detailed_record}
+                placeholder="暂无背景与难点记录"
+              />
             </div>
 
             <div className="typography-section">
               <h4 className="typography-label">技术方案与材料</h4>
-              <p className="typography-text">{item.technical_materials || '暂无技术方案记录'}</p>
+              <MilkdownView
+                content={item.technical_materials}
+                placeholder="暂无技术方案记录"
+              />
             </div>
 
             <div className="typography-section">
               <h4 className="typography-label">量化结果数据</h4>
-              <p className="typography-text highlight-result">{item.result_data || '暂无量化结果数据'}</p>
+              <MilkdownView
+                content={item.result_data}
+                className="highlight-result"
+                placeholder="暂无量化结果数据"
+              />
             </div>
 
-            {item.supplementary_notes && (
+            {parsedData.note && (
               <div className="typography-section">
                 <h4 className="typography-label">补充说明</h4>
-                <p className="typography-text muted">{item.supplementary_notes}</p>
+                <MilkdownView
+                  content={parsedData.note}
+                  className="muted"
+                />
               </div>
             )}
           </div>
 
           <footer className="work-content-card-footer">
-            <ResumeDescriptionTabs workContentId={item.id} />
+            <ResumeDescriptionTabs
+              workContentId={item.id}
+              descriptions={parsedData.descriptions}
+              onChange={handleDescriptionsChange}
+            />
           </footer>
         </div>
       )}

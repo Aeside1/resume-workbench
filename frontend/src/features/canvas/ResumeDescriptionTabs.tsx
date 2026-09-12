@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { Button, Input, TextArea } from '@heroui/react'
+import { useState, useEffect } from 'react'
+import { Button, Input } from '@heroui/react'
+import { MilkdownView, MilkdownEditor } from '../../components/ui/MilkdownView'
 
 export type ResumeDescriptionItem = {
   id: string
@@ -13,61 +14,105 @@ export type ResumeDescriptionTabsProps = {
   onChange?: (descriptions: ResumeDescriptionItem[]) => void
 }
 
-const defaultInitialVersions = (id: number): ResumeDescriptionItem[] => [
-  {
-    id: `desc-${id}-tech`,
-    tag: '技术深度版',
-    bullets: ['主导核心模块架构设计与性能优化，解决高并发与复杂状态同步难题。']
-  },
-  {
-    id: `desc-${id}-biz`,
-    tag: '业务结果版',
-    bullets: ['推动核心业务流程敏捷交付，提升端到端执行效率与用户满意度。']
-  }
-]
+const EMPTY_DESCRIPTIONS: ResumeDescriptionItem[] = []
 
 export function ResumeDescriptionTabs({
   workContentId,
-  descriptions: externalDescriptions,
+  descriptions: externalDescriptions = EMPTY_DESCRIPTIONS,
   onChange
 }: ResumeDescriptionTabsProps) {
-  const [descriptions, setDescriptions] = useState<ResumeDescriptionItem[]>(() =>
-    externalDescriptions && externalDescriptions.length > 0
-      ? externalDescriptions
-      : defaultInitialVersions(workContentId)
-  )
+  const [descriptions, setDescriptions] = useState<ResumeDescriptionItem[]>(externalDescriptions)
+  const [activeId, setActiveId] = useState<string>(() => descriptions[0]?.id ?? '')
 
-  const [activeId, setActiveId] = useState<string>(() =>
-    descriptions[0]?.id ?? ''
-  )
+  // 同步外部传入的 descriptions 变更
+  useEffect(() => {
+    setDescriptions(externalDescriptions)
+    setActiveId((prev) => {
+      if (externalDescriptions.some((d) => d.id === prev)) {
+        return prev
+      }
+      return externalDescriptions[0]?.id ?? ''
+    })
+  }, [externalDescriptions])
+
+  // 新增与编辑状态
   const [isAdding, setIsAdding] = useState(false)
-  const [newTag, setNewTag] = useState('')
-  const [newBulletsText, setNewBulletsText] = useState('')
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [draftTag, setDraftTag] = useState('')
+  const [draftBulletsText, setDraftBulletsText] = useState('')
 
   const activeItem = descriptions.find((item) => item.id === activeId) ?? descriptions[0]
 
-  const handleSaveNew = () => {
-    if (!newTag.trim()) return
+  const handleStartAdd = () => {
+    setEditingId(null)
+    setDraftTag('')
+    setDraftBulletsText('')
+    setIsAdding(true)
+  }
 
-    const bullets = newBulletsText
+  const handleStartEdit = (item: ResumeDescriptionItem) => {
+    setIsAdding(false)
+    setEditingId(item.id)
+    setDraftTag(item.tag)
+    setDraftBulletsText(item.bullets.join('\n'))
+  }
+
+  const handleCancelForm = () => {
+    setIsAdding(false)
+    setEditingId(null)
+    setDraftTag('')
+    setDraftBulletsText('')
+  }
+
+  const handleSave = () => {
+    if (!draftTag.trim()) return
+
+    const bullets = draftBulletsText
       .split('\n')
       .map((b) => b.trim())
       .filter(Boolean)
 
-    const newItem: ResumeDescriptionItem = {
-      id: `desc-${workContentId}-${Date.now()}`,
-      tag: newTag.trim(),
-      bullets: bullets.length > 0 ? bullets : ['暂无描述要点']
+    if (isAdding) {
+      const newItem: ResumeDescriptionItem = {
+        id: `desc-${workContentId}-${Date.now()}`,
+        tag: draftTag.trim(),
+        bullets: bullets.length > 0 ? bullets : ['暂无描述要点']
+      }
+      const updated = [...descriptions, newItem]
+      setDescriptions(updated)
+      setActiveId(newItem.id)
+      handleCancelForm()
+      onChange?.(updated)
+    } else if (editingId) {
+      const updated = descriptions.map((item) =>
+        item.id === editingId
+          ? {
+              ...item,
+              tag: draftTag.trim(),
+              bullets: bullets.length > 0 ? bullets : ['暂无描述要点']
+            }
+          : item
+      )
+      setDescriptions(updated)
+      handleCancelForm()
+      onChange?.(updated)
     }
+  }
 
-    const updated = [...descriptions, newItem]
+  const handleDelete = (id: string) => {
+    const target = descriptions.find((d) => d.id === id)
+    const confirmed = window.confirm(`确定要删除简历描述写法“${target?.tag || '此版本'}”吗？`)
+    if (!confirmed) return
+
+    const updated = descriptions.filter((item) => item.id !== id)
     setDescriptions(updated)
-    setActiveId(newItem.id)
-    setIsAdding(false)
-    setNewTag('')
-    setNewBulletsText('')
+    if (activeId === id) {
+      setActiveId(updated[0]?.id ?? '')
+    }
     onChange?.(updated)
   }
+
+  const isFormOpen = isAdding || editingId !== null
 
   return (
     <div className="resume-desc-container">
@@ -82,18 +127,21 @@ export function ResumeDescriptionTabs({
                 role="tab"
                 aria-selected={isSelected}
                 className={`resume-desc-tab-btn ${isSelected ? 'active' : ''}`}
-                onClick={() => setActiveId(item.id)}
+                onClick={() => {
+                  setActiveId(item.id)
+                  handleCancelForm()
+                }}
               >
                 {item.tag}
               </button>
             )
           })}
-          {!isAdding && (
+          {!isFormOpen && (
             <Button
               size="sm"
               variant="ghost"
               className="add-desc-tab-btn"
-              onPress={() => setIsAdding(true)}
+              onPress={handleStartAdd}
             >
               + 新增写法
             </Button>
@@ -101,59 +149,101 @@ export function ResumeDescriptionTabs({
         </div>
       </div>
 
-      {isAdding ? (
+      {isFormOpen ? (
         <div className="resume-desc-add-panel">
+          <div className="resume-desc-form-header">
+            <span className="desc-form-title">{isAdding ? '新增简历描述写法' : `编辑写法：${draftTag}`}</span>
+          </div>
+
           <div className="resume-desc-field">
             <label htmlFor={`tag-input-${workContentId}`}>版本标签</label>
             <Input
               id={`tag-input-${workContentId}`}
-              placeholder="例如：管理与协同版、海外业务版"
-              value={newTag}
-              onChange={(e) => setNewTag(e.target.value)}
+              placeholder="例如：技术深度版、业务结果版、管理协同版"
+              value={draftTag}
+              onChange={(e) => setDraftTag(e.target.value)}
             />
           </div>
+
           <div className="resume-desc-field">
-            <label htmlFor={`bullets-input-${workContentId}`}>简历描述要点 (每行一条)</label>
-            <TextArea
+            <label htmlFor={`bullets-input-${workContentId}`}>
+              简历描述要点 (每行一条，支持 Markdown 与 ==高亮==)
+            </label>
+            <MilkdownEditor
               id={`bullets-input-${workContentId}`}
               placeholder="输入该版本的 bullet points，每行一条..."
               rows={3}
-              value={newBulletsText}
-              onChange={(e) => setNewBulletsText(e.target.value)}
+              value={draftBulletsText}
+              onChange={setDraftBulletsText}
             />
           </div>
+
           <div className="resume-desc-add-actions">
             <Button
               size="sm"
               variant="primary"
-              onPress={handleSaveNew}
+              onPress={handleSave}
             >
-              保存新写法
+              {isAdding ? '保存新写法' : '保存修改'}
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              onPress={() => {
-                setIsAdding(false)
-                setNewTag('')
-                setNewBulletsText('')
-              }}
+              onPress={handleCancelForm}
             >
-              取消新增
+              取消
             </Button>
           </div>
         </div>
+      ) : descriptions.length === 0 ? (
+        <div className="resume-desc-empty-state">
+          <p className="resume-empty-text">暂无针对不同岗位的简历描述写法</p>
+          <Button
+            size="sm"
+            variant="secondary"
+            className="empty-add-btn"
+            onPress={handleStartAdd}
+          >
+            + 立即新增版本写法
+          </Button>
+        </div>
       ) : (
         <div className="resume-desc-content-panel" role="tabpanel">
-          {activeItem && activeItem.bullets.length > 0 ? (
-            <ul className="resume-bullets-list">
-              {activeItem.bullets.map((bullet, idx) => (
-                <li key={idx} className="resume-bullet-item">
-                  <span className="bullet-dot" aria-hidden="true">•</span>
-                  <span className="bullet-text">{bullet}</span>
-                </li>
-              ))}
-            </ul>
+          {activeItem ? (
+            <>
+              <div className="active-desc-header-actions">
+                <span className="active-desc-tag-pill">{activeItem.tag}</span>
+                <div className="desc-crud-btn-group">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="desc-action-edit-btn"
+                    onPress={() => handleStartEdit(activeItem)}
+                  >
+                    编辑写法
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="desc-action-delete-btn text-danger"
+                    onPress={() => handleDelete(activeItem.id)}
+                  >
+                    删除
+                  </Button>
+                </div>
+              </div>
+
+              <ul className="resume-bullets-list">
+                {activeItem.bullets.map((bullet, idx) => (
+                  <li key={idx} className="resume-bullet-item">
+                    <span className="bullet-dot" aria-hidden="true">•</span>
+                    <div className="bullet-markdown-content">
+                      <MilkdownView content={bullet} />
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
             <p className="resume-empty-bullets">暂无此版本简历描述</p>
           )}

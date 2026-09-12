@@ -8,7 +8,7 @@ const DEFAULT_TOAST_ID = 'workbench-toast'
 
 /**
  * 全局 Toaster 挂载提供者
- * 基于生态标准库 sonner，支持顶部居中、平滑微动效与手势滑动
+ * 极简现代风格：彻底移除 richColors 刺眼绿底与臃肿的 closeButton，采用极轻白底微卡片
  */
 export function ToastProvider({ children }: { children?: React.ReactNode }) {
   return (
@@ -16,10 +16,11 @@ export function ToastProvider({ children }: { children?: React.ReactNode }) {
       {children}
       <SonnerToaster
         position="top-center"
-        richColors
-        closeButton
         duration={import.meta.env.MODE === 'test' ? 10000 : 3500}
         theme="light"
+        toastOptions={{
+          className: 'workbench-minimal-toast',
+        }}
       />
     </HasToastContext.Provider>
   )
@@ -65,10 +66,11 @@ export function useToast() {
     ToastPortal: hasProvider ? null : (
       <SonnerToaster
         position="top-center"
-        richColors
-        closeButton
         duration={import.meta.env.MODE === 'test' ? 10000 : 3500}
         theme="light"
+        toastOptions={{
+          className: 'workbench-minimal-toast',
+        }}
       />
     ),
   }

@@ -11,6 +11,11 @@
   },
   "dependencies": {
     "@heroui/react": "^3.2.4",
+    "@milkdown/core": "^7.22.1",
+    "@milkdown/crepe": "^7.22.1",
+    "@milkdown/preset-commonmark": "^7.22.1",
+    "@milkdown/preset-gfm": "^7.22.1",
+    "@milkdown/react": "^7.22.1",
     "@vitejs/plugin-react": "4.3.4",
     "framer-motion": "^13.2.0",
     "react": "19.0.0",
