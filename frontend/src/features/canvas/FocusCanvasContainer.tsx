@@ -1,21 +1,15 @@
-import { FormEvent, useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api, ExperienceGroup, WorkContent } from '../../api'
 import type { Session } from '../../session'
-import { ContentDraft, WorkContentEditor } from '../WorkContentEditor'
+import { FocusCanvasDocument } from './FocusCanvasDocument'
+import { OutlineNavigator } from './OutlineNavigator'
+import type { ContentDraft } from './WorkContentBlock'
 
 export type FocusCanvasContainerProps = {
   session: Session
   group: ExperienceGroup
   onExitFocus: () => void
   onSaveStatusChange?: (status: 'idle' | 'saving' | 'saved') => void
-}
-
-const emptyContent: ContentDraft = {
-  title: '',
-  detailed_record: '',
-  technical_materials: '',
-  result_data: '',
-  supplementary_notes: ''
 }
 
 export function FocusCanvasContainer({
@@ -25,11 +19,14 @@ export function FocusCanvasContainer({
   onSaveStatusChange
 }: FocusCanvasContainerProps) {
   const [contents, setContents] = useState<WorkContent[]>([])
-  const [contentDraft, setContentDraft] = useState<ContentDraft>(emptyContent)
   const [editingContentId, setEditingContentId] = useState<number | null>(null)
+  const [isCreatingNew, setIsCreatingNew] = useState(false)
+  const [activeNavId, setActiveNavId] = useState<string>('section-overview')
   const [showArchived, setShowArchived] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     api.workContents(session.token, group.id, showArchived)
@@ -37,43 +34,82 @@ export function FocusCanvasContainer({
       .catch((e) => setError((e as Error).message))
   }, [session.token, group.id, showArchived])
 
-  const startEditContent = (item: WorkContent) => {
-    setEditingContentId(item.id)
-    setContentDraft({
-      title: item.title,
-      detailed_record: item.detailed_record ?? '',
-      technical_materials: item.technical_materials ?? '',
-      result_data: item.result_data ?? '',
-      supplementary_notes: item.supplementary_notes ?? ''
+  // IntersectionObserver 滚动高亮大纲
+  useEffect(() => {
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visibleEntries = entries.filter((e) => e.isIntersecting)
+        if (visibleEntries.length > 0) {
+          // 选择视窗中最早或最大的元素
+          const topEntry = visibleEntries[0]
+          if (topEntry.target.id) {
+            setActiveNavId(topEntry.target.id)
+          }
+        }
+      },
+      {
+        rootMargin: '-10% 0px -70% 0px',
+        threshold: 0.1
+      }
+    )
+
+    const overviewEl = document.getElementById('section-overview')
+    if (overviewEl) observer.observe(overviewEl)
+
+    contents.forEach((item) => {
+      const el = document.getElementById(`work-content-${item.id}`)
+      if (el) observer.observe(el)
     })
+
+    return () => observer.disconnect()
+  }, [contents])
+
+  const handleNavigate = (targetId: string) => {
+    setActiveNavId(targetId)
+    const element = document.getElementById(targetId)
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
   }
 
-  const saveContent = async (event: FormEvent) => {
-    event.preventDefault()
-    if (!contentDraft.title.trim()) return
+  const handleStartEdit = (item: WorkContent) => {
+    setIsCreatingNew(false)
+    setEditingContentId(item.id)
+  }
+
+  const handleCancelEdit = () => {
+    setEditingContentId(null)
+  }
+
+  const handleSaveContent = async (draft: ContentDraft, targetId: number | null) => {
+    if (!draft.title.trim()) return
 
     onSaveStatusChange?.('saving')
     const payload = {
-      ...contentDraft,
-      title: contentDraft.title.trim(),
-      detailed_record: contentDraft.detailed_record || null,
-      technical_materials: contentDraft.technical_materials || null,
-      result_data: contentDraft.result_data || null,
-      supplementary_notes: contentDraft.supplementary_notes || null
+      ...draft,
+      title: draft.title.trim(),
+      detailed_record: draft.detailed_record || null,
+      technical_materials: draft.technical_materials || null,
+      result_data: draft.result_data || null,
+      supplementary_notes: draft.supplementary_notes || null
     }
 
     try {
-      const saved = editingContentId
-        ? await api.updateWorkContent(session.token, editingContentId, payload)
-        : await api.createWorkContent(session.token, group.id, payload)
+      if (targetId) {
+        // 更新现有卡片
+        const saved = await api.updateWorkContent(session.token, targetId, payload)
+        setContents((items) => items.map((item) => (item.id === saved.id ? saved : item)))
+        setEditingContentId(null)
+      } else {
+        // 新建卡片
+        const created = await api.createWorkContent(session.token, group.id, payload)
+        setContents((items) => [...items, created])
+        setIsCreatingNew(false)
+        setActiveNavId(`work-content-${created.id}`)
+      }
 
-      setContents((items) =>
-        editingContentId
-          ? items.map((item) => (item.id === saved.id ? saved : item))
-          : [...items, saved]
-      )
-      setContentDraft(emptyContent)
-      setEditingContentId(null)
       onSaveStatusChange?.('saved')
       setTimeout(() => onSaveStatusChange?.('idle'), 2500)
     } catch (e) {
@@ -82,7 +118,7 @@ export function FocusCanvasContainer({
     }
   }
 
-  const archiveContent = async (item: WorkContent) => {
+  const handleArchiveContent = async (item: WorkContent) => {
     try {
       const updated = item.archived
         ? await api.restoreWorkContent(session.token, item.id)
@@ -102,7 +138,7 @@ export function FocusCanvasContainer({
     }
   }
 
-  const moveContent = async (index: number, direction: -1 | 1) => {
+  const handleMoveContent = async (index: number, direction: -1 | 1) => {
     const target = index + direction
     if (target < 0 || target >= contents.length) return
 
@@ -127,52 +163,46 @@ export function FocusCanvasContainer({
   }
 
   return (
-    <div className="focus-canvas-wrapper">
-      <div className="focus-canvas-document">
-        <header className="focus-experience-overview">
-          <div className="overview-header-row">
-            <div>
-              <span className="overview-type-pill">
-                {group.type === 'internship' ? '实习经历' : '项目经历'}
-              </span>
-              <h2 className="overview-title">{group.name}</h2>
-              <p className="overview-org-date">
-                <span>{group.organization || '未填写归属'}</span>
-                {(group.start_date || group.end_date) && (
-                  <>
-                    <span className="dot-divider">·</span>
-                    <span>{group.start_date || '至今'} — {group.end_date || '至今'}</span>
-                  </>
-                )}
-              </p>
-            </div>
-          </div>
-          {group.description && (
-            <div className="overview-description-box">
-              <p>{group.description}</p>
-            </div>
-          )}
-        </header>
+    <div className="focus-canvas-wrapper" ref={containerRef}>
+      <div className="focus-canvas-layout">
+        <main className="focus-canvas-main-col">
+          {error && <p className="error" role="alert">{error}</p>}
+          {notice && <p className="notice" role="status">{notice}</p>}
 
-        {error && <p className="error" role="alert">{error}</p>}
-        {notice && <p className="notice" role="status">{notice}</p>}
-
-        <section className="focus-work-contents-section">
-          <WorkContentEditor
+          <FocusCanvasDocument
+            group={group}
             contents={contents}
-            draft={contentDraft}
             editingId={editingContentId}
-            onDraftChange={setContentDraft}
-            onStartEdit={startEditContent}
-            onSubmit={saveContent}
-            onCancel={() => {
+            isCreatingNew={isCreatingNew}
+            onStartEdit={handleStartEdit}
+            onCancelEdit={handleCancelEdit}
+            onSaveContent={handleSaveContent}
+            onMoveContent={handleMoveContent}
+            onArchiveContent={handleArchiveContent}
+            onStartCreateNew={() => {
               setEditingContentId(null)
-              setContentDraft(emptyContent)
+              setIsCreatingNew(true)
             }}
-            onMove={moveContent}
-            onArchive={archiveContent}
+            onCancelCreateNew={() => setIsCreatingNew(false)}
           />
-        </section>
+        </main>
+
+        <aside className="focus-canvas-side-col">
+          <OutlineNavigator
+            group={group}
+            contents={contents}
+            activeId={activeNavId}
+            onNavigate={handleNavigate}
+            onAddNew={() => {
+              setEditingContentId(null)
+              setIsCreatingNew(true)
+              setTimeout(() => {
+                const el = document.querySelector('.creating-new-card')
+                el?.scrollIntoView({ behavior: 'smooth' })
+              }, 50)
+            }}
+          />
+        </aside>
       </div>
     </div>
   )
