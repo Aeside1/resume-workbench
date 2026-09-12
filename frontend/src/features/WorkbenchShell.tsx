@@ -14,21 +14,33 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const [mode, setMode] = useState<AppShellMode>('hub')
   const [activeExperience, setActiveExperience] = useState<ExperienceGroup | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [isCanvasDirty, setIsCanvasDirty] = useState(false)
 
   const handleSelectExperience = (group: ExperienceGroup) => {
     setActiveExperience(group)
     setMode('focus-canvas')
+    setIsCanvasDirty(false)
   }
 
   const handleExitFocus = () => {
+    if (isCanvasDirty) {
+      const confirmed = window.confirm('当前有未保存的工作内容编辑，确定要放弃修改并退出吗？')
+      if (!confirmed) return
+    }
     setMode('hub')
     setActiveExperience(null)
+    setIsCanvasDirty(false)
   }
 
   const handleNavClick = (nextView: View) => {
+    if (isCanvasDirty) {
+      const confirmed = window.confirm('当前有未保存的工作内容编辑，确定要放弃修改并离开吗？')
+      if (!confirmed) return
+    }
     setView(nextView)
     setMode('hub')
     setActiveExperience(null)
+    setIsCanvasDirty(false)
   }
 
   const navigationButtons = (
@@ -94,6 +106,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
             group={activeExperience}
             onExitFocus={handleExitFocus}
             onSaveStatusChange={setSaveStatus}
+            onDirtyChange={setIsCanvasDirty}
           />
         ) : (
           <ExperienceHubPanel

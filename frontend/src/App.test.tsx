@@ -67,7 +67,7 @@ describe('认证后的工作台', () => {
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: /新建经历分组/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: /新建经历分组/ })[0])
     fireEvent.change(screen.getByLabelText('经历名称'), { target: { value: '平台项目' } })
     fireEvent.click(screen.getByRole('button', { name: '创建经历分组' }))
     await waitFor(() => expect(screen.getByRole('heading', { name: '平台项目' })).toBeInTheDocument())

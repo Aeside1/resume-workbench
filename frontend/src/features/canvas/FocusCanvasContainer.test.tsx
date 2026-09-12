@@ -198,4 +198,30 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       expect.objectContaining({ behavior: 'smooth', block: 'start' })
     )
   })
+
+  it('处于编辑态或新建态时触发 onDirtyChange(true)，取消后触发 onDirtyChange(false)', async () => {
+    const handleDirtyChange = vi.fn()
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onExitFocus={vi.fn()}
+        onDirtyChange={handleDirtyChange}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    expect(handleDirtyChange).toHaveBeenCalledWith(false)
+
+    // 点击编辑，进入 dirty 态
+    const editBtn = screen.getAllByRole('button', { name: '编辑' })[0]
+    fireEvent.click(editBtn)
+    expect(handleDirtyChange).toHaveBeenCalledWith(true)
+
+    // 点击取消，恢复 clean 态
+    const cancelBtn = screen.getByRole('button', { name: '取消' })
+    fireEvent.click(cancelBtn)
+    expect(handleDirtyChange).toHaveBeenCalledWith(false)
+  })
 })

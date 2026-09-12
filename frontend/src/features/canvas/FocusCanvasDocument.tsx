@@ -1,8 +1,9 @@
 import { FormEvent, useState } from 'react'
-import { Button, Input, TextArea } from '@heroui/react'
+import { Button } from '@heroui/react'
 import type { ExperienceGroup, WorkContent } from '../../api'
 import { ExperienceOverviewSection } from './ExperienceOverviewSection'
 import { WorkContentBlock, ContentDraft } from './WorkContentBlock'
+import { WorkContentFormFields } from './WorkContentFormFields'
 
 export type FocusCanvasDocumentProps = {
   group: ExperienceGroup
@@ -88,60 +89,11 @@ export function FocusCanvasDocument({
                   <span className="edit-form-kicker">+ 新建具体工作内容</span>
                 </div>
 
-                <div className="canvas-field">
-                  <label htmlFor="new-wc-title">工作项标题</label>
-                  <Input
-                    id="new-wc-title"
-                    placeholder="例如：主导前端渲染性能专项优化"
-                    value={newDraft.title}
-                    onChange={(e) => setNewDraft({ ...newDraft, title: e.target.value })}
-                    required
-                  />
-                </div>
-
-                <div className="canvas-field">
-                  <label htmlFor="new-wc-record">背景与难点</label>
-                  <TextArea
-                    id="new-wc-record"
-                    placeholder="描述该工作的背景痛点、业务诉求或技术难点..."
-                    rows={3}
-                    value={newDraft.detailed_record}
-                    onChange={(e) => setNewDraft({ ...newDraft, detailed_record: e.target.value })}
-                  />
-                </div>
-
-                <div className="canvas-field">
-                  <label htmlFor="new-wc-materials">技术方案与材料</label>
-                  <TextArea
-                    id="new-wc-materials"
-                    placeholder="记录采用的架构方案、关键技术栈、设计文档或材料链接..."
-                    rows={3}
-                    value={newDraft.technical_materials}
-                    onChange={(e) => setNewDraft({ ...newDraft, technical_materials: e.target.value })}
-                  />
-                </div>
-
-                <div className="canvas-field">
-                  <label htmlFor="new-wc-result">量化结果数据</label>
-                  <TextArea
-                    id="new-wc-result"
-                    placeholder="说明带来的实际收益、性能提升百分比或关键量化业务指标..."
-                    rows={2}
-                    value={newDraft.result_data}
-                    onChange={(e) => setNewDraft({ ...newDraft, result_data: e.target.value })}
-                  />
-                </div>
-
-                <div className="canvas-field">
-                  <label htmlFor="new-wc-notes">补充说明</label>
-                  <TextArea
-                    id="new-wc-notes"
-                    placeholder="可记录专利、团队内分享或后续扩展思考..."
-                    rows={2}
-                    value={newDraft.supplementary_notes}
-                    onChange={(e) => setNewDraft({ ...newDraft, supplementary_notes: e.target.value })}
-                  />
-                </div>
+                <WorkContentFormFields
+                  prefixId="new-wc"
+                  draft={newDraft}
+                  onChange={setNewDraft}
+                />
 
                 <div className="edit-form-actions">
                   <Button

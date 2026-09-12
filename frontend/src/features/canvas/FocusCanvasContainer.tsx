@@ -10,13 +10,15 @@ export type FocusCanvasContainerProps = {
   group: ExperienceGroup
   onExitFocus: () => void
   onSaveStatusChange?: (status: 'idle' | 'saving' | 'saved') => void
+  onDirtyChange?: (isDirty: boolean) => void
 }
 
 export function FocusCanvasContainer({
   session,
   group,
   onExitFocus: _onExitFocus,
-  onSaveStatusChange
+  onSaveStatusChange,
+  onDirtyChange
 }: FocusCanvasContainerProps) {
   const [contents, setContents] = useState<WorkContent[]>([])
   const [editingContentId, setEditingContentId] = useState<number | null>(null)
@@ -27,6 +29,10 @@ export function FocusCanvasContainer({
   const [notice, setNotice] = useState('')
 
   const containerRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    onDirtyChange?.(editingContentId !== null || isCreatingNew)
+  }, [editingContentId, isCreatingNew, onDirtyChange])
 
   useEffect(() => {
     api.workContents(session.token, group.id, showArchived)
@@ -194,6 +200,10 @@ export function FocusCanvasContainer({
             activeId={activeNavId}
             onNavigate={handleNavigate}
             onAddNew={() => {
+              if (editingContentId !== null) {
+                const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
+                if (!confirmed) return
+              }
               setEditingContentId(null)
               setIsCreatingNew(true)
               setTimeout(() => {

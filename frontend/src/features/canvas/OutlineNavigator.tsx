@@ -17,8 +17,7 @@ export function OutlineNavigator({
   onAddNew
 }: OutlineNavigatorProps) {
   const activeKey = activeId || 'section-overview'
-  const unarchivedContents = contents.filter((item) => !item.archived)
-  const totalItemsCount = unarchivedContents.length
+  const totalItemsCount = contents.length
 
   return (
     <aside className="outline-navigator-container" aria-label="经历目录大纲">
