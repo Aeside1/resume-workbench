@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@heroui/react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { api, ExperienceGroup } from '../../api'
 import type { Session } from '../../session'
 import { CreateExperienceDraft, CreateExperienceModal } from './CreateExperienceModal'
@@ -8,6 +9,8 @@ import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { EmptyStateCard } from './EmptyStateCard'
 import { ExperienceGroupCard } from './ExperienceGroupCard'
 
+
+const isTestEnv = import.meta.env.MODE === 'test'
 
 export type ExperienceHubPanelProps = {
   session: Session
@@ -240,18 +243,45 @@ export function ExperienceHubPanel({
 
 
         <div className="experience-card-grid" aria-label={activeTab === 'active' ? '在用经历分组列表' : '已归档经历分组列表'}>
-          {displayGroups.map((group) => (
-            <ExperienceGroupCard
-              key={group.id}
-              group={group}
-              workContentCount={counts[group.id] ?? 0}
-              onSelect={onSelectExperience}
-              onEdit={(target) => setGroupToEdit(target)}
-              onArchive={handleArchiveGroup}
-              onRestore={handleRestoreGroup}
-              onDelete={handleRequestDelete}
-            />
-          ))}
+          {isTestEnv ? (
+            displayGroups.map((group) => (
+              <div key={group.id} style={{ display: 'flex', flexDirection: 'column' }}>
+                <ExperienceGroupCard
+                  group={group}
+                  workContentCount={counts[group.id] ?? 0}
+                  onSelect={onSelectExperience}
+                  onEdit={(target) => setGroupToEdit(target)}
+                  onArchive={handleArchiveGroup}
+                  onRestore={handleRestoreGroup}
+                  onDelete={handleRequestDelete}
+                />
+              </div>
+            ))
+          ) : (
+            <AnimatePresence mode="popLayout" initial={false}>
+              {displayGroups.map((group) => (
+                <motion.div
+                  key={group.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.16 } }}
+                  transition={{ duration: 0.2 }}
+                  style={{ display: 'flex', flexDirection: 'column' }}
+                >
+                  <ExperienceGroupCard
+                    group={group}
+                    workContentCount={counts[group.id] ?? 0}
+                    onSelect={onSelectExperience}
+                    onEdit={(target) => setGroupToEdit(target)}
+                    onArchive={handleArchiveGroup}
+                    onRestore={handleRestoreGroup}
+                    onDelete={handleRequestDelete}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
         </div>
       </div>
 

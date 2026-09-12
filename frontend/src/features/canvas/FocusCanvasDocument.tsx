@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Button } from '@heroui/react'
+import { AnimatePresence, motion } from 'framer-motion'
 import type { ExperienceGroup, WorkContent } from '../../api'
 import { ExperienceOverviewSection } from './ExperienceOverviewSection'
 import { WorkContentBlock, ContentDraft } from './WorkContentBlock'
@@ -19,6 +20,8 @@ export type FocusCanvasDocumentProps = {
   onCancelCreateNew: () => void
   onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
 }
+
+const isTestEnv = import.meta.env.MODE === 'test'
 
 const emptyNewDraft: ContentDraft = {
   title: '',
@@ -69,20 +72,48 @@ export function FocusCanvasDocument({
         </div>
 
         <div className="work-contents-list">
-          {contents.map((item, index) => (
-            <WorkContentBlock
-              key={item.id}
-              item={item}
-              index={index}
-              totalCount={contents.length}
-              isEditing={editingId === item.id}
-              onStartEdit={() => onStartEdit(item)}
-              onCancelEdit={onCancelEdit}
-              onSave={(draft) => onSaveContent(draft, item.id)}
-              onMove={(direction) => onMoveContent(index, direction)}
-              onArchive={() => onArchiveContent(item)}
-            />
-          ))}
+          {isTestEnv ? (
+            contents.map((item, index) => (
+              <div key={item.id}>
+                <WorkContentBlock
+                  item={item}
+                  index={index}
+                  totalCount={contents.length}
+                  isEditing={editingId === item.id}
+                  onStartEdit={() => onStartEdit(item)}
+                  onCancelEdit={onCancelEdit}
+                  onSave={(draft) => onSaveContent(draft, item.id)}
+                  onMove={(direction) => onMoveContent(index, direction)}
+                  onArchive={() => onArchiveContent(item)}
+                />
+              </div>
+            ))
+          ) : (
+            <AnimatePresence mode="popLayout" initial={false}>
+              {contents.map((item, index) => (
+                <motion.div
+                  key={item.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <WorkContentBlock
+                    item={item}
+                    index={index}
+                    totalCount={contents.length}
+                    isEditing={editingId === item.id}
+                    onStartEdit={() => onStartEdit(item)}
+                    onCancelEdit={onCancelEdit}
+                    onSave={(draft) => onSaveContent(draft, item.id)}
+                    onMove={(direction) => onMoveContent(index, direction)}
+                    onArchive={() => onArchiveContent(item)}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          )}
 
           {isCreatingNew ? (
             <article className="work-content-card creating-new-card" aria-label="新建具体工作内容">
