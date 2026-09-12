@@ -251,7 +251,7 @@ export function ExperienceHubPanel({
         <div className="experience-card-grid" aria-label={activeTab === 'active' ? '在用经历分组列表' : '已归档经历分组列表'}>
           {isTestEnv ? (
             displayGroups.map((group) => (
-              <div key={group.id} style={{ display: 'flex', flexDirection: 'column' }}>
+              <div key={group.id} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <ExperienceGroupCard
                   group={group}
                   workContentCount={counts[group.id] ?? 0}
@@ -273,7 +273,7 @@ export function ExperienceHubPanel({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.16 } }}
                   transition={{ duration: 0.2 }}
-                  style={{ display: 'flex', flexDirection: 'column' }}
+                  style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
                 >
                   <ExperienceGroupCard
                     group={group}

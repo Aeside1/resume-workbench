@@ -77,7 +77,7 @@ export function ExperienceGroupCard({
         <Card.Header className="group-card-header">
           <div className="group-card-title-group">
             <div className="group-card-top-row">
-              <h3 className="group-card-name">{group.name}</h3>
+              <h3 className="group-card-name" title={group.name}>{group.name}</h3>
               <div className="group-card-badges">
                 <span className={`group-type-badge type-${group.type}`}>
                   {group.type === 'internship' ? '实习经历' : '项目经历'}
@@ -87,7 +87,7 @@ export function ExperienceGroupCard({
                 )}
               </div>
             </div>
-            <p className="group-card-org">{group.organization || '未填写归属'}</p>
+            <p className="group-card-org" title={group.organization || ''}>{group.organization || '未填写归属'}</p>
           </div>
         </Card.Header>
 
@@ -102,7 +102,7 @@ export function ExperienceGroupCard({
             <span>{dateText}</span>
           </div>
 
-          <p className="group-card-description">
+          <p className="group-card-description" title={group.description || ''}>
             {group.description || '还没有整体说明。'}
           </p>
         </Card.Content>
