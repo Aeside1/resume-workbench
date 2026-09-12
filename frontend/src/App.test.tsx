@@ -82,26 +82,29 @@ describe('认证后的工作台', () => {
     expect(screen.getByText('梳理状态流转')).toBeInTheDocument()
   })
 
-  it('可以编辑、排序和归档具体工作内容', async () => {
+  it('可以编辑和归档具体工作内容，并渲染拖动手柄而非上下移按钮', async () => {
     const group = { id: 10, user_id: 1, name: '平台项目', type: 'project' as const, organization: null, start_date: null, end_date: null, description: null, archived: false, created_at: '', updated_at: '' }
     const first = { id: 20, experience_group_id: 10, title: '第一项', detailed_record: '第一项记录', technical_materials: 'Rust', result_data: null, supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
     const second = { id: 21, experience_group_id: 10, title: '第二项', detailed_record: '第二项记录', technical_materials: null, result_data: null, supplementary_notes: null, position: 1, archived: false, created_at: '', updated_at: '' }
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'content-actions@example.com' } })
-    mocked.experienceGroups.mockResolvedValue([group]); mocked.workContents.mockResolvedValue([first, second]); mocked.reorderWorkContents.mockResolvedValue([second, first]); mocked.updateWorkContent.mockResolvedValue({ ...first, title: '第一项（已编辑）' }); mocked.archiveWorkContent.mockResolvedValue({ ...first, archived: true })
+    mocked.experienceGroups.mockResolvedValue([group]); mocked.workContents.mockResolvedValue([first, second]); mocked.updateWorkContent.mockResolvedValue({ ...first, title: '第一项（已编辑）' }); mocked.archiveWorkContent.mockResolvedValue({ ...first, archived: true })
     render(<App />)
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'content-actions@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByText('平台项目')).toBeInTheDocument())
     fireEvent.click(screen.getByText('平台项目'))
     await waitFor(() => expect(screen.getByRole('heading', { level: 3, name: '第一项' })).toBeInTheDocument())
+    expect(screen.queryByRole('button', { name: '上移' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '下移' })).not.toBeInTheDocument()
+    expect(screen.getAllByLabelText('拖拽调整排序')).toHaveLength(2)
+
     fireEvent.click(screen.getAllByRole('button', { name: '编辑' })[0])
     fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '第一项（已编辑）' } })
     fireEvent.click(screen.getByRole('button', { name: '保存' }))
     await waitFor(() => expect(mocked.updateWorkContent).toHaveBeenCalled())
-    fireEvent.click(screen.getAllByRole('button', { name: '下移' })[0]); await waitFor(() => expect(mocked.reorderWorkContents).toHaveBeenCalledWith('token', 10, [21, 20]))
-    fireEvent.click(screen.getAllByRole('button', { name: '归档' })[0]); await waitFor(() => expect(mocked.archiveWorkContent).toHaveBeenCalledWith('token', 21))
+    fireEvent.click(screen.getAllByRole('button', { name: '归档' })[0]); await waitFor(() => expect(mocked.archiveWorkContent).toHaveBeenCalledWith('token', 20))
   })
 
-  it('归档内容不阻止对剩余可见内容排序', async () => {
+  it('未归档的工作项正常展示在画布中，已归档项不参与渲染', async () => {
     const group = { id: 10, user_id: 1, name: '平台项目', type: 'project' as const, organization: null, start_date: null, end_date: null, description: null, archived: false, created_at: '', updated_at: '' }
     const first = { id: 20, experience_group_id: 10, title: '第一项', detailed_record: null, technical_materials: null, result_data: null, supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
     const archived = { id: 22, experience_group_id: 10, title: '已归档项', detailed_record: null, technical_materials: null, result_data: null, supplementary_notes: null, position: 1, archived: true, created_at: '', updated_at: '' }
@@ -109,7 +112,6 @@ describe('认证后的工作台', () => {
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'visible-order@example.com' } })
     mocked.experienceGroups.mockResolvedValue([group])
     mocked.workContents.mockImplementation(async (_token, _groupId, includeArchived) => includeArchived ? [first, archived, second] : [first, second])
-    mocked.reorderWorkContents.mockResolvedValue([second, archived, first])
 
     render(<App />)
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'visible-order@example.com' } })
@@ -119,8 +121,8 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(screen.getByText('平台项目')).toBeInTheDocument())
     fireEvent.click(screen.getByText('平台项目'))
     await waitFor(() => expect(screen.getByRole('heading', { level: 3, name: '第一项' })).toBeInTheDocument())
-    fireEvent.click(screen.getAllByRole('button', { name: '下移' })[0])
-    await waitFor(() => expect(mocked.reorderWorkContents).toHaveBeenCalledWith('token', 10, [21, 22, 20]))
+    expect(screen.getByRole('heading', { level: 3, name: '第二项' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { level: 3, name: '已归档项' })).not.toBeInTheDocument()
   })
 
   it('归档经历分组后进入归档箱，支持恢复与彻底删除', async () => {

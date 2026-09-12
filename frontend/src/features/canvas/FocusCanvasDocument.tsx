@@ -23,8 +23,6 @@ export type FocusCanvasDocumentProps = {
   onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
 }
 
-const isTestEnv = import.meta.env.MODE === 'test'
-
 const emptyNewDraft: ContentDraft = {
   title: '',
   detailed_record: '',
@@ -120,59 +118,34 @@ export function FocusCanvasDocument({
         </div>
 
         <div className="work-contents-list">
-          {isTestEnv ? (
-            contents.map((item, index) => (
-              <div key={item.id}>
-                <WorkContentBlock
-                  item={item}
-                  index={index}
-                  totalCount={contents.length}
-                  isEditing={editingId === item.id}
-                  isDragging={draggedIndex === index}
-                  dragOverPosition={dragOverInfo?.index === index ? dragOverInfo.position : null}
-                  onStartEdit={() => onStartEdit(item)}
-                  onCancelEdit={onCancelEdit}
-                  onSave={(draft) => onSaveContent(draft, item.id)}
-                  onMove={(direction) => onMoveContent?.(index, direction)}
-                  onArchive={() => onArchiveContent(item)}
-                  onDragStart={(e) => handleDragStart(e, index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDragLeave={(e) => handleDragLeave(e, index)}
-                  onDrop={(e) => handleDrop(e, index)}
-                  onDragEnd={handleDragEnd}
-                />
-              </div>
-            ))
-          ) : (
-            <Reorder.Group
-              axis="y"
-              values={contents}
-              onReorder={(newOrder) => onReorderContents?.(newOrder)}
-              style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}
-            >
-              {contents.map((item, index) => (
-                <FocusWorkContentItem
-                  key={item.id}
-                  item={item}
-                  index={index}
-                  totalCount={contents.length}
-                  editingId={editingId}
-                  draggedIndex={draggedIndex}
-                  dragOverInfo={dragOverInfo}
-                  onStartEdit={onStartEdit}
-                  onCancelEdit={onCancelEdit}
-                  onSaveContent={onSaveContent}
-                  onMoveContent={onMoveContent}
-                  onArchiveContent={onArchiveContent}
-                  onDragStart={handleDragStart}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                  onDragEnd={handleDragEnd}
-                />
-              ))}
-            </Reorder.Group>
-          )}
+          <Reorder.Group
+            axis="y"
+            values={contents}
+            onReorder={(newOrder) => onReorderContents?.(newOrder)}
+            style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}
+          >
+            {contents.map((item, index) => (
+              <FocusWorkContentItem
+                key={item.id}
+                item={item}
+                index={index}
+                totalCount={contents.length}
+                editingId={editingId}
+                draggedIndex={draggedIndex}
+                dragOverInfo={dragOverInfo}
+                onStartEdit={onStartEdit}
+                onCancelEdit={onCancelEdit}
+                onSaveContent={onSaveContent}
+                onMoveContent={onMoveContent}
+                onArchiveContent={onArchiveContent}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onDragEnd={handleDragEnd}
+              />
+            ))}
+          </Reorder.Group>
 
           {isCreatingNew ? (
             <article className="work-content-card creating-new-card" aria-label="新建具体工作内容">
