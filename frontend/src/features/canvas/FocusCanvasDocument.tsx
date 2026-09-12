@@ -17,6 +17,7 @@ export type FocusCanvasDocumentProps = {
   onArchiveContent: (item: WorkContent) => void
   onStartCreateNew: () => void
   onCancelCreateNew: () => void
+  onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
 }
 
 const emptyNewDraft: ContentDraft = {
@@ -38,7 +39,8 @@ export function FocusCanvasDocument({
   onMoveContent,
   onArchiveContent,
   onStartCreateNew,
-  onCancelCreateNew
+  onCancelCreateNew,
+  onUpdateGroup
 }: FocusCanvasDocumentProps) {
   const [newDraft, setNewDraft] = useState<ContentDraft>(emptyNewDraft)
 
@@ -56,7 +58,7 @@ export function FocusCanvasDocument({
 
   return (
     <div className="focus-canvas-document">
-      <ExperienceOverviewSection group={group} />
+      <ExperienceOverviewSection group={group} onUpdate={onUpdateGroup} />
 
       <section className="focus-work-contents-section" aria-label="具体工作内容列表">
         <div className="work-contents-header">

@@ -109,6 +109,28 @@ describe('ExperienceGroupCard', () => {
     expect(handleSelect).not.toHaveBeenCalled()
   })
 
+  it('未归档经历展示编辑按钮，点击触发 onEdit 且不冒泡触发 onSelect', () => {
+    const handleSelect = vi.fn()
+    const handleEdit = vi.fn()
+
+    render(
+      <ExperienceGroupCard
+        group={baseGroup}
+        workContentCount={2}
+        onSelect={handleSelect}
+        onEdit={handleEdit}
+        onArchive={vi.fn()}
+      />
+    )
+
+    const editBtn = screen.getByRole('button', { name: '编辑经历分组' })
+    expect(editBtn).toBeInTheDocument()
+
+    fireEvent.click(editBtn)
+    expect(handleEdit).toHaveBeenCalledWith(baseGroup)
+    expect(handleSelect).not.toHaveBeenCalled()
+  })
+
   it('已归档经历展示已归档标记与恢复按钮，点击触发 onRestore 且不触发 onSelect', () => {
     const archivedGroup: ExperienceGroup = { ...baseGroup, archived: true }
     const handleSelect = vi.fn()

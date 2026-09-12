@@ -3,6 +3,7 @@ import { Button } from '@heroui/react'
 import { api, ExperienceGroup } from '../../api'
 import type { Session } from '../../session'
 import { CreateExperienceDraft, CreateExperienceModal } from './CreateExperienceModal'
+import { EditExperienceDraft, EditExperienceModal } from './EditExperienceModal'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { EmptyStateCard } from './EmptyStateCard'
 import { ExperienceGroupCard } from './ExperienceGroupCard'
@@ -21,6 +22,7 @@ export function ExperienceHubPanel({
   const [counts, setCounts] = useState<Record<number, number>>({})
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [groupToEdit, setGroupToEdit] = useState<ExperienceGroup | null>(null)
   const [groupToDelete, setGroupToDelete] = useState<ExperienceGroup | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -83,6 +85,27 @@ export function ExperienceHubPanel({
       setIsCreateOpen(false)
       setActiveTab('active')
       onSelectExperience(created)
+    } catch (e) {
+      setError((e as Error).message)
+      throw e
+    }
+  }
+
+  const handleUpdateGroup = async (draft: EditExperienceDraft) => {
+    if (!groupToEdit) return
+    try {
+      const updated = await api.updateExperienceGroup(session.token, groupToEdit.id, {
+        name: draft.name,
+        type: draft.type,
+        organization: draft.organization || null,
+        start_date: draft.start_date || null,
+        end_date: draft.end_date || null,
+        description: draft.description || null
+      })
+
+      setGroups((items) => items.map((g) => (g.id === updated.id ? updated : g)))
+      setNotice(`经历分组“${updated.name}”已成功保存修改。`)
+      setGroupToEdit(null)
     } catch (e) {
       setError((e as Error).message)
       throw e
@@ -223,6 +246,7 @@ export function ExperienceHubPanel({
               group={group}
               workContentCount={counts[group.id] ?? 0}
               onSelect={onSelectExperience}
+              onEdit={(target) => setGroupToEdit(target)}
               onArchive={handleArchiveGroup}
               onRestore={handleRestoreGroup}
               onDelete={handleRequestDelete}
@@ -235,6 +259,13 @@ export function ExperienceHubPanel({
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSubmit={handleCreateGroup}
+      />
+
+      <EditExperienceModal
+        isOpen={Boolean(groupToEdit)}
+        group={groupToEdit}
+        onClose={() => setGroupToEdit(null)}
+        onSubmit={handleUpdateGroup}
       />
 
       <ConfirmDeleteModal

@@ -6,6 +6,7 @@ export type ExperienceGroupCardProps = {
   group: ExperienceGroup
   workContentCount?: number
   onSelect: (group: ExperienceGroup) => void
+  onEdit?: (group: ExperienceGroup) => void
   onArchive?: (group: ExperienceGroup) => void
   onRestore?: (group: ExperienceGroup) => void
   onDelete?: (group: ExperienceGroup) => void
@@ -15,6 +16,7 @@ export function ExperienceGroupCard({
   group,
   workContentCount = 0,
   onSelect,
+  onEdit,
   onArchive,
   onRestore,
   onDelete
@@ -26,6 +28,13 @@ export function ExperienceGroupCard({
 
   const handleBodyClick = () => {
     onSelect(group)
+  }
+
+  const handleEdit = (e?: MouseEvent | unknown) => {
+    if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
+      (e as MouseEvent).stopPropagation()
+    }
+    onEdit?.(group)
   }
 
   const handleArchive = (e?: MouseEvent | unknown) => {
@@ -138,15 +147,26 @@ export function ExperienceGroupCard({
             </>
 
           ) : (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="group-action-btn btn-archive"
-              aria-label="归档经历分组"
-              onPress={handleArchive}
-            >
-              归档经历分组
-            </Button>
+            <>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="group-action-btn btn-edit"
+                aria-label="编辑经历分组"
+                onPress={handleEdit}
+              >
+                编辑
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="group-action-btn btn-archive"
+                aria-label="归档经历分组"
+                onPress={handleArchive}
+              >
+                归档经历分组
+              </Button>
+            </>
           )}
         </div>
       </Card.Footer>

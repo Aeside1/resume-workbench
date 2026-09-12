@@ -1028,13 +1028,43 @@ button.btn-danger-solid:active:not(:disabled),
   gap: 24px;
 }
 
-/* Overview Section */
 .focus-experience-overview {
   background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e2e8f0;
   padding: 28px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.focus-experience-overview.editing {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.edit-overview-btn {
+  font-weight: 600 !important;
+  color: #64748b !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+.edit-overview-btn:hover {
+  color: #0284c7 !important;
+  background: #f0f9ff !important;
+}
+
+.overview-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.overview-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
 }
 
 .overview-header-row {
@@ -1199,8 +1229,66 @@ button.btn-danger-solid:active:not(:disabled),
   color: inherit;
 }
 
+.outline-nav-item--parent {
+  font-weight: 650;
+  color: #1e293b;
+  font-size: 13.5px;
+}
+
+.outline-nav-item--parent .outline-bullet {
+  width: 7px;
+  height: 7px;
+}
+
+.outline-tree-branch {
+  margin-top: 4px;
+  margin-left: 9px;
+  padding-left: 10px;
+  border-left: 1.5px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.outline-branch-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 2px;
+}
+
+.outline-branch-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.outline-branch-count {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.outline-sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.outline-nav-item--child {
+  font-size: 12.5px;
+  padding: 5px 8px;
+}
+
+.outline-bullet--child {
+  width: 5px;
+  height: 5px;
+}
+
 .outline-action-section {
-  padding-top: 6px;
+  padding-top: 8px;
+  margin-top: 4px;
   border-top: 1px solid #f1f5f9;
 }
 
@@ -1216,32 +1304,6 @@ button.btn-danger-solid:active:not(:disabled),
 
 .outline-add-btn:hover {
   background: #e0f2fe !important;
-}
-
-.outline-stats-footer {
-  margin-top: 4px;
-  padding-top: 10px;
-  border-top: 1px solid #f1f5f9;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.stats-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-}
-
-.stats-label {
-  color: #94a3b8;
-}
-
-.stats-value {
-  color: #334155;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
 /* Work Contents Section */

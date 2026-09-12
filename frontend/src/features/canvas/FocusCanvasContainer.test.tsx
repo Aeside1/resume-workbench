@@ -94,7 +94,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 验证右侧大纲
     expect(screen.getByText('经历大纲')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /经历概况/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '经历概况' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /1\. 重构可视化拖拽画布核心渲染引擎/ })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /2\. 设计组件库 Tree-shaking 自动化检测管线/ })).toBeInTheDocument()
   })
@@ -223,5 +223,48 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const cancelBtn = screen.getByRole('button', { name: '取消' })
     fireEvent.click(cancelBtn)
     expect(handleDirtyChange).toHaveBeenCalledWith(false)
+  })
+
+  it('点击经历概况卡片右上角编辑按钮就地编辑并保存，调用 updateExperienceGroup 并触发 onUpdateGroup 和保存状态提示', async () => {
+    const updatedGroup: ExperienceGroup = {
+      ...mockGroup,
+      name: '基础架构部高级前端技术专家',
+      organization: '美团核心本地商业'
+    }
+    const updateSpy = vi.spyOn(api, 'updateExperienceGroup').mockResolvedValue(updatedGroup)
+    const handleSaveStatus = vi.fn()
+    const handleUpdateGroup = vi.fn()
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onExitFocus={vi.fn()}
+        onSaveStatusChange={handleSaveStatus}
+        onUpdateGroup={handleUpdateGroup}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+
+    const editOverviewBtn = screen.getByRole('button', { name: '编辑经历概况' })
+    fireEvent.click(editOverviewBtn)
+
+    expect(screen.getByText('编辑经历概况')).toBeInTheDocument()
+    const nameInput = screen.getByLabelText('经历名称')
+    fireEvent.change(nameInput, { target: { value: '基础架构部高级前端技术专家' } })
+
+    const saveBtn = screen.getByRole('button', { name: '保存概况' })
+    fireEvent.click(saveBtn)
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(
+        mockSession.token,
+        10,
+        expect.objectContaining({ name: '基础架构部高级前端技术专家' })
+      )
+      expect(handleUpdateGroup).toHaveBeenCalledWith(updatedGroup)
+      expect(handleSaveStatus).toHaveBeenCalledWith('saved')
+    })
   })
 })

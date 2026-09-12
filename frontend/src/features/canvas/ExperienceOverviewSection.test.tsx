@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, render, screen } from '@testing-library/react'
-import { afterEach, describe, it, expect } from 'vitest'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 
 afterEach(cleanup)
 import { ExperienceOverviewSection } from './ExperienceOverviewSection'
@@ -55,5 +55,39 @@ describe('ExperienceOverviewSection 经历整体概况卡片', () => {
     const { container } = render(<ExperienceOverviewSection group={mockInternship} />)
     const section = container.querySelector('#section-overview')
     expect(section).not.toBeNull()
+  })
+
+  it('提供 onUpdate 时显示编辑概况按钮，点击展开就地编辑表单', () => {
+    render(<ExperienceOverviewSection group={mockInternship} onUpdate={vi.fn()} />)
+
+    const editBtn = screen.getByRole('button', { name: '编辑经历概况' })
+    expect(editBtn).toBeInTheDocument()
+
+    fireEvent.click(editBtn)
+
+    expect(screen.getByText('编辑经历概况')).toBeInTheDocument()
+    expect(screen.getByLabelText('经历名称')).toHaveValue('基础架构部前端开发')
+    expect(screen.getByRole('button', { name: '保存概况' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '取消' })).toBeInTheDocument()
+  })
+
+  it('在就地编辑态修改并保存，触发 onUpdate 回调并折叠回排版', async () => {
+    const handleUpdate = vi.fn().mockResolvedValue(undefined)
+    render(<ExperienceOverviewSection group={mockInternship} onUpdate={handleUpdate} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '编辑经历概况' }))
+
+    const nameInput = screen.getByLabelText('经历名称')
+    fireEvent.change(nameInput, { target: { value: '基础架构部高级前端研发' } })
+
+    const saveBtn = screen.getByRole('button', { name: '保存概况' })
+    fireEvent.click(saveBtn)
+
+    expect(handleUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: '基础架构部高级前端研发',
+        organization: '美团'
+      })
+    )
   })
 })

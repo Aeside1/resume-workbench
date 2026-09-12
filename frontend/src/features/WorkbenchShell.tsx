@@ -107,6 +107,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
             onExitFocus={handleExitFocus}
             onSaveStatusChange={setSaveStatus}
             onDirtyChange={setIsCanvasDirty}
+            onUpdateGroup={setActiveExperience}
           />
         ) : (
           <ExperienceHubPanel

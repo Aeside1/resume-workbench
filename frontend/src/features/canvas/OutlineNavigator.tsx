@@ -47,32 +47,41 @@ export function OutlineNavigator({
         <nav className="outline-nav-list" aria-label="大纲导航">
           <button
             type="button"
-            className={`outline-nav-item ${activeKey === 'section-overview' ? 'active' : ''}`}
+            className={`outline-nav-item outline-nav-item--parent ${activeKey === 'section-overview' ? 'active' : ''}`}
             aria-current={activeKey === 'section-overview' ? 'location' : undefined}
             onClick={() => onNavigate('section-overview')}
           >
             <span className="outline-bullet" aria-hidden="true" />
-            <span className="outline-item-text">经历概况</span>
+            <span className="outline-item-text outline-parent-text">经历概况</span>
           </button>
 
-          {contents.map((item, index) => {
-            const itemKey = `work-content-${item.id}`
-            const isActive = activeKey === itemKey
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`outline-nav-item ${isActive ? 'active' : ''} ${item.archived ? 'archived' : ''}`}
-                aria-current={isActive ? 'location' : undefined}
-                onClick={() => onNavigate(itemKey)}
-              >
-                <span className="outline-bullet" aria-hidden="true" />
-                <span className="outline-item-text">
-                  <span className="outline-item-num">{index + 1}.</span> {item.title}
-                </span>
-              </button>
-            )
-          })}
+          <div className="outline-tree-branch">
+            <div className="outline-branch-label">
+              <span className="outline-branch-title">具体工作内容</span>
+              <span className="outline-branch-count">({contents.length})</span>
+            </div>
+
+            <div className="outline-sub-list">
+              {contents.map((item, index) => {
+                const itemKey = `work-content-${item.id}`
+                const isActive = activeKey === itemKey
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`outline-nav-item outline-nav-item--child ${isActive ? 'active' : ''} ${item.archived ? 'archived' : ''}`}
+                    aria-current={isActive ? 'location' : undefined}
+                    onClick={() => onNavigate(itemKey)}
+                  >
+                    <span className="outline-bullet outline-bullet--child" aria-hidden="true" />
+                    <span className="outline-item-text">
+                      <span className="outline-item-num">{index + 1}.</span> {item.title}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </nav>
 
         <div className="outline-action-section">
@@ -84,17 +93,6 @@ export function OutlineNavigator({
           >
             + 新增工作内容
           </Button>
-        </div>
-
-        <div className="outline-stats-footer">
-          <div className="stats-row">
-            <span className="stats-label">已沉淀工作项</span>
-            <span className="stats-value">{totalItemsCount}</span>
-          </div>
-          <div className="stats-row">
-            <span className="stats-label">多版本简历资产</span>
-            <span className="stats-value">{totalItemsCount * 2}+</span>
-          </div>
         </div>
       </div>
     </aside>

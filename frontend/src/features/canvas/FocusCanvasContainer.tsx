@@ -11,6 +11,7 @@ export type FocusCanvasContainerProps = {
   onExitFocus: () => void
   onSaveStatusChange?: (status: 'idle' | 'saving' | 'saved') => void
   onDirtyChange?: (isDirty: boolean) => void
+  onUpdateGroup?: (updated: ExperienceGroup) => void
 }
 
 export function FocusCanvasContainer({
@@ -18,8 +19,10 @@ export function FocusCanvasContainer({
   group,
   onExitFocus: _onExitFocus,
   onSaveStatusChange,
-  onDirtyChange
+  onDirtyChange,
+  onUpdateGroup
 }: FocusCanvasContainerProps) {
+  const [currentGroup, setCurrentGroup] = useState<ExperienceGroup>(group)
   const [contents, setContents] = useState<WorkContent[]>([])
   const [editingContentId, setEditingContentId] = useState<number | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
@@ -27,6 +30,10 @@ export function FocusCanvasContainer({
   const [showArchived, setShowArchived] = useState(false)
   const [error, setError] = useState('')
   const [notice, setNotice] = useState('')
+
+  useEffect(() => {
+    setCurrentGroup(group)
+  }, [group])
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -124,6 +131,21 @@ export function FocusCanvasContainer({
     }
   }
 
+  const handleUpdateOverview = async (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => {
+    onSaveStatusChange?.('saving')
+    try {
+      const updated = await api.updateExperienceGroup(session.token, currentGroup.id, payload)
+      setCurrentGroup(updated)
+      onUpdateGroup?.(updated)
+      onSaveStatusChange?.('saved')
+      setTimeout(() => onSaveStatusChange?.('idle'), 2500)
+    } catch (e) {
+      setError((e as Error).message)
+      onSaveStatusChange?.('idle')
+      throw e
+    }
+  }
+
   const handleArchiveContent = async (item: WorkContent) => {
     try {
       const updated = item.archived
@@ -131,40 +153,42 @@ export function FocusCanvasContainer({
         : await api.archiveWorkContent(session.token, item.id)
 
       setContents((items) =>
-        items.map((current) => (current.id === updated.id ? updated : current))
+        items.map((it) => (it.id === updated.id ? updated : it))
       )
-      if (updated.archived) {
-        setShowArchived(true)
-        setNotice('具体工作内容已归档，已显示已归档内容，可在列表中恢复。')
-      } else {
-        setNotice('具体工作内容已恢复。')
-      }
+      setNotice(`已${updated.archived ? '归档' : '恢复'}工作内容：“${updated.title}”`)
+      setTimeout(() => setNotice(''), 3000)
     } catch (e) {
       setError((e as Error).message)
     }
   }
 
   const handleMoveContent = async (index: number, direction: -1 | 1) => {
-    const target = index + direction
-    if (target < 0 || target >= contents.length) return
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= contents.length) return
 
-    const next = [...contents]
-    ;[next[index], next[target]] = [next[target], next[index]]
-    setContents(next)
+    const reordered = [...contents]
+    const [moved] = reordered.splice(index, 1)
+    reordered.splice(targetIndex, 0, moved)
 
+    setContents(reordered)
     try {
-      let workContentIds = next.map((item) => item.id)
+      let workContentIds = reordered.map((item) => item.id)
       if (!showArchived) {
-        const allContents = await api.workContents(session.token, group.id, true)
+        const allContents = await api.workContents(session.token, currentGroup.id, true)
         let visibleIndex = 0
         workContentIds = allContents.map((item) =>
-          item.archived ? item.id : next[visibleIndex++].id
+          item.archived ? item.id : reordered[visibleIndex++].id
         )
       }
-      const reordered = await api.reorderWorkContents(session.token, group.id, workContentIds)
-      setContents(showArchived ? reordered : reordered.filter((item) => !item.archived))
+      const saved = await api.reorderWorkContents(
+        session.token,
+        currentGroup.id,
+        workContentIds
+      )
+      setContents(showArchived ? saved : saved.filter((item) => !item.archived))
     } catch (e) {
       setError((e as Error).message)
+      setContents(contents)
     }
   }
 
@@ -176,7 +200,7 @@ export function FocusCanvasContainer({
           {notice && <p className="notice" role="status">{notice}</p>}
 
           <FocusCanvasDocument
-            group={group}
+            group={currentGroup}
             contents={contents}
             editingId={editingContentId}
             isCreatingNew={isCreatingNew}
@@ -190,12 +214,13 @@ export function FocusCanvasContainer({
               setIsCreatingNew(true)
             }}
             onCancelCreateNew={() => setIsCreatingNew(false)}
+            onUpdateGroup={handleUpdateOverview}
           />
         </main>
 
         <aside className="focus-canvas-side-col">
           <OutlineNavigator
-            group={group}
+            group={currentGroup}
             contents={contents}
             activeId={activeNavId}
             onNavigate={handleNavigate}

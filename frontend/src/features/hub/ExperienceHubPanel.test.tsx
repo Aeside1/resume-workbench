@@ -9,6 +9,7 @@ vi.mock('../../api', () => ({
   api: {
     experienceGroups: vi.fn(),
     createExperienceGroup: vi.fn(),
+    updateExperienceGroup: vi.fn(),
     archiveExperienceGroup: vi.fn(),
     restoreExperienceGroup: vi.fn(),
     deleteExperienceGroup: vi.fn(),
@@ -247,6 +248,44 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     expect(screen.queryByText('微信支付平台实习')).not.toBeInTheDocument()
     expect(screen.getByText(/归档箱是空的/)).toBeInTheDocument()
+  })
+
+  it('在在用列表中点击编辑经历分组，唤出编辑弹窗，提交修改后更新经历列表', async () => {
+    const updatedGroup = {
+      ...mockGroups[0],
+      name: '微信支付核心系统开发'
+    }
+    mocked.updateExperienceGroup.mockResolvedValue(updatedGroup)
+
+    render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getByText('微信支付平台实习')).toBeInTheDocument()
+    })
+
+    const editBtns = screen.getAllByRole('button', { name: '编辑经历分组' })
+    fireEvent.click(editBtns[0])
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeInTheDocument()
+      expect(screen.getByText('编辑经历分组')).toBeInTheDocument()
+    })
+
+    const nameInput = screen.getByLabelText('经历名称')
+    fireEvent.change(nameInput, { target: { value: '微信支付核心系统开发' } })
+
+    const submitBtn = screen.getByRole('button', { name: '保存修改' })
+    fireEvent.click(submitBtn)
+
+    await waitFor(() => {
+      expect(mocked.updateExperienceGroup).toHaveBeenCalledWith(
+        mockSession.token,
+        101,
+        expect.objectContaining({ name: '微信支付核心系统开发' })
+      )
+      expect(screen.getByText('微信支付核心系统开发')).toBeInTheDocument()
+      expect(screen.getByText(/已成功保存修改/)).toBeInTheDocument()
+    })
   })
 })
 

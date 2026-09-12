@@ -118,7 +118,7 @@ describe('OutlineNavigator 右侧常驻伴随大纲 TOC Mini-map', () => {
     expect(handleAddNew).toHaveBeenCalledTimes(1)
   })
 
-  it('底部统计微模块准确呈现已沉淀工作项数量', () => {
+  it('呈现以经历概况为父级的大纲树状结构并标明具体工作内容子项，且不包含多余统计指标', () => {
     render(
       <OutlineNavigator
         group={mockGroup}
@@ -129,7 +129,16 @@ describe('OutlineNavigator 右侧常驻伴随大纲 TOC Mini-map', () => {
       />
     )
 
-    expect(screen.getByText('已沉淀工作项')).toBeInTheDocument()
-    expect(screen.getByText('2')).toBeInTheDocument()
+    // 经历概况作为顶层节点
+    const overviewBtn = screen.getByRole('button', { name: /经历概况/ })
+    expect(overviewBtn).toHaveClass('outline-nav-item--parent')
+
+    // 下属具备具体工作内容分组子树
+    expect(screen.getByText('具体工作内容')).toBeInTheDocument()
+    expect(screen.getByText('(2)')).toBeInTheDocument()
+
+    // 冗余统计数据已彻底移除
+    expect(screen.queryByText('已沉淀工作项')).not.toBeInTheDocument()
+    expect(screen.queryByText('多版本简历资产')).not.toBeInTheDocument()
   })
 })
