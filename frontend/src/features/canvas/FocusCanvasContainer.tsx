@@ -167,22 +167,15 @@ export function FocusCanvasContainer({
     }
   }
 
-  const handleMoveContent = async (index: number, direction: -1 | 1) => {
-    const targetIndex = index + direction
-    if (targetIndex < 0 || targetIndex >= contents.length) return
-
-    const reordered = [...contents]
-    const [moved] = reordered.splice(index, 1)
-    reordered.splice(targetIndex, 0, moved)
-
-    setContents(reordered)
+  const handleReorderContents = async (newContents: WorkContent[]) => {
+    setContents(newContents)
     try {
-      let workContentIds = reordered.map((item) => item.id)
+      let workContentIds = newContents.map((item) => item.id)
       if (!showArchived) {
         const allContents = await api.workContents(session.token, currentGroup.id, true)
         let visibleIndex = 0
         workContentIds = allContents.map((item) =>
-          item.archived ? item.id : reordered[visibleIndex++].id
+          item.archived ? item.id : newContents[visibleIndex++].id
         )
       }
       const saved = await api.reorderWorkContents(
@@ -195,6 +188,29 @@ export function FocusCanvasContainer({
       setError((e as Error).message)
       setContents(contents)
     }
+  }
+
+  const handleReorderContent = async (sourceIndex: number, targetIndex: number) => {
+    if (
+      sourceIndex === targetIndex ||
+      sourceIndex < 0 ||
+      targetIndex < 0 ||
+      sourceIndex >= contents.length ||
+      targetIndex >= contents.length
+    ) {
+      return
+    }
+
+    const reordered = [...contents]
+    const [moved] = reordered.splice(sourceIndex, 1)
+    reordered.splice(targetIndex, 0, moved)
+    await handleReorderContents(reordered)
+  }
+
+  const handleMoveContent = async (index: number, direction: -1 | 1) => {
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= contents.length) return
+    await handleReorderContent(index, targetIndex)
   }
 
   return (
@@ -213,6 +229,8 @@ export function FocusCanvasContainer({
             onCancelEdit={handleCancelEdit}
             onSaveContent={handleSaveContent}
             onMoveContent={handleMoveContent}
+            onReorderContent={handleReorderContent}
+            onReorderContents={handleReorderContents}
             onArchiveContent={handleArchiveContent}
             onStartCreateNew={() => {
               setEditingContentId(null)

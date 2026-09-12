@@ -21,8 +21,16 @@ export type WorkContentBlockProps = {
   onStartEdit: () => void
   onCancelEdit: () => void
   onSave: (draft: ContentDraft) => Promise<void> | void
-  onMove: (direction: -1 | 1) => void
+  onMove?: (direction: -1 | 1) => void
   onArchive: () => void
+  isDragging?: boolean
+  dragOverPosition?: 'top' | 'bottom' | null
+  onDragStart?: (e: React.DragEvent) => void
+  onDragOver?: (e: React.DragEvent) => void
+  onDragLeave?: (e: React.DragEvent) => void
+  onDrop?: (e: React.DragEvent) => void
+  onDragEnd?: (e: React.DragEvent) => void
+  onDragHandlePointerDown?: (e: React.PointerEvent) => void
 }
 
 export function parseSupplementaryNotes(raw: string | null | undefined): {
@@ -75,7 +83,15 @@ export function WorkContentBlock({
   onCancelEdit,
   onSave,
   onMove,
-  onArchive
+  onArchive,
+  isDragging = false,
+  dragOverPosition = null,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
+  onDragHandlePointerDown
 }: WorkContentBlockProps) {
   const parsedData = useMemo(
     () => parseSupplementaryNotes(item.supplementary_notes),
@@ -139,8 +155,12 @@ export function WorkContentBlock({
   return (
     <article
       id={`work-content-${item.id}`}
-      className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : ''}`}
+      className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : ''} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
       aria-label={`工作项 ${index + 1}: ${item.title}`}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={onDrop}
+      onDragEnd={onDragEnd}
     >
       {isEditing ? (
         <form className="work-content-edit-form" onSubmit={handleSubmit}>
@@ -174,6 +194,26 @@ export function WorkContentBlock({
         <div className="work-content-read-view">
           <header className="work-content-card-header">
             <div className="work-content-title-meta">
+              <span
+                className="work-content-drag-handle"
+                draggable={!isEditing}
+                onDragStart={onDragStart}
+                onPointerDown={onDragHandlePointerDown}
+                style={{ touchAction: 'none' }}
+                title="按住拖拽调整排序"
+                aria-label="拖拽调整排序"
+                role="button"
+                tabIndex={0}
+              >
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="9" cy="5" r="1.2" fill="currentColor" />
+                  <circle cx="9" cy="12" r="1.2" fill="currentColor" />
+                  <circle cx="9" cy="19" r="1.2" fill="currentColor" />
+                  <circle cx="15" cy="5" r="1.2" fill="currentColor" />
+                  <circle cx="15" cy="12" r="1.2" fill="currentColor" />
+                  <circle cx="15" cy="19" r="1.2" fill="currentColor" />
+                </svg>
+              </span>
               <span className="work-content-index-pill">工作项 {index + 1}</span>
               {item.archived && <span className="archived-badge">已归档</span>}
               <h3 className="work-content-title">
@@ -188,22 +228,6 @@ export function WorkContentBlock({
             </div>
 
             <div className="work-content-actions" onClick={(e) => e.stopPropagation()}>
-              <Button
-                size="sm"
-                variant="ghost"
-                isDisabled={index === 0}
-                onPress={() => onMove(-1)}
-              >
-                上移
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                isDisabled={index === totalCount - 1}
-                onPress={() => onMove(1)}
-              >
-                下移
-              </Button>
               <Button
                 size="sm"
                 variant="ghost"

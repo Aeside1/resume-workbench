@@ -5,9 +5,9 @@ import { WorkContentBlock } from './WorkContentBlock'
 import type { WorkContent } from '../../api'
 import { pasteMarkdown } from '../../test/pasteMarkdown'
 
-afterEach(cleanup)
-
 describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）', () => {
+  afterEach(cleanup)
+
   const mockWorkItem: WorkContent = {
     id: 42,
     experience_group_id: 1,
@@ -52,12 +52,10 @@ describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）',
     expect(screen.getByRole('tab', { name: '技术深度版' })).toBeInTheDocument()
   })
 
-  it('首项禁用上移，末项禁用下移，点击上移下移与归档触发对应回调', () => {
-    const handleMove = vi.fn()
+  it('展示拖拽排序手柄，移除了上移下移按钮，点击归档触发对应回调', () => {
     const handleArchive = vi.fn()
 
-    // index = 0, totalCount = 2 -> 上移禁用，下移启用
-    const { rerender } = render(
+    render(
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
@@ -66,41 +64,20 @@ describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）',
         onStartEdit={vi.fn()}
         onCancelEdit={vi.fn()}
         onSave={vi.fn()}
-        onMove={handleMove}
         onArchive={handleArchive}
       />
     )
 
-    const moveUpBtn = screen.getByRole('button', { name: '上移' })
-    const moveDownBtn = screen.getByRole('button', { name: '下移' })
+    // 验证拖拽手柄存在
+    expect(screen.getByLabelText('拖拽调整排序')).toBeInTheDocument()
+
+    // 验证旧有的上移与下移按钮已彻底移除
+    expect(screen.queryByRole('button', { name: '上移' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '下移' })).not.toBeInTheDocument()
+
     const archiveBtn = screen.getByRole('button', { name: '归档' })
-
-    expect(moveUpBtn).toBeDisabled()
-    expect(moveDownBtn).not.toBeDisabled()
-
-    fireEvent.click(moveDownBtn)
-    expect(handleMove).toHaveBeenCalledWith(1)
-
     fireEvent.click(archiveBtn)
     expect(handleArchive).toHaveBeenCalledTimes(1)
-
-    // 当为末项时 (index = 1, totalCount = 2)
-    rerender(
-      <WorkContentBlock
-        item={mockWorkItem}
-        index={1}
-        totalCount={2}
-        isEditing={false}
-        onStartEdit={vi.fn()}
-        onCancelEdit={vi.fn()}
-        onSave={vi.fn()}
-        onMove={handleMove}
-        onArchive={handleArchive}
-      />
-    )
-
-    expect(screen.getByRole('button', { name: '上移' })).not.toBeDisabled()
-    expect(screen.getByRole('button', { name: '下移' })).toBeDisabled()
   })
 
   it('已归档项显示已归档徽章与恢复按钮', () => {

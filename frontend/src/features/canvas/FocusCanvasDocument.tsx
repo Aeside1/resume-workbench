@@ -1,6 +1,6 @@
 import { FormEvent, useState } from 'react'
 import { Button } from '@heroui/react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { Reorder, useDragControls } from 'framer-motion'
 import type { ExperienceGroup, WorkContent } from '../../api'
 import { ExperienceOverviewSection } from './ExperienceOverviewSection'
 import { WorkContentBlock, ContentDraft } from './WorkContentBlock'
@@ -14,7 +14,9 @@ export type FocusCanvasDocumentProps = {
   onStartEdit: (item: WorkContent) => void
   onCancelEdit: () => void
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
-  onMoveContent: (index: number, direction: -1 | 1) => void
+  onMoveContent?: (index: number, direction: -1 | 1) => void
+  onReorderContent?: (sourceIndex: number, targetIndex: number) => void
+  onReorderContents?: (newContents: WorkContent[]) => void
   onArchiveContent: (item: WorkContent) => void
   onStartCreateNew: () => void
   onCancelCreateNew: () => void
@@ -40,12 +42,58 @@ export function FocusCanvasDocument({
   onCancelEdit,
   onSaveContent,
   onMoveContent,
+  onReorderContent,
+  onReorderContents,
   onArchiveContent,
   onStartCreateNew,
   onCancelCreateNew,
   onUpdateGroup
 }: FocusCanvasDocumentProps) {
   const [newDraft, setNewDraft] = useState<ContentDraft>(emptyNewDraft)
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
+  const [dragOverInfo, setDragOverInfo] = useState<{ index: number; position: 'top' | 'bottom' } | null>(null)
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index)
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', String(index))
+  }
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    if (draggedIndex === null || draggedIndex === index) {
+      setDragOverInfo(null)
+      return
+    }
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midY = rect.top + rect.height / 2
+    const position = e.clientY < midY ? 'top' : 'bottom'
+    setDragOverInfo({ index, position })
+  }
+
+  const handleDragLeave = (_e: React.DragEvent, index: number) => {
+    if (dragOverInfo?.index === index) {
+      setDragOverInfo(null)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault()
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null)
+      setDragOverInfo(null)
+      return
+    }
+    onReorderContent?.(draggedIndex, targetIndex)
+    setDraggedIndex(null)
+    setDragOverInfo(null)
+  }
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null)
+    setDragOverInfo(null)
+  }
 
   const handleCreateSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -80,39 +128,50 @@ export function FocusCanvasDocument({
                   index={index}
                   totalCount={contents.length}
                   isEditing={editingId === item.id}
+                  isDragging={draggedIndex === index}
+                  dragOverPosition={dragOverInfo?.index === index ? dragOverInfo.position : null}
                   onStartEdit={() => onStartEdit(item)}
                   onCancelEdit={onCancelEdit}
                   onSave={(draft) => onSaveContent(draft, item.id)}
-                  onMove={(direction) => onMoveContent(index, direction)}
+                  onMove={(direction) => onMoveContent?.(index, direction)}
                   onArchive={() => onArchiveContent(item)}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={(e) => handleDragLeave(e, index)}
+                  onDrop={(e) => handleDrop(e, index)}
+                  onDragEnd={handleDragEnd}
                 />
               </div>
             ))
           ) : (
-            <AnimatePresence mode="popLayout" initial={false}>
+            <Reorder.Group
+              axis="y"
+              values={contents}
+              onReorder={(newOrder) => onReorderContents?.(newOrder)}
+              style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}
+            >
               {contents.map((item, index) => (
-                <motion.div
+                <FocusWorkContentItem
                   key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <WorkContentBlock
-                    item={item}
-                    index={index}
-                    totalCount={contents.length}
-                    isEditing={editingId === item.id}
-                    onStartEdit={() => onStartEdit(item)}
-                    onCancelEdit={onCancelEdit}
-                    onSave={(draft) => onSaveContent(draft, item.id)}
-                    onMove={(direction) => onMoveContent(index, direction)}
-                    onArchive={() => onArchiveContent(item)}
-                  />
-                </motion.div>
+                  item={item}
+                  index={index}
+                  totalCount={contents.length}
+                  editingId={editingId}
+                  draggedIndex={draggedIndex}
+                  dragOverInfo={dragOverInfo}
+                  onStartEdit={onStartEdit}
+                  onCancelEdit={onCancelEdit}
+                  onSaveContent={onSaveContent}
+                  onMoveContent={onMoveContent}
+                  onArchiveContent={onArchiveContent}
+                  onDragStart={handleDragStart}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onDragEnd={handleDragEnd}
+                />
               ))}
-            </AnimatePresence>
+            </Reorder.Group>
           )}
 
           {isCreatingNew ? (
@@ -158,5 +217,79 @@ export function FocusCanvasDocument({
         </div>
       </section>
     </div>
+  )
+}
+
+function FocusWorkContentItem({
+  item,
+  index,
+  totalCount,
+  editingId,
+  draggedIndex,
+  dragOverInfo,
+  onStartEdit,
+  onCancelEdit,
+  onSaveContent,
+  onMoveContent,
+  onArchiveContent,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd
+}: {
+  item: WorkContent
+  index: number
+  totalCount: number
+  editingId: number | null
+  draggedIndex: number | null
+  dragOverInfo: { index: number; position: 'top' | 'bottom' } | null
+  onStartEdit: (item: WorkContent) => void
+  onCancelEdit: () => void
+  onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
+  onMoveContent?: (index: number, direction: -1 | 1) => void
+  onArchiveContent: (item: WorkContent) => void
+  onDragStart: (e: React.DragEvent, index: number) => void
+  onDragOver: (e: React.DragEvent, index: number) => void
+  onDragLeave: (e: React.DragEvent, index: number) => void
+  onDrop: (e: React.DragEvent, index: number) => void
+  onDragEnd: () => void
+}) {
+  const dragControls = useDragControls()
+  const isEditing = editingId === item.id
+
+  return (
+    <Reorder.Item
+      value={item}
+      id={`work-content-${item.id}`}
+      dragListener={false}
+      dragControls={dragControls}
+      style={{ listStyle: 'none', position: 'relative' }}
+      whileDrag={{ scale: 1.01, zIndex: 10, boxShadow: '0 12px 24px -4px rgba(0,0,0,0.12)' }}
+    >
+      <WorkContentBlock
+        item={item}
+        index={index}
+        totalCount={totalCount}
+        isEditing={isEditing}
+        isDragging={draggedIndex === index}
+        dragOverPosition={dragOverInfo?.index === index ? dragOverInfo.position : null}
+        onStartEdit={() => onStartEdit(item)}
+        onCancelEdit={onCancelEdit}
+        onSave={(draft) => onSaveContent(draft, item.id)}
+        onMove={(direction) => onMoveContent?.(index, direction)}
+        onArchive={() => onArchiveContent(item)}
+        onDragStart={(e) => onDragStart(e, index)}
+        onDragOver={(e) => onDragOver(e, index)}
+        onDragLeave={(e) => onDragLeave(e, index)}
+        onDrop={(e) => onDrop(e, index)}
+        onDragEnd={onDragEnd}
+        onDragHandlePointerDown={(e) => {
+          if (!isEditing) {
+            dragControls.start(e)
+          }
+        }}
+      />
+    </Reorder.Item>
   )
 }
