@@ -1,27 +1,28 @@
 import { useEffect, useRef, useState } from 'react'
-import { api, ExperienceGroup, WorkContent } from '../../api'
+import { api, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
-import { FocusCanvasDocument } from './FocusCanvasDocument'
+import { useToast } from '../../components/ui/Toast'
 import { OutlineNavigator } from './OutlineNavigator'
+import { FocusCanvasDocument } from './FocusCanvasDocument'
 import type { ContentDraft } from './WorkContentBlock'
 
-export type FocusCanvasContainerProps = {
+type Props = {
   session: Session
   group: ExperienceGroup
-  onExitFocus: () => void
+  onExitFocus?: () => void
   onSaveStatusChange?: (status: 'idle' | 'saving' | 'saved') => void
   onDirtyChange?: (isDirty: boolean) => void
-  onUpdateGroup?: (updated: ExperienceGroup) => void
+  onUpdateGroup?: (group: ExperienceGroup) => void
 }
 
 export function FocusCanvasContainer({
   session,
   group,
-  onExitFocus: _onExitFocus,
+  onExitFocus,
   onSaveStatusChange,
   onDirtyChange,
   onUpdateGroup
-}: FocusCanvasContainerProps) {
+}: Props) {
   const [currentGroup, setCurrentGroup] = useState<ExperienceGroup>(group)
   const [contents, setContents] = useState<WorkContent[]>([])
   const [editingContentId, setEditingContentId] = useState<number | null>(null)
@@ -29,7 +30,7 @@ export function FocusCanvasContainer({
   const [activeNavId, setActiveNavId] = useState<string>('section-overview')
   const [showArchived, setShowArchived] = useState(false)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
+  const toast = useToast()
 
   useEffect(() => {
     setCurrentGroup(group)
@@ -155,8 +156,12 @@ export function FocusCanvasContainer({
       setContents((items) =>
         items.map((it) => (it.id === updated.id ? updated : it))
       )
-      setNotice(`已${updated.archived ? '归档' : '恢复'}工作内容：“${updated.title}”`)
-      setTimeout(() => setNotice(''), 3000)
+      toast.success(`已${updated.archived ? '归档' : '恢复'}工作内容：“${updated.title}”`, {
+        action: {
+          label: '撤销',
+          onClick: () => handleArchiveContent(updated),
+        },
+      })
     } catch (e) {
       setError((e as Error).message)
     }
@@ -194,10 +199,10 @@ export function FocusCanvasContainer({
 
   return (
     <div className="focus-canvas-wrapper" ref={containerRef}>
+      {toast.ToastPortal}
       <div className="focus-canvas-layout">
         <main className="focus-canvas-main-col">
           {error && <p className="error" role="alert">{error}</p>}
-          {notice && <p className="notice" role="status">{notice}</p>}
 
           <FocusCanvasDocument
             group={currentGroup}

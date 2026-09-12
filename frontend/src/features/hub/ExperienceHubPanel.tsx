@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@heroui/react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { api, ExperienceGroup } from '../../api'
+import { api, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
+import { useToast } from '../../components/ui/Toast'
 import { CreateExperienceDraft, CreateExperienceModal } from './CreateExperienceModal'
 import { EditExperienceDraft, EditExperienceModal } from './EditExperienceModal'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
@@ -29,7 +30,7 @@ export function ExperienceHubPanel({
   const [groupToDelete, setGroupToDelete] = useState<ExperienceGroup | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
+  const toast = useToast()
 
 
   useEffect(() => {
@@ -107,7 +108,7 @@ export function ExperienceHubPanel({
       })
 
       setGroups((items) => items.map((g) => (g.id === updated.id ? updated : g)))
-      setNotice(`经历分组“${updated.name}”已成功保存修改。`)
+      toast.success(`经历分组“${updated.name}”已成功保存修改。`)
       setGroupToEdit(null)
     } catch (e) {
       setError((e as Error).message)
@@ -119,7 +120,12 @@ export function ExperienceHubPanel({
     try {
       const updated = await api.archiveExperienceGroup(session.token, group.id)
       setGroups((items) => items.map((g) => (g.id === updated.id ? updated : g)))
-      setNotice(`经历分组“${group.name}”已移至归档箱，可在“归档箱”中查看或恢复。`)
+      toast.success(`经历分组“${group.name}”已移至归档箱，可在“归档箱”中查看或恢复。`, {
+        action: {
+          label: '撤销',
+          onClick: () => handleRestoreGroup(group),
+        },
+      })
     } catch (e) {
       setError((e as Error).message)
     }
@@ -129,7 +135,7 @@ export function ExperienceHubPanel({
     try {
       const updated = await api.restoreExperienceGroup(session.token, group.id)
       setGroups((items) => items.map((g) => (g.id === updated.id ? updated : g)))
-      setNotice(`经历分组“${group.name}”已恢复到在用经历列表。`)
+      toast.success(`经历分组“${group.name}”已恢复到在用经历列表。`)
     } catch (e) {
       setError((e as Error).message)
     }
@@ -145,7 +151,7 @@ export function ExperienceHubPanel({
     try {
       await api.deleteExperienceGroup(session.token, target.id)
       setGroups((items) => items.filter((g) => g.id !== target.id))
-      setNotice(`经历分组“${target.name}”已彻底删除。`)
+      toast.success(`经历分组“${target.name}”已彻底删除。`)
       setGroupToDelete(null)
     } catch (e) {
       setError((e as Error).message)
@@ -205,7 +211,7 @@ export function ExperienceHubPanel({
       </div>
 
       {error && <p className="error" role="alert">{error}</p>}
-      {notice && <p className="notice" role="status">{notice}</p>}
+      {toast.ToastPortal}
 
       <div className="hub-content-area">
         {!loading && displayGroups.length === 0 && (
