@@ -227,25 +227,65 @@ button { cursor: pointer; }
 .focus-breadcrumb-group {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
 }
 .focus-back-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #e2e8f0;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
   background: #ffffff;
   color: #334155;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .focus-back-btn:hover {
   background: #f8fafc;
-  border-color: #cbd5e1;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateX(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+.focus-back-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+.focus-breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.focus-breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+.focus-breadcrumb-link:hover {
+  color: #0284c7;
+  background: #f0f9ff;
+}
+.focus-breadcrumb-separator {
+  color: #cbd5e1;
+  font-size: 13px;
+  user-select: none;
+}
+.focus-breadcrumb-current {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 3px 6px;
 }
 .focus-breadcrumb-text {
   font-size: 14px;
@@ -280,19 +320,7 @@ button { cursor: pointer; }
 .focus-actions-right {
   display: flex;
   align-items: center;
-}
-.focus-exit-btn {
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  border: 1px solid #e2e8f0 !important;
-  color: #334155 !important;
-  border-radius: 8px !important;
-  background: #ffffff !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04) !important;
-}
-.focus-exit-btn:hover {
-  background: #f8fafc !important;
-  border-color: #cbd5e1 !important;
+  min-width: 32px;
 }
 
 /* App Main Content */

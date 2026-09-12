@@ -99,7 +99,6 @@ export function ResumeDescriptionTabs({
             </Button>
           )}
         </div>
-        <span className="resume-asset-badge">简历内容资产 · 供方案直接引用</span>
       </div>
 
       {isAdding ? (

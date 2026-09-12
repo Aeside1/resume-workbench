@@ -86,10 +86,10 @@ describe('ResumeDescriptionTabs 多版本简历描述横向 Tab 栏', () => {
     expect(screen.queryByLabelText('版本标签')).not.toBeInTheDocument()
   })
 
-  it('标明简历资产提示，不出现无意义的复制到剪贴板按钮', () => {
+  it('界面整洁不展示多余的 demo 注释徽章，不出现无意义的复制到剪贴板按钮', () => {
     render(<ResumeDescriptionTabs workContentId={101} descriptions={mockDescriptions} />)
 
-    expect(screen.getByText(/简历内容资产/)).toBeInTheDocument()
+    expect(screen.queryByText(/简历内容资产/)).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /复制/ })).not.toBeInTheDocument()
   })
 })

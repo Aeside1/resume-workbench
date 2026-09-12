@@ -110,7 +110,8 @@ describe('AppShell 专注模式切换', () => {
     expect(screen.queryByRole('complementary', { name: '主导航' })).not.toBeInTheDocument()
     const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
     expect(breadcrumbNav).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByText(/经历内容 \/ 蚂蚁集团/)).toBeInTheDocument()
+    expect(within(breadcrumbNav).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
+    expect(within(breadcrumbNav).getByText('蚂蚁集团')).toBeInTheDocument()
   })
 
   it('focus 模式显示轻量面包屑顶栏', () => {
@@ -122,7 +123,8 @@ describe('AppShell 专注模式切换', () => {
 
     const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
     expect(breadcrumbNav).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByText(/经历内容 \/ 测试经历/)).toBeInTheDocument()
+    expect(within(breadcrumbNav).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
+    expect(within(breadcrumbNav).getByText('测试经历')).toBeInTheDocument()
   })
 
   it('focus 模式下点击面包屑返回按钮触发 onExitFocus', () => {
@@ -145,16 +147,24 @@ describe('AppShell 专注模式切换', () => {
     expect(handleExitFocus).toHaveBeenCalledOnce()
   })
 
-  it('focus 模式顶栏显示退出专注按钮', () => {
+  it('focus 模式顶栏点击面包屑链接触发 onExitFocus 且不渲染退出专注按钮', () => {
     const handleExitFocus = vi.fn()
     render(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" onExitFocus={handleExitFocus}>
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        mode="focus"
+        breadcrumb="经历内容 / 测试经历"
+        onExitFocus={handleExitFocus}
+      >
         <div>主内容</div>
       </AppShell>
     )
 
-    const exitButton = screen.getByRole('button', { name: '退出专注模式' })
-    fireEvent.click(exitButton)
+    expect(screen.queryByRole('button', { name: '退出专注模式' })).not.toBeInTheDocument()
+
+    const breadcrumbLink = screen.getByRole('button', { name: '经历内容' })
+    fireEvent.click(breadcrumbLink)
 
     expect(handleExitFocus).toHaveBeenCalledOnce()
   })
