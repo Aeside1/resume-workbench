@@ -1,48 +1,31 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ToastProvider, useToast } from './Toast'
+import { ToastProvider, toast, useToast } from './Toast'
 
 afterEach(cleanup)
 
 function TestComponent({ onAction }: { onAction?: () => void }) {
-  const toast = useToast()
+  const t = useToast()
 
   return (
     <div>
       <button
         onClick={() =>
-          toast.success('操作成功完成', {
+          t.success('操作成功完成', {
             action: onAction ? { label: '撤销', onClick: onAction } : undefined,
           })
         }
       >
         触发成功提示
       </button>
-      <button onClick={() => toast.error('发生异常')}>触发错误提示</button>
-      {toast.ToastPortal}
+      <button onClick={() => t.error('发生异常')}>触发错误提示</button>
     </div>
   )
 }
 
-describe('Toast 组件与 useToast Hook', () => {
-  it('在 ToastProvider 下可以正常弹出 Toast 并带有 role="status"', () => {
-    render(
-      <ToastProvider>
-        <TestComponent />
-      </ToastProvider>
-    )
-
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByText('触发成功提示'))
-
-    const statusElem = screen.getByRole('status')
-    expect(statusElem).toBeInTheDocument()
-    expect(statusElem).toHaveTextContent('操作成功完成')
-  })
-
-  it('支持点击关闭按钮关闭 Toast', () => {
+describe('基于 sonner 的 Toast 组件与 API 测试', () => {
+  it('在 ToastProvider 下可以正常弹出 Toast 并带有 role="status"', async () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -50,15 +33,15 @@ describe('Toast 组件与 useToast Hook', () => {
     )
 
     fireEvent.click(screen.getByText('触发成功提示'))
-    expect(screen.getByRole('status')).toBeInTheDocument()
 
-    const closeBtn = screen.getByLabelText('关闭提示')
-    fireEvent.click(closeBtn)
-
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    await waitFor(() => {
+      const statusElem = screen.getByRole('status')
+      expect(statusElem).toBeInTheDocument()
+      expect(statusElem).toHaveTextContent('操作成功完成')
+    })
   })
 
-  it('支持 Action 操作按钮（如撤销）点击触发回调', () => {
+  it('支持 Action 按钮（如撤销）点击触发回调', async () => {
     const handleAction = vi.fn()
     render(
       <ToastProvider>
@@ -68,21 +51,28 @@ describe('Toast 组件与 useToast Hook', () => {
 
     fireEvent.click(screen.getByText('触发成功提示'))
 
-    const undoBtn = screen.getByRole('button', { name: '撤销' })
-    expect(undoBtn).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: '撤销' })).toBeInTheDocument()
+    })
 
+    const undoBtn = screen.getByRole('button', { name: '撤销' })
     fireEvent.click(undoBtn)
     expect(handleAction).toHaveBeenCalledTimes(1)
-    expect(screen.queryByRole('status')).not.toBeInTheDocument()
   })
 
-  it('在没有 ToastProvider 的孤立测试环境下自适应使用本地 fallback', () => {
-    render(<TestComponent />)
+  it('支持弹出错误提示并带有 role="alert"', async () => {
+    render(
+      <ToastProvider>
+        <TestComponent />
+      </ToastProvider>
+    )
 
     fireEvent.click(screen.getByText('触发错误提示'))
 
-    const statusElem = screen.getByRole('status')
-    expect(statusElem).toBeInTheDocument()
-    expect(statusElem).toHaveTextContent('发生异常')
+    await waitFor(() => {
+      const alertElem = screen.getByRole('alert')
+      expect(alertElem).toBeInTheDocument()
+      expect(alertElem).toHaveTextContent('发生异常')
+    })
   })
 })
