@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
-import { MilkdownView } from './MilkdownView'
+import { MilkdownView, MilkdownEditor } from './MilkdownView'
 
 afterEach(cleanup)
 
@@ -32,5 +32,37 @@ describe('MilkdownView Markdown 渲染组件', () => {
     render(<MilkdownView content="" placeholder="暂无背景与难点" />)
 
     expect(screen.getByText('暂无背景与难点')).toBeInTheDocument()
+  })
+})
+
+describe('MilkdownEditor 写时渲染编辑器（渲染状态下直接编辑）', () => {
+  it('直接在渲染状态下展示富文本并支持编辑，不存在分离的 Tab 或 Demo 提示', () => {
+    const handleChange = () => {}
+    const { container } = render(
+      <MilkdownEditor
+        value={`这是 ==核心优势== 与 **技术方案**`}
+        onChange={handleChange}
+        placeholder="请输入内容..."
+      />
+    )
+
+    // 验证不存在分离的编辑/预览 Tab
+    expect(screen.queryByRole('tab', { name: '编辑 (Markdown)' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: '写时渲染预览' })).not.toBeInTheDocument()
+
+    // 验证不存在 demo 式提示语
+    expect(screen.queryByText(/支持 \*\*加粗\*\*/)).not.toBeInTheDocument()
+
+    // 验证在渲染状态下展示加粗与高亮节点
+    const mark = screen.getByText('核心优势')
+    expect(mark.tagName.toLowerCase()).toBe('mark')
+    expect(mark).toHaveClass('md-highlight')
+
+    const strong = screen.getByText('技术方案')
+    expect(strong.tagName.toLowerCase()).toBe('strong')
+
+    // 验证容器是 contenteditable
+    const editorNode = container.querySelector('[contenteditable="true"]')
+    expect(editorNode).toBeInTheDocument()
   })
 })

@@ -30,7 +30,7 @@ export function WorkContentFormFields({
         <label htmlFor={`${prefixId}-record`}>背景与难点</label>
         <MilkdownEditor
           id={`${prefixId}-record`}
-          placeholder="描述该工作的背景痛点、业务诉求或技术难点（支持 Markdown、列表 与 ==高亮==）..."
+          placeholder="描述该工作的背景痛点、业务诉求或技术难点..."
           rows={3}
           value={draft.detailed_record}
           onChange={(val) => onChange({ ...draft, detailed_record: val })}
@@ -41,7 +41,7 @@ export function WorkContentFormFields({
         <label htmlFor={`${prefixId}-materials`}>技术方案与材料</label>
         <MilkdownEditor
           id={`${prefixId}-materials`}
-          placeholder="记录采用的架构方案、关键技术栈、设计文档或材料链接（支持 Markdown）..."
+          placeholder="记录采用的架构方案、关键技术栈、设计文档或材料链接..."
           rows={3}
           value={draft.technical_materials}
           onChange={(val) => onChange({ ...draft, technical_materials: val })}

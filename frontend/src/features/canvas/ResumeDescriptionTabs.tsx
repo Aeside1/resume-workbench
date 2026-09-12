@@ -167,7 +167,7 @@ export function ResumeDescriptionTabs({
 
           <div className="resume-desc-field">
             <label htmlFor={`bullets-input-${workContentId}`}>
-              简历描述要点 (每行一条，支持 Markdown 与 ==高亮==)
+              简历描述要点 (每行一条)
             </label>
             <MilkdownEditor
               id={`bullets-input-${workContentId}`}

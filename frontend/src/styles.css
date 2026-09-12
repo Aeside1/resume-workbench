@@ -2246,6 +2246,108 @@ mark.md-highlight {
   gap: 8px;
 }
 
+/* ==========================================================================
+   Milkdown & Obsidian Markdown Live Rendered Styles
+   ========================================================================== */
+
+/* Obsidian 风格的 ==高亮== 效果：暖浅黄背景 + 深褐强调字，带柔和微圆角与 padding */
+.md-highlight {
+  background-color: #fef08a !important;
+  color: #713f12 !important;
+  padding: 1px 4px !important;
+  border-radius: 3px !important;
+  font-weight: 500 !important;
+}
+
+/* 统一 Markdown 排版样式 */
+.markdown-body-render {
+  font-size: 14px;
+  line-height: 1.65;
+  color: #334155;
+}
+
+.markdown-body-render strong {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+.markdown-body-render code {
+  background: #f1f5f9;
+  color: #0f172a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12.5px;
+}
+
+.markdown-body-render .markdown-paragraph,
+.markdown-body-render .live-p {
+  margin: 0 0 6px 0;
+}
+
+.markdown-body-render .markdown-paragraph:last-child,
+.markdown-body-render .live-p:last-child {
+  margin-bottom: 0;
+}
+
+.markdown-body-render .markdown-ul,
+.markdown-body-render .live-ul {
+  margin: 4px 0 6px 20px;
+  padding: 0;
+  list-style-type: disc;
+}
+
+.markdown-body-render .markdown-li,
+.markdown-body-render .live-li {
+  margin-bottom: 3px;
+}
+
+/* 所见即所得写时渲染编辑器容器（单一容器，在渲染状态下直接编辑） */
+.milkdown-live-editor {
+  position: relative;
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background-color: #ffffff;
+  transition: all 0.15s ease-in-out;
+}
+
+.milkdown-live-editor:focus-within {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.milkdown-live-content {
+  min-height: 72px;
+  padding: 8px 12px;
+  outline: none;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: #1e293b;
+  cursor: text;
+  word-break: break-word;
+}
+
+.milkdown-live-content:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+/* 隐藏用于表单集成与 a11y 的桥接控件 */
+.live-editor-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+
 
 
 
