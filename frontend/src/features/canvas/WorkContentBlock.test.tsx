@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WorkContentBlock } from './WorkContentBlock'
 import type { WorkContent } from '../../api'
+import { pasteMarkdown } from '../../test/pasteMarkdown'
 
 afterEach(cleanup)
 
@@ -165,7 +166,7 @@ describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）',
     expect(titleInput).toHaveValue('重构可视化拖拽画布核心渲染引擎')
 
     const recordInput = screen.getByLabelText('背景与难点')
-    expect(recordInput).toHaveValue('旧渲染器全量 re-render 导致大页面卡顿，帧率掉至 20fps。')
+    expect(recordInput).toHaveTextContent('旧渲染器全量 re-render 导致大页面卡顿，帧率掉至 20fps。')
 
     fireEvent.change(titleInput, { target: { value: '优化画布渲染管线' } })
 
@@ -208,8 +209,8 @@ describe('WorkContentBlock 单项工作卡片（阅读态与就地编辑态）',
     fireEvent.click(screen.getByRole('button', { name: '+ 立即新增版本写法' }))
     const tagInput = screen.getByLabelText('版本标签')
     fireEvent.change(tagInput, { target: { value: '业务导向版' } })
-    const bulletsInput = screen.getByPlaceholderText('输入该版本的 bullet points，每行一条...')
-    fireEvent.change(bulletsInput, { target: { value: '业务指标翻倍提升\n支持千万级调用' } })
+    const bulletsInput = screen.getByRole('textbox', { name: /简历描述要点/ })
+    pasteMarkdown(bulletsInput, '业务指标翻倍提升\n支持千万级调用')
 
     fireEvent.click(screen.getByRole('button', { name: '保存新写法' }))
 

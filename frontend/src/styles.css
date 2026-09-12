@@ -2280,25 +2280,21 @@ mark.md-highlight {
   font-size: 12.5px;
 }
 
-.markdown-body-render .markdown-paragraph,
-.markdown-body-render .live-p {
+.markdown-body-render p {
   margin: 0 0 6px 0;
 }
 
-.markdown-body-render .markdown-paragraph:last-child,
-.markdown-body-render .live-p:last-child {
+.markdown-body-render p:last-child {
   margin-bottom: 0;
 }
 
-.markdown-body-render .markdown-ul,
-.markdown-body-render .live-ul {
+.markdown-body-render ul {
   margin: 4px 0 6px 20px;
   padding: 0;
   list-style-type: disc;
 }
 
-.markdown-body-render .markdown-li,
-.markdown-body-render .live-li {
+.markdown-body-render li {
   margin-bottom: 3px;
 }
 
@@ -2328,23 +2324,32 @@ mark.md-highlight {
   word-break: break-word;
 }
 
-.milkdown-live-content:empty::before {
+.milkdown-live-content[data-empty="true"]::before {
   content: attr(data-placeholder);
   color: #94a3b8;
   pointer-events: none;
+  position: absolute;
 }
 
-/* 隐藏用于表单集成与 a11y 的桥接控件 */
-.live-editor-hidden-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border-width: 0;
+.markdown-body-render strong .md-highlight {
+  font-weight: inherit !important;
+}
+
+.markdown-body-render pre {
+  white-space: pre-wrap;
+  background: #f1f5f9;
+  padding: 10px 12px;
+  border-radius: 4px;
+}
+
+.markdown-body-render img {
+  max-width: 100%;
+}
+
+.markdown-body-render blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 12px;
+  margin: 6px 0;
 }
 
 

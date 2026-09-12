@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-li
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { api } from './api'
+import { pasteMarkdown } from './test/pasteMarkdown'
 
 vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn() } }))
 const mocked = vi.mocked(api)
@@ -73,9 +74,9 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: '平台项目' })).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: '添加具体工作内容' }))
     fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '统一状态模型' } })
-    fireEvent.change(screen.getByLabelText('背景与难点'), { target: { value: '梳理状态流转' } })
-    fireEvent.change(screen.getByLabelText('技术方案与材料'), { target: { value: 'Rust' } })
-    fireEvent.change(screen.getByLabelText('量化结果数据'), { target: { value: '耗时下降' } })
+    pasteMarkdown(screen.getByRole('textbox', { name: '背景与难点' }), '梳理状态流转')
+    pasteMarkdown(screen.getByRole('textbox', { name: '技术方案与材料' }), 'Rust')
+    pasteMarkdown(screen.getByRole('textbox', { name: '量化结果数据' }), '耗时下降')
     fireEvent.click(screen.getByRole('button', { name: '添加工作内容' }))
     await waitFor(() => expect(screen.getByRole('heading', { level: 3, name: '统一状态模型' })).toBeInTheDocument())
     expect(screen.getByText('梳理状态流转')).toBeInTheDocument()
@@ -158,5 +159,4 @@ describe('认证后的工作台', () => {
     })
   })
 })
-
 

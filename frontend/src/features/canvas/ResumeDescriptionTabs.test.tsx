@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ResumeDescriptionTabs, type ResumeDescriptionItem } from './ResumeDescriptionTabs'
+import { pasteMarkdown } from '../../test/pasteMarkdown'
 
 afterEach(cleanup)
 
@@ -75,9 +76,7 @@ describe('ResumeDescriptionTabs 多版本简历描述与完整 CRUD', () => {
     expect(screen.getByLabelText(/简历描述要点/)).toBeInTheDocument()
 
     fireEvent.change(screen.getByLabelText('版本标签'), { target: { value: '管理与协同版' } })
-    fireEvent.change(screen.getByPlaceholderText('输入该版本的 bullet points，每行一条...'), {
-      target: { value: '协同跨部门 5 人团队完成交付\n推进敏捷迭代流程' }
-    })
+    pasteMarkdown(screen.getByRole('textbox', { name: /简历描述要点/ }), '协同跨部门 5 人团队完成交付\n推进敏捷迭代流程')
 
     const saveBtn = screen.getByRole('button', { name: '保存新写法' })
     fireEvent.click(saveBtn)

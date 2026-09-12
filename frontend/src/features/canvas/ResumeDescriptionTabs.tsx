@@ -166,7 +166,7 @@ export function ResumeDescriptionTabs({
           </div>
 
           <div className="resume-desc-field">
-            <label htmlFor={`bullets-input-${workContentId}`}>
+            <label id={`bullets-input-${workContentId}-label`} htmlFor={`bullets-input-${workContentId}`}>
               简历描述要点 (每行一条)
             </label>
             <MilkdownEditor

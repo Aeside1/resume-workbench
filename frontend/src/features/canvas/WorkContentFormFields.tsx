@@ -27,7 +27,7 @@ export function WorkContentFormFields({
       </div>
 
       <div className="canvas-field">
-        <label htmlFor={`${prefixId}-record`}>背景与难点</label>
+        <label id={`${prefixId}-record-label`} htmlFor={`${prefixId}-record`}>背景与难点</label>
         <MilkdownEditor
           id={`${prefixId}-record`}
           placeholder="描述该工作的背景痛点、业务诉求或技术难点..."
@@ -38,7 +38,7 @@ export function WorkContentFormFields({
       </div>
 
       <div className="canvas-field">
-        <label htmlFor={`${prefixId}-materials`}>技术方案与材料</label>
+        <label id={`${prefixId}-materials-label`} htmlFor={`${prefixId}-materials`}>技术方案与材料</label>
         <MilkdownEditor
           id={`${prefixId}-materials`}
           placeholder="记录采用的架构方案、关键技术栈、设计文档或材料链接..."
@@ -49,7 +49,7 @@ export function WorkContentFormFields({
       </div>
 
       <div className="canvas-field">
-        <label htmlFor={`${prefixId}-result`}>量化结果数据</label>
+        <label id={`${prefixId}-result-label`} htmlFor={`${prefixId}-result`}>量化结果数据</label>
         <MilkdownEditor
           id={`${prefixId}-result`}
           placeholder="说明带来的实际收益、性能提升百分比或关键量化业务指标..."
@@ -60,7 +60,7 @@ export function WorkContentFormFields({
       </div>
 
       <div className="canvas-field">
-        <label htmlFor={`${prefixId}-notes`}>补充说明</label>
+        <label id={`${prefixId}-notes-label`} htmlFor={`${prefixId}-notes`}>补充说明</label>
         <MilkdownEditor
           id={`${prefixId}-notes`}
           placeholder="可记录专利、团队内分享或后续扩展思考..."
