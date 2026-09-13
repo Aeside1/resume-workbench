@@ -59,7 +59,6 @@ export function MilkdownEditor({
   cacheKey,
   showToolbar = true,
 }: MilkdownEditorProps) {
-  const effectiveCacheKey = cacheKey
   const hostRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const changeRef = useRef(onChange)
@@ -88,7 +87,7 @@ export function MilkdownEditor({
 
     // 尝试从页面级缓存恢复之前的 EditorState，以保持完整的 Undo/Redo 历史栈
     let initialState: EditorState
-    const cachedState = effectiveCacheKey ? globalEditorStateCache.get(effectiveCacheKey) : null
+    const cachedState = cacheKey ? globalEditorStateCache.get(cacheKey) : null
     if (cachedState) {
       const cachedMarkdown = serializeMarkdown(cachedState.doc)
       if (cachedMarkdown === initialValueRef.current) {
@@ -107,8 +106,8 @@ export function MilkdownEditor({
       initialState = createLiveEditorState(initialValueRef.current)
     }
 
-    if (effectiveCacheKey) {
-      globalEditorStateCache.set(effectiveCacheKey, initialState)
+    if (cacheKey) {
+      globalEditorStateCache.set(cacheKey, initialState)
     }
 
     const view = new EditorView(hostRef.current!, {
@@ -117,8 +116,8 @@ export function MilkdownEditor({
         const nextState = view.state.apply(transaction)
         view.updateState(nextState)
         setEditorState(nextState)
-        if (effectiveCacheKey) {
-          globalEditorStateCache.set(effectiveCacheKey, nextState)
+        if (cacheKey) {
+          globalEditorStateCache.set(cacheKey, nextState)
         }
         if (transaction.docChanged) publish(view)
       },
@@ -145,7 +144,7 @@ export function MilkdownEditor({
       viewRef.current = null
       view.destroy()
     }
-  }, [effectiveCacheKey])
+  }, [cacheKey])
 
   useLayoutEffect(() => {
     const view = viewRef.current
@@ -176,11 +175,11 @@ export function MilkdownEditor({
       const nextState = createLiveEditorState(doc)
       view.updateState(nextState)
       setEditorState(nextState)
-      if (effectiveCacheKey) {
-        globalEditorStateCache.set(effectiveCacheKey, nextState)
+      if (cacheKey) {
+        globalEditorStateCache.set(cacheKey, nextState)
       }
     }
-  }, [value, effectiveCacheKey])
+  }, [value, cacheKey])
 
   return (
     <div className={`milkdown-editor-wrapper ${className}`}>

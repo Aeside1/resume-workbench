@@ -26,6 +26,17 @@ const insertBreak: Command = (state, dispatch) => {
   return true
 }
 
+const exitCodeBlockToParagraph: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection
+  if (empty && $from.parent.type === liveSchema.nodes.code_block) {
+    // 空代码块，或者在代码块首字符处按键，直接还原为普通段落
+    if ($from.parent.content.size === 0 || $from.parentOffset === 0) {
+      return setBlockType(liveSchema.nodes.paragraph)(state, dispatch)
+    }
+  }
+  return false
+}
+
 export function createLiveEditorState(content: string | ProseNode) {
   const { nodes, marks } = liveSchema
   return EditorState.create({
@@ -49,22 +60,10 @@ export function createLiveEditorState(content: string | ProseNode) {
         'Mod-b': toggleMark(marks.strong),
         'Mod-i': toggleMark(marks.em),
         'Mod-Shift-h': toggleMark(marks.highlight),
-        Backspace: chainCommands(undoInputRule, (state, dispatch) => {
-          const { $from, empty } = state.selection
-          if (empty && $from.parent.type === nodes.code_block && $from.parent.content.size === 0) {
-            return setBlockType(nodes.paragraph)(state, dispatch)
-          }
-          return false
-        }),
+        Backspace: chainCommands(undoInputRule, exitCodeBlockToParagraph),
         Enter: chainCommands(
           splitListItem(nodes.list_item),
-          (state, dispatch) => {
-            const { $from, empty } = state.selection
-            if (empty && $from.parent.type === nodes.code_block && $from.parent.content.size === 0) {
-              return setBlockType(nodes.paragraph)(state, dispatch)
-            }
-            return false
-          }
+          exitCodeBlockToParagraph
         ),
         'Shift-Enter': chainCommands(exitCode, insertBreak),
         Tab: sinkListItem(nodes.list_item),

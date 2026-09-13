@@ -171,6 +171,7 @@ export function ResumeDescriptionTabs({
             </label>
             <MilkdownEditor
               id={`bullets-input-${workContentId}`}
+              cacheKey={`bullets-input-${workContentId}-${editingId || 'new'}`}
               placeholder="输入该版本的 bullet points，每行一条..."
               rows={3}
               value={draftBulletsText}

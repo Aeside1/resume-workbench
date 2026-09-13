@@ -64,7 +64,7 @@ describe('认证后的工作台', () => {
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'creator@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByText('经历分组')).toBeInTheDocument())
 
-    fireEvent.click(screen.getByRole('button', { name: /新建经历分组/ }))
+    fireEvent.click(screen.getAllByRole('button', { name: /新建经历分组/ })[0])
     const modal = await screen.findByRole('dialog', { name: '新建经历分组' })
     fireEvent.change(within(modal).getByLabelText('经历名称'), { target: { value: '电商中台重构' } })
     fireEvent.click(within(modal).getByRole('button', { name: '创建经历分组' }))

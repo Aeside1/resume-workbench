@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState, useMemo, useRef } from 'react'
 import { Button } from '@heroui/react'
 import type { WorkContent } from '../../api'
-import { MilkdownView } from '../../components/ui/MilkdownView'
+import { MilkdownView, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 import { WorkContentFormFields } from './WorkContentFormFields'
 import {
   parseSupplementaryNotes,
@@ -375,6 +375,7 @@ export function WorkContentBlock({
                 className="btn-delete-ghost"
                 onPress={() => {
                   if (window.confirm(`确定要删除工作项“${item.title}”吗？此操作不可恢复。`)) {
+                    clearMilkdownEditorCache(`wc-${item.id}-record`)
                     if (onDelete) {
                       onDelete()
                     } else if (onArchive) {
