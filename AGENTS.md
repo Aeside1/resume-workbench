@@ -26,6 +26,8 @@
    在 Tailwind 4 与当前打包环境下，HeroUI 默认变体（如 `.button--primary`、`.button--ghost`、`[data-slot="select-trigger"]`）不能仅依赖局部容器 class（如 `.stack-form`）。必须在 `styles.css` 中声明完备的全局基础组件样式（按钮所有 variant、输入框、下拉选择器及其 Popover 高 z-index），杜绝组件在 Modal 等新容器内退化为无样式的裸元素。
 4. **统一图标与框架组件规范（避免手搓图标并全面适配深浅色模式）**：
    开发界面与交互组件时，尽量避免自行手写内联 SVG 矢量代码或使用纯文本字符（如“x”、“+”等）充当图标，优先统一使用框架（`@heroui/react`）内置提供的组件或官方标准图标（如 `CloseIcon`、`IconPlus` 等）。所有组件与图标必须整体适配 HeroUI 的浅色（Light）与深色（Dark）模式切换，图标颜色统一采用 `currentColor` 随文本语义流转，背景、文本与边框优先使用语义化主题变量（如 `var(--surface)`、`var(--foreground)`、`var(--border)`、`var(--muted)` 等）或配置 `.dark` 变体，严禁写死绝对明暗色值导致暗色模式下失真或元素不可见。
+5. **严禁在界面与文案中使用 Emoji 字符**：
+   全项目严禁在任何界面展示文本、空状态占位符、操作引导、按钮图标或系统提示中硬编码 Emoji 字符（如 📝、💡、🚀 等），杜绝 AI Demo 的廉价玩具质感。空状态与各类视觉传达应统一使用框架内置标准矢量图标组件或纯净利落的工程级排版布局。
 
 ## Git 协作规范
 
