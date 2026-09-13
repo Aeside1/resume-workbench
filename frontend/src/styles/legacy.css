@@ -7,7 +7,9 @@
    ExperienceGroupList / WorkContentEditor）后，又移除了随之失去引用的
    group-list* / stack-form / detail-header / content-list* / content-form /
    empty-copy / experience-layout / experience-panel / section-heading /
-   group-column / content-column / group-description / notice。
+   group-column / content-column / group-description / notice；
+   issue 11 收口审计再次移除 migration 后失去引用的 content-card / content-title /
+   content-actions / form-actions / empty-state / muted（Focus Canvas 已改用 Card 族）。
    ========================================================================== */
 
 .auth-page {
@@ -25,7 +27,8 @@
   min-width: 0;
 }
 
-.auth-card [data-slot="card-description"] {
+/* 卡片描述需容忍超长无空格文本（邮箱等），不再依赖框架内部 slot 选择器 */
+.auth-card-description {
   overflow-wrap: anywhere;
 }
 
@@ -33,11 +36,6 @@
   display: grid;
   gap: 18px;
   margin-top: 24px;
-}
-
-.muted {
-  color: var(--muted);
-  margin-top: 0;
 }
 
 .error {
@@ -77,6 +75,8 @@
   margin: 0;
   font-size: 30px;
   letter-spacing: 0;
+  /* 登录邮箱等超长无空格文本不得撑破栅格 */
+  overflow-wrap: anywhere;
 }
 
 .page-context {
@@ -84,76 +84,6 @@
   color: var(--muted);
   font-size: 14px;
   text-align: right;
-}
-
-/* --------------------------------------------------------------------------
-   工作内容卡片排版（用于 Focus Canvas 的只读展示）
-   -------------------------------------------------------------------------- */
-
-.content-card {
-  padding: 16px 18px;
-}
-
-.content-card.archived {
-  opacity: 0.68;
-}
-
-.content-title {
-  padding: 0;
-  border: 0;
-  color: var(--foreground);
-  background: none;
-  font-size: 17px;
-  font-weight: 650;
-  text-align: left;
-}
-
-.content-title:hover {
-  color: var(--accent);
-}
-
-.content-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 4px;
-}
-
-.content-card > p {
-  margin: 10px 0;
-  color: var(--muted);
-  white-space: pre-wrap;
-}
-
-.content-card dl {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-}
-
-.content-card dt {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.content-card dd {
-  margin: 3px 0 0;
-  color: var(--foreground);
-  overflow-wrap: anywhere;
-  white-space: pre-wrap;
-}
-
-.form-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.empty-state {
-  padding: 22px 14px;
-  color: var(--muted);
-  font-size: 14px;
-  text-align: center;
 }
 
 /* 工作台概览入口 */
@@ -165,12 +95,12 @@
 }
 
 .dashboard-entry {
-  display: grid !important;
-  justify-items: start !important;
-  gap: 6px !important;
+  display: grid;
+  justify-items: start;
+  gap: 6px;
   min-height: 170px;
-  padding: 20px !important;
-  text-align: left !important;
+  padding: 20px;
+  text-align: left;
 }
 
 .dashboard-entry strong {
@@ -213,14 +143,6 @@
 @media (max-width: 520px) {
   .date-row,
   .dashboard-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .content-actions {
-    justify-content: flex-start;
-  }
-
-  .content-card dl {
     grid-template-columns: 1fr;
   }
 }

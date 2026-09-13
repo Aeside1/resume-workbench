@@ -76,7 +76,8 @@
   gap: 16px;
 }
 
-.overview-header-row .chip {
+/* 类型药丸与标题的间距（不再依赖 HeroUI 内部类名） */
+.overview-type-chip {
   margin-bottom: 8px;
 }
 

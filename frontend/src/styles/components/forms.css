@@ -3,7 +3,7 @@
 
    HeroUI 已提供 Input / TextArea / Select / Checkbox 的原生外观，
    此处只保留应用自身的表单布局类与语义变量色值，
-   严禁再对 [data-slot="…"] 施加 !important 外观覆盖。
+   严禁再对 [data-slot="…"] 施加强制覆盖（AGENTS.md 第 3 条）。
    ========================================================================== */
 
 .field {
@@ -18,15 +18,7 @@
   font-weight: 650;
 }
 
-/* 归档切换与日期栅格 */
-.archive-toggle {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 14px;
-}
+/* 日期栅格 */
 
 .date-row {
   display: grid;

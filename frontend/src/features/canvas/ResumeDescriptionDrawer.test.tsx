@@ -104,7 +104,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
       />
     )
 
-    // 点击右上角 ✕ 按钮
+    // 点击右上角关闭按钮
     const closeBtn = screen.getByRole('button', { name: '关闭抽屉' })
     fireEvent.click(closeBtn)
     expect(handleClose).toHaveBeenCalledTimes(1)

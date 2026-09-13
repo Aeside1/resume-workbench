@@ -191,7 +191,7 @@ export function ExperienceOverviewSection({ group, onUpdate }: ExperienceOvervie
               <div>
                 <Chip
                   size="sm"
-                  className={isInternship ? 'chip-type-internship' : 'chip-project'}
+                  className={`overview-type-chip ${isInternship ? 'chip-type-internship' : 'chip-project'}`}
                 >
                   <Chip.Label>{isInternship ? '实习经历' : '项目经历'}</Chip.Label>
                 </Chip>

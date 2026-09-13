@@ -9,7 +9,8 @@
 @import "./styles/base/reset.css";
 @import "./styles/base/typography.css";
 
-/* 2. Components Layer (全局基础组件，严格维护 HeroUI / React Aria 规范) */
+/* 2. Components Layer (应用侧表单/弹窗布局类；基础组件外观一律以 HeroUI 为准，
+   严禁在此层重写框架样式，见 AGENTS.md 第 3 条) */
 @import "./styles/components/forms.css";
 @import "./styles/components/modal.css";
 
@@ -38,8 +39,8 @@
 @import "./styles/features/editor/milkdown-toolbar.css";
 
 /* ==========================================================================
-   6. Theme Overrides (品牌色与品牌私有色)
-   HeroUI 语义变量在此处集中补充；除本区块外，禁止在任何模块内新增硬编码色值。
+   6. Theme Tokens (品牌色与品牌私有色 —— 全站唯一允许出现硬编码色值的地方)
+   除本区块外，任何模块内都禁止新增硬编码色值（issue 11 审计口径）。
    ========================================================================== */
 
 :root {

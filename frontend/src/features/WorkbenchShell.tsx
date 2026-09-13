@@ -150,7 +150,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
                     </Button>
                     <Button
                       variant="tertiary"
-                      className="dashboard-entry dashboard-entry--muted"
+                      className="dashboard-entry"
                       onPress={() => handleNavClick('plans')}
                     >
                       <span className="entry-kicker">组合输出</span>
