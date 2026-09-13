@@ -1,5 +1,8 @@
 /* ==========================================================================
    Experience Hub Panel (Scene 1 经历管理 Hub 主面板)
+
+   卡片与按钮外观由 HeroUI Card / Button 承载；
+   此处只保留布局骨架与语义变量色值。
    ========================================================================== */
 
 .experience-hub-panel {
@@ -14,7 +17,7 @@
   justify-content: space-between;
   gap: 20px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid var(--border);
 }
 
 .hub-title-section {
@@ -33,7 +36,7 @@
   margin: 0;
   font-size: 24px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--foreground);
   letter-spacing: -0.02em;
 }
 
@@ -44,14 +47,14 @@
   border-radius: 9999px;
   font-size: 12px;
   font-weight: 500;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  color: var(--muted);
+  background: var(--surface-secondary);
+  border: 1px solid var(--border);
 }
 
 .hub-subtitle {
   margin: 0;
-  color: #64748b;
+  color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -67,10 +70,10 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #f1f5f9;
+  background: var(--surface-secondary);
   padding: 4px;
   border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border);
 }
 
 .hub-tab-btn {
@@ -81,7 +84,7 @@
   border-radius: 7px;
   font-size: 14px;
   font-weight: 500;
-  color: #64748b;
+  color: var(--muted);
   background: transparent;
   border: none;
   cursor: pointer;
@@ -89,15 +92,15 @@
 }
 
 .hub-tab-btn:hover {
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.6);
+  color: var(--foreground);
+  background: var(--surface-tertiary);
 }
 
 .hub-tab-btn--active {
-  color: #0f172a !important;
-  background: #ffffff !important;
+  color: var(--foreground);
+  background: var(--surface);
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--surface-shadow);
 }
 
 .tab-count-badge {
@@ -110,13 +113,13 @@
   border-radius: 9999px;
   font-size: 11px;
   font-weight: 600;
-  background: #e2e8f0;
-  color: #475569;
+  background: var(--default);
+  color: var(--muted);
 }
 
 .hub-tab-btn--active .tab-count-badge {
-  background: #e0f2fe;
-  color: #0284c7;
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 /* ==========================================================================
@@ -124,24 +127,24 @@
    ========================================================================== */
 
 .empty-state-card {
-  border: 1px dashed #cbd5e1 !important;
-  border-radius: 16px !important;
-  background: #f8fafc !important;
-  padding: 48px 24px !important;
-  text-align: center !important;
-  box-shadow: none !important;
-  margin: 12px 0 !important;
+  border: 1px dashed var(--border-secondary);
+  border-radius: 16px;
+  background: var(--surface-secondary);
+  padding: 48px 24px;
+  text-align: center;
+  box-shadow: none;
+  margin: 12px 0;
 }
 
 .empty-state-content {
-  display: flex !important;
-  flex-direction: column !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  max-width: 460px !important;
-  margin: 0 auto !important;
-  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 0;
 }
 
 .empty-state-icon-box {
@@ -151,8 +154,8 @@
   width: 56px;
   height: 56px;
   border-radius: 16px;
-  background: #e0f2fe;
-  color: #0284c7;
+  background: var(--accent-soft);
+  color: var(--accent);
   margin-bottom: 4px;
 }
 
@@ -160,23 +163,16 @@
   margin: 0;
   font-size: 18px;
   font-weight: 650;
-  color: #0f172a;
+  color: var(--foreground);
 }
 
 .empty-state-desc {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #64748b;
+  color: var(--muted);
 }
 
 .empty-state-action-box {
   margin-top: 8px;
-}
-
-.empty-state-action-btn {
-  height: 36px !important;
-  padding: 0 18px !important;
-  font-size: 14px !important;
-  font-weight: 600 !important;
 }

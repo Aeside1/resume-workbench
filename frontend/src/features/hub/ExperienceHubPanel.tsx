@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@heroui/react'
+import { Archive, FilePlus2, Plus } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { api, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
@@ -202,10 +203,10 @@ export function ExperienceHubPanel({
 
           <Button
             variant="primary"
-            className="btn-create-experience"
             onPress={() => setIsCreateOpen(true)}
           >
-            + 新建经历分组
+            <Plus size={16} aria-hidden="true" />
+            新建经历分组
           </Button>
         </div>
       </div>
@@ -219,16 +220,9 @@ export function ExperienceHubPanel({
             <EmptyStateCard
               title="开始整理一段经历"
               description="还没有在用经历分组，点击下方按钮或上方“+ 新建经历分组”开始沉淀你的实习或项目经历。"
-              actionLabel="+ 新建经历分组"
+              actionLabel="新建经历分组"
               onAction={() => setIsCreateOpen(true)}
-              icon={
-                <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                  <line x1="12" y1="18" x2="12" y2="12" />
-                  <line x1="9" y1="15" x2="15" y2="15" />
-                </svg>
-              }
+              icon={<FilePlus2 size={32} aria-hidden="true" />}
             />
           ) : (
             <EmptyStateCard
@@ -236,13 +230,7 @@ export function ExperienceHubPanel({
               description="没有已归档的经历分组。在在用经历中归档的内容会存放在这里，可随时恢复或彻底删除。"
               actionLabel="查看在用经历"
               onAction={() => setActiveTab('active')}
-              icon={
-                <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                  <polyline points="21 8 21 21 3 21 3 8" />
-                  <rect x="1" y="3" width="22" height="5" />
-                  <line x1="10" y1="12" x2="14" y2="12" />
-                </svg>
-              }
+              icon={<Archive size={32} aria-hidden="true" />}
             />
           )
         )}

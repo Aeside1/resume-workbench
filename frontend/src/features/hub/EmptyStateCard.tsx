@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import { Button, Card } from '@heroui/react'
+import { Plus } from 'lucide-react'
 
 export type EmptyStateCardProps = {
   title: string
@@ -26,9 +27,9 @@ export function EmptyStateCard({
           <div className="empty-state-action-box">
             <Button
               variant="primary"
-              className="empty-state-action-btn"
               onPress={onAction}
             >
+              <Plus size={16} aria-hidden="true" />
               {actionLabel}
             </Button>
           </div>
