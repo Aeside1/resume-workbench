@@ -237,7 +237,11 @@ export function ResumeDescriptionDrawer({
                     >
                       <header className="resume-version-card-header">
                         <div className="version-label-box">
+                          <label id={`desc-version-${version.id}-label`} htmlFor={`desc-version-label-${version.id}`} className="sr-only">
+                            {version.label || '简历描述版本'}
+                          </label>
                           <input
+                            id={`desc-version-label-${version.id}`}
                             type="text"
                             className="version-label-input"
                             value={version.label}
