@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
 import type { WorkContent } from '../../api'
+import { ToastProvider } from '../../components/ui/Toast'
 
 afterEach(cleanup)
 
@@ -196,6 +197,36 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
       ])
     )
     expect(screen.queryByDisplayValue('业务成效版')).not.toBeInTheDocument()
+  })
+
+  it('删除版本后可通过 Toast 撤销操作恢复该版本', async () => {
+    const handleUpdateVersions = vi.fn()
+    render(
+      <ToastProvider>
+        <ResumeDescriptionDrawer
+          isOpen={true}
+          workContent={mockWorkContent}
+          onClose={vi.fn()}
+          onUpdateVersions={handleUpdateVersions}
+        />
+      </ToastProvider>
+    )
+
+    const deleteBtn = screen.getByRole('button', { name: '删除 业务成效版' })
+    fireEvent.click(deleteBtn)
+    expect(screen.queryByDisplayValue('业务成效版')).not.toBeInTheDocument()
+
+    // 寻找 Toast 撤销按钮
+    const undoBtn = await screen.findByRole('button', { name: '撤销' })
+    fireEvent.click(undoBtn)
+
+    expect(handleUpdateVersions).toHaveBeenLastCalledWith(
+      101,
+      expect.arrayContaining([
+        expect.objectContaining({ id: 'desc_2', label: '业务成效版' })
+      ])
+    )
+    expect(screen.getByDisplayValue('业务成效版')).toBeInTheDocument()
   })
 
   it('点击新建简历描述版本按钮，追加新版本并触发 onUpdateVersions', () => {

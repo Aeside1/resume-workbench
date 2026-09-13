@@ -450,6 +450,31 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(await screen.findByRole('button', { name: /简历描述提炼 \(3 个版本\)/ })).toBeInTheDocument()
   })
 
+  it('在抽屉中点击复制按钮一键拷贝版本全文到剪贴板，并触发视觉反馈', async () => {
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onExitFocus={vi.fn()}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+
+    // 打开第一个工作项的抽屉
+    const drawerBtn101 = screen.getByRole('button', { name: /简历描述提炼 \(1 个版本\)/ })
+    fireEvent.click(drawerBtn101)
+
+    const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
+    const copyBtn = within(drawer).getByRole('button', { name: '复制 技术深度版' })
+    fireEvent.click(copyBtn)
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      '主导画布渲染引擎重构，降低耗时 75%。'
+    )
+    expect(await screen.findByText('已复制')).toBeInTheDocument()
+  })
+
   it('点击抽屉关闭按钮或按 Escape 键关闭抽屉，卡片激活高亮移除', async () => {
     render(
       <FocusCanvasContainer

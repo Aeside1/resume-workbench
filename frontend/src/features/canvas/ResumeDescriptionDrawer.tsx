@@ -29,17 +29,28 @@ export function ResumeDescriptionDrawer({
   const [versions, setVersions] = useState<ResumeDescriptionVersion[]>(() => parsedData?.versions ?? [])
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const currentWorkContentIdRef = useRef<number | null>(workContent?.id ?? null)
-  currentWorkContentIdRef.current = workContent?.id ?? null
+  const versionsRef = useRef(versions)
+  versionsRef.current = versions
 
-  // 当外部绑定的 workContent 切换或其内容变更时同步本地版本状态
+  const previousWorkContentIdRef = useRef<number | null>(workContent?.id ?? null)
+
+  // 当外部绑定的 workContent 切换或其内容变更时同步本地版本状态，并刷新上一卡片尚未触发的防抖保存
   useEffect(() => {
+    if (previousWorkContentIdRef.current !== null && previousWorkContentIdRef.current !== workContent?.id) {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
+        onUpdateVersions(previousWorkContentIdRef.current, versionsRef.current)
+      }
+    }
+    previousWorkContentIdRef.current = workContent?.id ?? null
+
     if (parsedData) {
       setVersions(parsedData.versions)
     } else {
       setVersions([])
     }
-  }, [parsedData])
+  }, [parsedData, workContent?.id, onUpdateVersions])
 
   // 监听 Escape 按键关闭抽屉
   useEffect(() => {
@@ -99,8 +110,9 @@ export function ResumeDescriptionDrawer({
     if (!workContent) return
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
     }
-    onUpdateVersions(workContent.id, versions)
+    onUpdateVersions(workContent.id, versionsRef.current)
   }
 
   const handleAddVersion = () => {
@@ -120,7 +132,17 @@ export function ResumeDescriptionDrawer({
     const target = versions.find((v) => v.id === id)
     const updated = versions.filter((v) => v.id !== id)
     triggerUpdate(updated, true)
-    toast.success(`已删除版本${target ? `“${target.label}”` : ''}`)
+    toast.success(`已删除版本${target ? `“${target.label}”` : ''}`, {
+      action: target
+        ? {
+            label: '撤销',
+            onClick: () => {
+              const restored = [...updated, target]
+              triggerUpdate(restored, true)
+            }
+          }
+        : undefined
+    })
   }
 
   const handleCopy = async (version: ResumeDescriptionVersion) => {
