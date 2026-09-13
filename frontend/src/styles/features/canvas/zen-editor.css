@@ -187,20 +187,20 @@
 
 /* 4. 左侧主写作区 */
 .zen-main-writer {
+  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
   background: var(--surface, #ffffff);
-  transition: flex 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .zen-main-writer--with-companion {
-  flex: 7; /* 约 70% 宽 */
+  flex: 1;
 }
 
 .zen-main-writer--full {
-  flex: 1; /* 100% 宽 */
+  flex: 1;
 }
 
 .zen-writer-scroll {
@@ -282,27 +282,26 @@
 
 /* 5. 右侧伴随提炼栏 */
 .zen-companion-sidebar {
-  flex: 3; /* 约 30% 宽 */
-  min-width: 360px;
-  max-width: 460px;
+  width: 380px;
+  flex-shrink: 0;
   background: color-mix(in oklch, var(--surface, #ffffff) 97%, var(--foreground, #000000) 3%);
   border-left: 1px solid var(--border, #e2e8f0);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
   overflow: hidden;
-  animation: companionSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-sizing: border-box;
 }
 
-@keyframes companionSlideIn {
-  from {
-    opacity: 0;
-    transform: translateX(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.zen-companion-inner {
+  width: 380px;
+  min-width: 380px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .zen-companion-header {

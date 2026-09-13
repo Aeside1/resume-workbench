@@ -164,7 +164,7 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     }, { timeout: 2000 })
   })
 
-  it('支持仅通过 Topbar 伴随栏切换按钮收起与重新展开伴随栏', () => {
+  it('支持仅通过 Topbar 伴随栏切换按钮收起与重新展开伴随栏', async () => {
     render(
       <ZenFocusEditor
         isOpen={true}
@@ -183,14 +183,18 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     const toggleCollapseBtn = screen.getByRole('button', { name: '收起伴随栏' })
     fireEvent.click(toggleCollapseBtn)
 
-    // 验证伴随栏已收起，Topbar 按钮文案切换为“展开伴随栏”
-    expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument()
+    // 验证伴随栏平滑收起后已卸载，Topbar 按钮文案切换为“展开伴随栏”
+    await waitFor(() => {
+      expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument()
+    })
     const toggleExpandBtn = screen.getByRole('button', { name: '展开伴随栏' })
     expect(toggleExpandBtn).toBeInTheDocument()
 
     // 2. 再次点击 Topbar 上的“展开伴随栏”按钮重新展开
     fireEvent.click(toggleExpandBtn)
-    expect(screen.getByLabelText('伴随提炼栏')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByLabelText('伴随提炼栏')).toBeInTheDocument()
+    })
   })
 
   it('按下物理 Escape 键平滑退出专注模式，若有未决修改立即刷新保存', async () => {
