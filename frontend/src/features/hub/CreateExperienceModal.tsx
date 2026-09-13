@@ -9,6 +9,7 @@ import {
   Select,
   TextArea
 } from '@heroui/react'
+import { ChevronDown } from 'lucide-react'
 
 export type CreateExperienceDraft = {
   name: string
@@ -76,25 +77,16 @@ export function CreateExperienceModal({
 
   return (
     <Modal.Root isOpen={isOpen} onOpenChange={(open) => !open && handleClose()}>
-      <Modal.Backdrop className="modal-backdrop-custom" />
-      <Modal.Container className="modal-container-custom">
-        <Modal.Dialog className="modal-dialog-custom">
+      <Modal.Backdrop>
+        <Modal.Container size="md">
+        <Modal.Dialog>
           <form onSubmit={handleSubmit} className="create-experience-form">
-            <Modal.Header className="modal-header-custom">
-              <Modal.Heading className="modal-title">新建经历分组</Modal.Heading>
-              <Button
-                size="sm"
-                variant="ghost"
-                type="button"
-                className="modal-close-btn"
-                aria-label="关闭弹窗"
-                onPress={handleClose}
-              >
-                ✕
-              </Button>
+            <Modal.Header>
+              <Modal.Heading>新建经历分组</Modal.Heading>
+              <Modal.CloseTrigger aria-label="关闭弹窗" />
             </Modal.Header>
 
-            <Modal.Body className="modal-body-custom">
+            <Modal.Body>
               {error && <p className="error" role="alert">{error}</p>}
 
               <div className="field">
@@ -117,24 +109,11 @@ export function CreateExperienceModal({
                   onSelectionChange={(key) =>
                     setDraft({ ...draft, type: String(key) as CreateExperienceDraft['type'] })
                   }
-                  className="modal-select-type"
                 >
-                  <Select.Trigger className="select-trigger-box">
+                  <Select.Trigger>
                     <Select.Value />
                     <Select.Indicator>
-                      <svg
-                        aria-hidden="true"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <polyline points="6 9 12 15 18 9" />
-                      </svg>
+                      <ChevronDown size={16} aria-hidden="true" />
                     </Select.Indicator>
                   </Select.Trigger>
                   <Select.Popover className="experience-type-popover">
@@ -193,11 +172,10 @@ export function CreateExperienceModal({
               </div>
             </Modal.Body>
 
-            <Modal.Footer className="modal-footer-custom">
+            <Modal.Footer>
               <Button
                 type="button"
                 variant="ghost"
-                className="modal-btn-cancel"
                 onPress={handleClose}
                 isDisabled={submitting}
               >
@@ -206,15 +184,15 @@ export function CreateExperienceModal({
               <Button
                 type="submit"
                 variant="primary"
-                className="modal-btn-submit"
                 isDisabled={submitting || !draft.name.trim()}
               >
                 {submitting ? '创建中...' : '创建经历分组'}
               </Button>
             </Modal.Footer>
           </form>
-        </Modal.Dialog>
-      </Modal.Container>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal.Root>
   )
 }

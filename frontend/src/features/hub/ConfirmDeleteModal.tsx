@@ -17,24 +17,15 @@ export function ConfirmDeleteModal({
 
   return (
     <Modal.Root isOpen={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <Modal.Backdrop className="modal-backdrop-custom" />
-      <Modal.Container className="modal-container-custom">
-        <Modal.Dialog className="modal-dialog-custom delete-confirm-dialog" aria-label="确认彻底删除">
-          <Modal.Header className="modal-header-custom delete-dialog-header">
-            <Modal.Heading className="modal-title delete-title">确认彻底删除经历分组</Modal.Heading>
-            <Button
-              size="sm"
-              variant="ghost"
-              type="button"
-              className="modal-close-btn"
-              aria-label="关闭弹窗"
-              onPress={onClose}
-            >
-              ✕
-            </Button>
+      <Modal.Backdrop>
+        <Modal.Container size="sm">
+        <Modal.Dialog aria-label="确认彻底删除">
+          <Modal.Header>
+            <Modal.Heading className="delete-title">确认彻底删除经历分组</Modal.Heading>
+            <Modal.CloseTrigger aria-label="关闭弹窗" />
           </Modal.Header>
 
-          <Modal.Body className="modal-body-custom delete-dialog-body">
+          <Modal.Body>
             <div className="delete-warning-box">
               <p className="delete-warning-text">
                 确定要彻底删除经历分组 <strong>“{groupName}”</strong> 吗？
@@ -45,25 +36,25 @@ export function ConfirmDeleteModal({
             </div>
           </Modal.Body>
 
-          <Modal.Footer className="modal-footer-custom delete-dialog-footer">
+          <Modal.Footer>
             <Button
               size="sm"
               variant="ghost"
-              className="modal-btn-cancel"
               onPress={onClose}
             >
               取消
             </Button>
             <Button
               size="sm"
-              className="modal-btn-delete-confirm"
+              variant="danger"
               onPress={onConfirm}
             >
               确认彻底删除
             </Button>
           </Modal.Footer>
-        </Modal.Dialog>
-      </Modal.Container>
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
     </Modal.Root>
   )
 }

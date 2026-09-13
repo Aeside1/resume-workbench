@@ -147,7 +147,7 @@ export function ZenFocusEditor({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         const hasActiveModal = !!document.querySelector(
-          '.modal-backdrop-custom, [role="dialog"]:not(.zen-focus-overlay)'
+          '[role="dialog"]:not(.zen-focus-overlay)'
         )
         if (hasActiveModal) return
 
