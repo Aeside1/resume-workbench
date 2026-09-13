@@ -24,6 +24,8 @@
    当卡片整体可点击跳转时，卡片底部的操作按钮区域（如归档、删除）必须与卡片主体点击区域物理解耦（不在包含按钮的 Footer 上绑定父级点击），并在按钮回调中阻断事件冒泡，防止操作时误触发卡片跳转。
 3. **基础组件显式维护全局 CSS 样式**：
    在 Tailwind 4 与当前打包环境下，HeroUI 默认变体（如 `.button--primary`、`.button--ghost`、`[data-slot="select-trigger"]`）不能仅依赖局部容器 class（如 `.stack-form`）。必须在 `styles.css` 中声明完备的全局基础组件样式（按钮所有 variant、输入框、下拉选择器及其 Popover 高 z-index），杜绝组件在 Modal 等新容器内退化为无样式的裸元素。
+4. **统一图标与框架组件规范（避免手搓图标并全面适配深浅色模式）**：
+   开发界面与交互组件时，尽量避免自行手写内联 SVG 矢量代码或使用纯文本字符（如“x”、“+”等）充当图标，优先统一使用框架（`@heroui/react`）内置提供的组件或官方标准图标（如 `CloseIcon`、`IconPlus` 等）。所有组件与图标必须整体适配 HeroUI 的浅色（Light）与深色（Dark）模式切换，图标颜色统一采用 `currentColor` 随文本语义流转，背景、文本与边框优先使用语义化主题变量（如 `var(--surface)`、`var(--foreground)`、`var(--border)`、`var(--muted)` 等）或配置 `.dark` 变体，严禁写死绝对明暗色值导致暗色模式下失真或元素不可见。
 
 ## Git 协作规范
 

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { Button } from '@heroui/react'
+import { Button, CloseIcon, IconPlus } from '@heroui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { WorkContent } from '../../api'
 import { toast } from '../../components/ui/Toast'
@@ -208,10 +208,7 @@ export function ResumeDescriptionDrawer({
                 aria-label="关闭抽屉"
                 onPress={onClose}
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
+                <CloseIcon className="resume-drawer-close-icon" />
               </Button>
             </div>
 
@@ -405,7 +402,7 @@ export function ResumeDescriptionDrawer({
               onPress={handleAddVersion}
               aria-label="新建简历描述版本"
             >
-              <span className="plus-icon" aria-hidden="true">+</span>
+              <IconPlus className="add-version-icon" aria-hidden="true" />
               <span>新建简历描述版本</span>
             </Button>
           </footer>
