@@ -100,7 +100,7 @@ describe('OutlineNavigator 右侧常驻伴随大纲 TOC Mini-map', () => {
     expect(handleNavigate).toHaveBeenCalledWith('work-content-101')
   })
 
-  it('点击快捷入口“+ 新增工作内容”派发 onAddNew 回调', () => {
+  it('点击快捷入口“新增工作内容”派发 onAddNew 回调', () => {
     const handleAddNew = vi.fn()
     render(
       <OutlineNavigator
@@ -112,7 +112,7 @@ describe('OutlineNavigator 右侧常驻伴随大纲 TOC Mini-map', () => {
       />
     )
 
-    const addBtn = screen.getByRole('button', { name: '+ 新增工作内容' })
+    const addBtn = screen.getByRole('button', { name: '新增工作内容' })
     fireEvent.click(addBtn)
 
     expect(handleAddNew).toHaveBeenCalledTimes(1)

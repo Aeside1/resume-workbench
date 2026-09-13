@@ -1,9 +1,9 @@
 /* ==========================================================================
    Zen Focus Editor (全屏专注写作工作台)
-   遵从 ITCSS 架构与 AGENTS.md 规范：
-   - 严禁硬编码 Emoji
-   - 全面适配 HeroUI 深色/浅色语义主题
-   - 纯矢量图标与语义变量联动
+
+   顶层覆盖层与双栏工作区保留原生定位骨架（非模态全屏工作台，
+   需要与 Escape 退出逻辑和画布联动，不套 HeroUI Modal）；
+   内部按钮/徽章/快捷键一律使用 HeroUI 组件，色值读取语义变量。
    ========================================================================== */
 
 /* 1. 顶层全屏覆盖层 */
@@ -13,8 +13,8 @@
   width: 100vw;
   height: 100vh;
   z-index: 100;
-  background: var(--surface, #ffffff);
-  color: var(--foreground, #0f172a);
+  background: var(--background);
+  color: var(--foreground);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -41,8 +41,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  background: var(--surface, #ffffff);
-  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
   user-select: none;
   z-index: 10;
 }
@@ -56,42 +56,11 @@
 }
 
 .zen-exit-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  height: 32px !important;
-  padding: 0 10px !important;
-  border-radius: 6px !important;
-  font-size: 13px !important;
-  font-weight: 500 !important;
-  color: var(--muted-foreground, #64748b) !important;
-  transition: all 0.15s ease !important;
-  flex-shrink: 0 !important;
-}
-
-.zen-exit-btn:hover {
-  color: var(--foreground, #0f172a) !important;
-  background: color-mix(in oklch, var(--foreground, #0f172a) 6%, transparent) !important;
+  flex-shrink: 0;
 }
 
 .zen-exit-text {
   letter-spacing: -0.01em;
-}
-
-.zen-shortcut-kbd {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-  padding: 2px 5px;
-  border-radius: 4px;
-  color: var(--muted-foreground, #64748b);
-  background: color-mix(in oklch, var(--foreground, #0f172a) 5%, transparent);
-  border: 1px solid var(--border, #cbd5e1);
-  margin-left: 2px;
 }
 
 /* 层级面包屑导航 */
@@ -101,7 +70,7 @@
   gap: 8px;
   min-width: 0;
   font-size: 13px;
-  color: var(--muted-foreground, #64748b);
+  color: var(--muted);
   overflow: hidden;
   white-space: nowrap;
 }
@@ -114,7 +83,7 @@
 }
 
 .zen-breadcrumb-separator {
-  color: var(--border, #94a3b8);
+  color: var(--muted);
   font-weight: 300;
   flex-shrink: 0;
 }
@@ -124,7 +93,7 @@
   text-overflow: ellipsis;
   max-width: 320px;
   font-weight: 600;
-  color: var(--foreground, #0f172a);
+  color: var(--foreground);
 }
 
 /* Topbar 右侧操作与状态 */
@@ -140,41 +109,6 @@
   align-items: center;
 }
 
-.zen-save-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 12px;
-  font-weight: 500;
-  padding: 3px 8px;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.zen-save-badge.saving {
-  color: var(--primary, #0284c7);
-  background: color-mix(in oklch, var(--primary, #0284c7) 10%, transparent);
-}
-
-.zen-spinner-icon {
-  animation: zenSpin 1s linear infinite;
-}
-
-@keyframes zenSpin {
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-.zen-save-badge.saved {
-  color: #16a34a;
-  background: rgba(22, 163, 74, 0.1);
-}
-
-.zen-toggle-companion-btn {
-  border: 1px solid var(--border, #cbd5e1) !important;
-}
-
 /* 3. 左右双栏工作区 */
 .zen-workspace {
   flex: 1;
@@ -182,7 +116,7 @@
   overflow: hidden;
   min-height: 0;
   position: relative;
-  background: var(--surface, #ffffff);
+  background: var(--surface);
 }
 
 /* 4. 左侧主写作区 */
@@ -192,15 +126,7 @@
   flex-direction: column;
   overflow: hidden;
   min-width: 0;
-  background: var(--surface, #ffffff);
-}
-
-.zen-main-writer--with-companion {
-  flex: 1;
-}
-
-.zen-main-writer--full {
-  flex: 1;
+  background: var(--surface);
 }
 
 .zen-writer-scroll {
@@ -220,7 +146,7 @@
   gap: 20px;
 }
 
-/* 大标题无边框极简输入 */
+/* 大标题无边框极简输入（沉浸写作的排版元素，非表单字段，保留原生 input） */
 .zen-title-container {
   width: 100%;
 }
@@ -233,7 +159,7 @@
   font-size: 28px;
   font-weight: 700;
   line-height: 1.35;
-  color: var(--foreground, #0f172a);
+  color: var(--foreground);
   letter-spacing: -0.02em;
   padding: 8px 0;
   border-bottom: 2px solid transparent;
@@ -241,16 +167,16 @@
 }
 
 .zen-title-input::placeholder {
-  color: var(--muted-foreground, #94a3b8);
+  color: var(--muted);
   font-weight: 600;
   opacity: 0.8;
 }
 
 .zen-title-input:focus {
-  border-bottom-color: color-mix(in oklch, var(--primary, #0284c7) 30%, transparent);
+  border-bottom-color: var(--accent);
 }
 
-/* 宽阔 Markdown 编辑区域 */
+/* 宽阔 Markdown 编辑区域（编辑器外壳样式见 features/editor/milkdown-editor.css） */
 .zen-editor-wrapper {
   width: 100%;
   display: flex;
@@ -258,34 +184,17 @@
 }
 
 .zen-editor-wrapper .milkdown-editor-wrapper {
-  border: none !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-.zen-editor-wrapper .milkdown-textarea {
-  min-height: 480px !important;
-  font-size: 15px !important;
-  line-height: 1.75 !important;
-  border-radius: 8px !important;
-  padding: 16px !important;
-  border: 1px solid var(--border, #e2e8f0) !important;
-  background: var(--surface, #ffffff) !important;
-  color: var(--foreground, #1e293b) !important;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
-}
-
-.zen-editor-wrapper .milkdown-textarea:focus {
-  border-color: var(--primary, #0284c7) !important;
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary, #0284c7) 15%, transparent) !important;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 /* 5. 右侧伴随提炼栏 */
 .zen-companion-sidebar {
   width: 380px;
   flex-shrink: 0;
-  background: color-mix(in oklch, var(--surface, #ffffff) 97%, var(--foreground, #000000) 3%);
-  border-left: 1px solid var(--border, #e2e8f0);
+  background: var(--surface-secondary);
+  border-left: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -311,8 +220,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--border, #e2e8f0);
-  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .zen-companion-header-title {
@@ -322,7 +231,7 @@
 }
 
 .zen-companion-icon {
-  color: var(--primary, #0284c7);
+  color: var(--accent);
   flex-shrink: 0;
 }
 
@@ -330,7 +239,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 600;
-  color: var(--foreground, #0f172a);
+  color: var(--foreground);
 }
 
 .zen-companion-body {
@@ -344,54 +253,4 @@
 /* 6. 版本流适配：栅格布局类已上移至 resume-drawer.css（抽屉与伴随栏共用） */
 .zen-companion-body .resume-versions-scroll-body {
   padding: 16px 18px;
-}
-
-/* 7. 深色模式全面适配 (Dark Mode) */
-.dark .zen-focus-overlay {
-  background: var(--surface, #0f172a);
-  color: var(--foreground, #f8fafc);
-}
-
-.dark .zen-topbar {
-  background: var(--surface, #0f172a);
-  border-bottom-color: var(--border, #1e293b);
-}
-
-.dark .zen-workspace {
-  background: var(--surface, #0f172a);
-}
-
-.dark .zen-main-writer {
-  background: var(--surface, #0f172a);
-}
-
-.dark .zen-title-input {
-  color: var(--foreground, #f8fafc);
-}
-
-.dark .zen-editor-wrapper .milkdown-textarea {
-  background: var(--surface, #1e293b) !important;
-  border-color: var(--border, #334155) !important;
-  color: var(--foreground, #f8fafc) !important;
-}
-
-.dark .zen-companion-sidebar {
-  background: color-mix(in oklch, var(--surface, #0f172a) 96%, #000000 4%);
-  border-left-color: var(--border, #1e293b);
-}
-
-.dark .zen-companion-header {
-  background: var(--surface, #0f172a);
-  border-bottom-color: var(--border, #1e293b);
-}
-
-.dark .zen-shortcut-kbd {
-  color: var(--muted-foreground, #94a3b8);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--border, #334155);
-}
-
-.dark .zen-save-badge.saved {
-  color: #4ade80;
-  background: rgba(74, 222, 128, 0.12);
 }

@@ -6,16 +6,15 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   overflow: hidden;
 }
 
 .milkdown-editor-wrapper:focus-within {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  border-color: var(--accent);
 }
 
 .milkdown-editor-toolbar {
@@ -83,15 +82,14 @@
 .milkdown-live-editor {
   position: relative;
   width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background-color: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background-color: var(--surface);
   transition: all 0.15s ease-in-out;
 }
 
 .milkdown-live-editor:focus-within {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  border-color: var(--accent);
 }
 
 .milkdown-editor-wrapper .milkdown-live-editor {
@@ -106,14 +104,14 @@
   outline: none;
   font-size: 13.5px;
   line-height: 1.6;
-  color: #1e293b;
+  color: var(--field-foreground);
   cursor: text;
   word-break: break-word;
 }
 
 .milkdown-live-content[data-empty="true"]::before {
   content: attr(data-placeholder);
-  color: #94a3b8;
+  color: var(--muted);
   pointer-events: none;
   position: absolute;
 }

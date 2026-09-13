@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { Button } from '@heroui/react'
+import { Button, Chip, Kbd, Spinner } from '@heroui/react'
+import { ArrowLeft, Check, FileText, PanelRight, PanelRightClose } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { ExperienceGroup, WorkContent } from '../../api'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
@@ -198,12 +199,9 @@ export function ZenFocusEditor({
             onPress={handleExit}
             aria-label="退出全屏"
           >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
+            <ArrowLeft size={15} aria-hidden="true" />
             <span className="zen-exit-text">退出全屏</span>
-            <kbd className="zen-shortcut-kbd">Esc</kbd>
+            <Kbd>Esc</Kbd>
           </Button>
 
           <nav className="zen-breadcrumbs" aria-label="层级面包屑导航">
@@ -220,34 +218,28 @@ export function ZenFocusEditor({
         <div className="zen-topbar-right">
           <div className="zen-save-indicator" aria-live="polite">
             {saveStatus === 'saving' && (
-              <span className="zen-save-badge saving" role="status">
-                <svg className="zen-spinner-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                </svg>
+              <Chip className="zen-save-badge" color="accent" size="sm" role="status">
+                <Spinner size="sm" color="current" />
                 <span>保存中...</span>
-              </span>
+              </Chip>
             )}
             {saveStatus === 'saved' && (
-              <span className="zen-save-badge saved" role="status">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+              <Chip className="zen-save-badge" color="success" size="sm" role="status">
+                <Check size={12} aria-hidden="true" />
                 <span>已自动保存</span>
-              </span>
+              </Chip>
             )}
           </div>
 
           <Button
             size="sm"
             variant={isCompanionOpen ? 'secondary' : 'ghost'}
-            className="zen-action-btn zen-toggle-companion-btn"
             onPress={() => setIsCompanionOpen((prev) => !prev)}
             aria-label={isCompanionOpen ? '收起伴随栏' : '展开伴随栏'}
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <line x1="15" y1="3" x2="15" y2="21" />
-            </svg>
+            {isCompanionOpen
+              ? <PanelRightClose size={14} aria-hidden="true" />
+              : <PanelRight size={14} aria-hidden="true" />}
             <span>{isCompanionOpen ? '收起伴随栏' : '展开伴随栏'}</span>
           </Button>
         </div>
@@ -309,13 +301,7 @@ export function ZenFocusEditor({
               <div className="zen-companion-inner">
                 <header className="zen-companion-header">
                   <div className="zen-companion-header-title">
-                    <svg className="zen-companion-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                      <polyline points="14 2 14 8 20 8" />
-                      <line x1="16" y1="13" x2="8" y2="13" />
-                      <line x1="16" y1="17" x2="8" y2="17" />
-                      <polyline points="10 9 9 9 8 9" />
-                    </svg>
+                    <FileText className="zen-companion-icon" size={15} aria-hidden="true" />
                     <h3 className="zen-companion-heading">简历描述提炼</h3>
                   </div>
                 </header>
