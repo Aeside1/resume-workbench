@@ -37,3 +37,29 @@
 /* 5.3 Rich-text Editor: Milkdown */
 @import "./styles/features/editor/milkdown-editor.css";
 @import "./styles/features/editor/milkdown-toolbar.css";
+
+/* ==========================================================================
+   6. Theme Overrides (品牌色与品牌私有色)
+   HeroUI 语义变量在此处集中补充；除本区块外，禁止在任何模块内新增硬编码色值。
+   ========================================================================== */
+
+:root {
+  /* 沿用简历工作台原有品牌蓝作为主强调色 */
+  --accent: #0284c7;
+
+  /* 表单控件常驻于 Card（--surface）之上，而 HeroUI 默认的 --field-background
+     与 --surface 同色、--field-border 为 transparent，会让字段在卡片内"隐身"。
+     这里改走页面背景色并显式给边框，使字段在深浅两色下都可辨。 */
+  --field-background: var(--background);
+  --field-border: var(--separator);
+
+  /* 经历类型标签的品牌私有色：HeroUI 语义变量未覆盖“项目紫” */
+  --tag-project-bg: #f3e8ff;
+  --tag-project-fg: #7e22ce;
+}
+
+.dark,
+[data-theme='dark'] {
+  --tag-project-bg: #2e1065;
+  --tag-project-fg: #d8b4fe;
+}
