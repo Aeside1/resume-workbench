@@ -264,6 +264,27 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     // 验证专业实体按钮“简历描述提炼”
     expect(screen.getByRole('button', { name: /简历描述提炼/ })).toBeInTheDocument()
   })
+
+  it('当 isActive 为 true 时，卡片具有 work-content-card--active 样式类且胶囊按钮具有激活类名', () => {
+    render(
+      <WorkContentBlock
+        item={mockWorkItem}
+        index={0}
+        totalCount={1}
+        isEditing={false}
+        isActive={true}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={vi.fn()}
+      />
+    )
+
+    const card = document.getElementById(`work-content-${mockWorkItem.id}`)!
+    expect(card).toHaveClass('work-content-card--active')
+
+    const drawerBtn = screen.getByRole('button', { name: /简历描述提炼/ })
+    expect(drawerBtn).toHaveClass('resume-desc-trigger-btn--active')
+  })
 })
 
 

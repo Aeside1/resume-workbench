@@ -32,6 +32,7 @@ export type WorkContentBlockProps = {
   onArchive?: () => void
   onOpenDrawer?: () => void
   onOpenZenMode?: () => void
+  isActive?: boolean
   isDragging?: boolean
   dragOverPosition?: 'top' | 'bottom' | null
   onDragStart?: (e: React.DragEvent) => void
@@ -110,6 +111,7 @@ export function WorkContentBlock({
   onArchive,
   onOpenDrawer,
   onOpenZenMode,
+  isActive = false,
   isDragging = false,
   dragOverPosition = null,
   onDragStart,
@@ -242,7 +244,7 @@ export function WorkContentBlock({
       <article
         ref={cardRef}
         id={`work-content-${item.id}`}
-        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : 'interactive-card'} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
+        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : 'interactive-card'} ${isActive ? 'work-content-card--active' : ''} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
       aria-label={`工作项 ${index + 1}: ${item.title}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -402,10 +404,10 @@ export function WorkContentBlock({
             <Button
               size="sm"
               variant="secondary"
-              className="resume-desc-trigger-btn"
+              className={`resume-desc-trigger-btn ${isActive ? 'resume-desc-trigger-btn--active' : ''}`}
               onPress={() => onOpenDrawer?.()}
               onClick={(e) => e.stopPropagation()}
-              aria-label="打开简历描述提炼抽屉"
+              aria-label={`简历描述提炼 (${parsedData.versions.length} 个版本)`}
             >
               <svg className="resume-trigger-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -414,7 +416,11 @@ export function WorkContentBlock({
                 <line x1="16" y1="17" x2="8" y2="17" />
                 <polyline points="10 9 9 9 8 9" />
               </svg>
-              <span className="resume-trigger-label">简历描述提炼</span>
+              <span className="resume-trigger-label">
+                {parsedData.versions.length > 0
+                  ? `简历描述提炼 (${parsedData.versions.length} 个版本)`
+                  : '简历描述提炼 (0 个版本)'}
+              </span>
               <svg className="resume-trigger-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />
               </svg>

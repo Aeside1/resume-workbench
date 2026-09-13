@@ -19,6 +19,8 @@ export type FocusCanvasDocumentProps = {
   onReorderContents?: (newContents: WorkContent[]) => void
   onDeleteContent: (item: WorkContent) => void
   onArchiveContent?: (item: WorkContent) => void
+  activeDrawerWorkContentId?: number | null
+  onOpenDrawer?: (item: WorkContent) => void
   onStartCreateNew: () => void
   onCancelCreateNew: () => void
   onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
@@ -45,6 +47,8 @@ export function FocusCanvasDocument({
   onReorderContents,
   onDeleteContent,
   onArchiveContent,
+  activeDrawerWorkContentId,
+  onOpenDrawer,
   onStartCreateNew,
   onCancelCreateNew,
   onUpdateGroup
@@ -142,6 +146,8 @@ export function FocusCanvasDocument({
                 onMoveContent={onMoveContent}
                 onDeleteContent={onDeleteContent}
                 onArchiveContent={onArchiveContent}
+                activeDrawerWorkContentId={activeDrawerWorkContentId}
+                onOpenDrawer={onOpenDrawer}
                 onDragStart={handleDragStart}
 
                 onDragOver={handleDragOver}
@@ -211,6 +217,8 @@ function FocusWorkContentItem({
   onMoveContent,
   onDeleteContent,
   onArchiveContent,
+  activeDrawerWorkContentId,
+  onOpenDrawer,
   onDragStart,
   onDragOver,
   onDragLeave,
@@ -229,6 +237,8 @@ function FocusWorkContentItem({
   onMoveContent?: (index: number, direction: -1 | 1) => void
   onDeleteContent: (item: WorkContent) => void
   onArchiveContent?: (item: WorkContent) => void
+  activeDrawerWorkContentId?: number | null
+  onOpenDrawer?: (item: WorkContent) => void
   onDragStart: (e: React.DragEvent, index: number) => void
   onDragOver: (e: React.DragEvent, index: number) => void
   onDragLeave: (e: React.DragEvent, index: number) => void
@@ -237,11 +247,11 @@ function FocusWorkContentItem({
 }) {
   const dragControls = useDragControls()
   const isEditing = editingId === item.id
+  const isActive = activeDrawerWorkContentId === item.id
 
   return (
     <Reorder.Item
       value={item}
-      id={`work-content-${item.id}`}
       dragListener={false}
       dragControls={dragControls}
       style={{ listStyle: 'none', position: 'relative' }}
@@ -252,6 +262,7 @@ function FocusWorkContentItem({
         index={index}
         totalCount={totalCount}
         isEditing={isEditing}
+        isActive={isActive}
         isDragging={draggedIndex === index}
         dragOverPosition={dragOverInfo?.index === index ? dragOverInfo.position : null}
         onStartEdit={() => onStartEdit(item)}
@@ -260,6 +271,7 @@ function FocusWorkContentItem({
         onMove={(direction) => onMoveContent?.(index, direction)}
         onDelete={() => onDeleteContent(item)}
         onArchive={() => onArchiveContent?.(item)}
+        onOpenDrawer={() => onOpenDrawer?.(item)}
         onDragStart={(e) => onDragStart(e, index)}
         onDragOver={(e) => onDragOver(e, index)}
         onDragLeave={(e) => onDragLeave(e, index)}

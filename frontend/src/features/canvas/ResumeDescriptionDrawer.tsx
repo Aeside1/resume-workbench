@@ -1,0 +1,292 @@
+import { useEffect, useRef, useState, useMemo } from 'react'
+import { Button } from '@heroui/react'
+import { motion, AnimatePresence } from 'framer-motion'
+import type { WorkContent } from '../../api'
+import { toast } from '../../components/ui/Toast'
+import {
+  parseSupplementaryNotes,
+  type ResumeDescriptionVersion
+} from './supplementaryNotes'
+
+export type ResumeDescriptionDrawerProps = {
+  isOpen: boolean
+  workContent: WorkContent | null
+  onClose: () => void
+  onUpdateVersions: (workContentId: number, versions: ResumeDescriptionVersion[]) => Promise<void> | void
+}
+
+export function ResumeDescriptionDrawer({
+  isOpen,
+  workContent,
+  onClose,
+  onUpdateVersions
+}: ResumeDescriptionDrawerProps) {
+  const parsedData = useMemo(
+    () => (workContent ? parseSupplementaryNotes(workContent.supplementary_notes) : null),
+    [workContent?.supplementary_notes]
+  )
+
+  const [versions, setVersions] = useState<ResumeDescriptionVersion[]>(() => parsedData?.versions ?? [])
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const currentWorkContentIdRef = useRef<number | null>(workContent?.id ?? null)
+  currentWorkContentIdRef.current = workContent?.id ?? null
+
+  // 当外部绑定的 workContent 切换或其内容变更时同步本地版本状态
+  useEffect(() => {
+    if (parsedData) {
+      setVersions(parsedData.versions)
+    } else {
+      setVersions([])
+    }
+  }, [parsedData])
+
+  // 监听 Escape 按键关闭抽屉
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen, onClose])
+
+  // 清理防抖定时器
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+      }
+    }
+  }, [])
+
+  const triggerUpdate = (newVersions: ResumeDescriptionVersion[], immediate = false) => {
+    setVersions(newVersions)
+    if (!workContent) return
+
+    const targetId = workContent.id
+
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    if (immediate) {
+      onUpdateVersions(targetId, newVersions)
+    } else {
+      debounceTimerRef.current = setTimeout(() => {
+        onUpdateVersions(targetId, newVersions)
+      }, 500)
+    }
+  }
+
+  const handleUpdateLabel = (id: string, label: string) => {
+    const updated = versions.map((v) => (v.id === id ? { ...v, label } : v))
+    triggerUpdate(updated, false)
+  }
+
+  const handleUpdateContent = (id: string, content: string) => {
+    const updated = versions.map((v) => (v.id === id ? { ...v, content } : v))
+    triggerUpdate(updated, false)
+  }
+
+  const handleBlurSave = () => {
+    if (!workContent) return
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+    onUpdateVersions(workContent.id, versions)
+  }
+
+  const handleAddVersion = () => {
+    if (!workContent) return
+    const newVersion: ResumeDescriptionVersion = {
+      id: `desc_${Date.now()}`,
+      label: `版本 ${versions.length + 1}`,
+      content: ''
+    }
+    const updated = [...versions, newVersion]
+    triggerUpdate(updated, true)
+    toast.success('已添加新的简历描述版本')
+  }
+
+  const handleDeleteVersion = (id: string) => {
+    if (!workContent) return
+    const target = versions.find((v) => v.id === id)
+    const updated = versions.filter((v) => v.id !== id)
+    triggerUpdate(updated, true)
+    toast.success(`已删除版本${target ? `“${target.label}”` : ''}`)
+  }
+
+  const handleCopy = async (version: ResumeDescriptionVersion) => {
+    const textToCopy = version.content || ''
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(textToCopy)
+      } else {
+        // Fallback for jsdom or non-secure contexts
+        const textarea = document.createElement('textarea')
+        textarea.value = textToCopy
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+      setCopiedId(version.id)
+      toast.success(`已复制“${version.label}”到剪贴板`)
+      setTimeout(() => {
+        setCopiedId((curr) => (curr === version.id ? null : curr))
+      }, 2000)
+    } catch {
+      toast.error('复制失败，请手动选择复制')
+    }
+  }
+
+  return (
+    <AnimatePresence>
+      {isOpen && workContent && (
+        <motion.aside
+          key="resume-desc-drawer"
+          className="resume-description-drawer"
+          aria-label="简历描述提炼抽屉"
+          initial={{ x: '100%', opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: '100%', opacity: 0 }}
+          transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+        >
+          <header className="resume-drawer-header">
+            <div className="resume-drawer-title-box">
+              <h3 className="resume-drawer-title">简历描述提炼</h3>
+              <p className="resume-drawer-subtitle" title={workContent.title}>
+                <span className="drawer-item-dot" aria-hidden="true">●</span>
+                <span className="drawer-item-title-text">{workContent.title}</span>
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="resume-drawer-close-btn"
+              aria-label="关闭抽屉"
+              onPress={onClose}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </Button>
+          </header>
+
+          <div className="resume-drawer-body">
+            {versions.length === 0 ? (
+              <div className="resume-drawer-empty">
+                <div className="empty-icon-box" aria-hidden="true">📝</div>
+                <p className="empty-heading">暂无简历描述版本</p>
+                <p className="empty-subtext">针对不同求职岗位沉淀提炼专属的子弹点或整段高质量描述。</p>
+              </div>
+            ) : (
+              <div className="resume-versions-list" role="feed" aria-label="简历描述版本列表">
+                {versions.map((version, index) => {
+                  const isCopied = copiedId === version.id
+                  return (
+                    <article
+                      key={version.id}
+                      className="resume-version-card"
+                      aria-label={`版本卡片: ${version.label}`}
+                    >
+                      <header className="resume-version-card-header">
+                        <div className="version-label-box">
+                          <span className="version-index-tag" aria-hidden="true">
+                            {index + 1}
+                          </span>
+                          <input
+                            type="text"
+                            className="version-label-input"
+                            value={version.label}
+                            aria-label={`版本 ${index + 1} 名称`}
+                            placeholder="版本名称，如：技术深度版"
+                            onChange={(e) => handleUpdateLabel(version.id, e.target.value)}
+                            onBlur={handleBlurSave}
+                          />
+                        </div>
+
+                        <div className="version-actions">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className={`version-action-btn version-copy-btn ${isCopied ? 'version-copy-btn--copied' : ''}`}
+                            aria-label={`复制 ${version.label}`}
+                            onPress={() => handleCopy(version)}
+                          >
+                            {isCopied ? (
+                              <>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <polyline points="20 6 9 17 4 12" />
+                                </svg>
+                                <span>已复制</span>
+                              </>
+                            ) : (
+                              <>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                                </svg>
+                                <span>复制</span>
+                              </>
+                            )}
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="version-action-btn version-delete-btn"
+                            aria-label={`删除 ${version.label}`}
+                            onPress={() => handleDeleteVersion(version.id)}
+                          >
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <polyline points="3 6 5 6 21 6" />
+                              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                            </svg>
+                          </Button>
+                        </div>
+                      </header>
+
+                      <div className="resume-version-card-content">
+                        <textarea
+                          className="version-content-textarea"
+                          rows={4}
+                          value={version.content}
+                          aria-label={`${version.label} 内容`}
+                          placeholder="编写该版本的完整简历描述段落（建议包含行动动词、量化结果与核心技术细节）..."
+                          onChange={(e) => handleUpdateContent(version.id, e.target.value)}
+                          onBlur={handleBlurSave}
+                        />
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <footer className="resume-drawer-footer">
+            <Button
+              type="button"
+              variant="secondary"
+              className="add-version-btn"
+              onPress={handleAddVersion}
+              aria-label="新建简历描述版本"
+            >
+              <span className="plus-icon" aria-hidden="true">+</span>
+              <span>新建简历描述版本</span>
+            </Button>
+          </footer>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  )
+}

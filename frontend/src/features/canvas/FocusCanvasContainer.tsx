@@ -4,6 +4,12 @@ import type { Session } from '../../session'
 import { useToast } from '../../components/ui/Toast'
 import { OutlineNavigator } from './OutlineNavigator'
 import { FocusCanvasDocument } from './FocusCanvasDocument'
+import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
+import {
+  parseSupplementaryNotes,
+  serializeSupplementaryNotes,
+  type ResumeDescriptionVersion
+} from './supplementaryNotes'
 import type { ContentDraft } from './WorkContentBlock'
 
 type Props = {
@@ -26,6 +32,7 @@ export function FocusCanvasContainer({
   const [currentGroup, setCurrentGroup] = useState<ExperienceGroup>(group)
   const [contents, setContents] = useState<WorkContent[]>([])
   const [editingContentId, setEditingContentId] = useState<number | null>(null)
+  const [activeDrawerWorkContentId, setActiveDrawerWorkContentId] = useState<number | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [activeNavId, setActiveNavId] = useState<string>('section-overview')
   const [showArchived, setShowArchived] = useState(false)
@@ -155,6 +162,9 @@ export function FocusCanvasContainer({
       if (editingContentId === item.id) {
         setEditingContentId(null)
       }
+      if (activeDrawerWorkContentId === item.id) {
+        setActiveDrawerWorkContentId(null)
+      }
       toast.success(`已删除工作内容：“${item.title}”`)
     } catch (e) {
       setError((e as Error).message)
@@ -170,12 +180,46 @@ export function FocusCanvasContainer({
       setContents((items) =>
         items.map((it) => (it.id === updated.id ? updated : it))
       )
+      if (activeDrawerWorkContentId === item.id && updated.archived && !showArchived) {
+        setActiveDrawerWorkContentId(null)
+      }
       toast.success(`已${updated.archived ? '归档' : '恢复'}工作内容：“${updated.title}”`, {
         action: {
           label: '撤销',
           onClick: () => handleArchiveContent(updated),
         },
       })
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
+  const handleOpenDrawer = (item: WorkContent) => {
+    setActiveDrawerWorkContentId((prev) => (prev === item.id ? null : item.id))
+  }
+
+  const handleCloseDrawer = () => {
+    setActiveDrawerWorkContentId(null)
+  }
+
+  const handleUpdateDrawerVersions = async (
+    workContentId: number,
+    versions: ResumeDescriptionVersion[]
+  ) => {
+    const target = contents.find((item) => item.id === workContentId)
+    if (!target) return
+    const parsed = parseSupplementaryNotes(target.supplementary_notes)
+    const serializedNotes = serializeSupplementaryNotes(parsed.note, versions)
+    const payload = {
+      title: target.title,
+      detailed_record: target.detailed_record,
+      technical_materials: target.technical_materials,
+      result_data: target.result_data,
+      supplementary_notes: serializedNotes
+    }
+    try {
+      const saved = await api.updateWorkContent(session.token, workContentId, payload)
+      setContents((items) => items.map((item) => (item.id === saved.id ? saved : item)))
     } catch (e) {
       setError((e as Error).message)
     }
@@ -248,6 +292,8 @@ export function FocusCanvasContainer({
             onReorderContents={handleReorderContents}
             onDeleteContent={handleDeleteContent}
             onArchiveContent={handleArchiveContent}
+            activeDrawerWorkContentId={activeDrawerWorkContentId}
+            onOpenDrawer={handleOpenDrawer}
             onStartCreateNew={() => {
 
               setEditingContentId(null)
@@ -279,6 +325,13 @@ export function FocusCanvasContainer({
           />
         </aside>
       </div>
+
+      <ResumeDescriptionDrawer
+        isOpen={activeDrawerWorkContentId !== null}
+        workContent={contents.find((item) => item.id === activeDrawerWorkContentId) ?? null}
+        onClose={handleCloseDrawer}
+        onUpdateVersions={handleUpdateDrawerVersions}
+      />
     </div>
   )
 }
