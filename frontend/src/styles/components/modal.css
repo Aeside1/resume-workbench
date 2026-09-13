@@ -1,0 +1,140 @@
+/* ==========================================================================
+   HeroUI Modal Dialog Customization (通用模态弹窗规范)
+   ========================================================================== */
+
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.modal-container-custom {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 50;
+  pointer-events: none;
+}
+
+.modal-dialog-custom {
+  width: 100%;
+  max-width: 520px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.2), 0 10px 20px -8px rgba(15, 23, 42, 0.1);
+  overflow: hidden;
+  pointer-events: auto;
+}
+
+.create-experience-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header-custom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.modal-close-btn {
+  width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  color: #94a3b8 !important;
+}
+
+.modal-close-btn:hover {
+  color: #334155 !important;
+  background: #f1f5f9 !important;
+}
+
+.modal-body-custom {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-height: calc(85vh - 140px);
+  overflow-y: auto;
+}
+
+.modal-footer-custom {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #f1f5f9;
+  background: #fafafa;
+}
+
+/* ==========================================================================
+   Delete Confirmation Modal (彻底删除确认弹窗)
+   ========================================================================== */
+
+.delete-confirm-dialog {
+  max-width: 440px !important;
+}
+
+.delete-title {
+  color: #b91c1c !important;
+}
+
+.delete-dialog-body {
+  padding: 16px 24px !important;
+}
+
+.delete-warning-box {
+  background: #fff5f5;
+  border: 1px solid #fed7d7;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.delete-warning-text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+.delete-warning-subtext {
+  margin: 0;
+  font-size: 13px;
+  color: #dc2626;
+  line-height: 1.5;
+}
+
+.modal-btn-delete-confirm {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 3px rgba(220, 38, 38, 0.3) !important;
+}
+
+.modal-btn-delete-confirm:hover:not(:disabled) {
+  background: #b91c1c !important;
+  border-color: #b91c1c !important;
+  box-shadow: 0 4px 10px rgba(220, 38, 38, 0.4) !important;
+}

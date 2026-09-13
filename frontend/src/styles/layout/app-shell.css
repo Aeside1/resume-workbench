@@ -1,0 +1,33 @@
+/* ==========================================================================
+   AppShell Dual Mode Layout (Hub 模式 / Focus 模式顶层架构)
+   ========================================================================== */
+
+.app-shell {
+  min-height: 100vh;
+  background: #f8fafc;
+}
+
+.app-shell--hub {
+  display: flex;
+  width: 100%;
+}
+
+.app-shell--focus {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* App Main Content Containers */
+.app-main--hub {
+  flex: 1;
+  min-width: 0;
+  padding: 24px clamp(20px, 3vw, 48px) 56px;
+  max-width: 1400px;
+}
+
+.app-main--focus {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}

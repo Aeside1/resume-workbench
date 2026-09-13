@@ -1,0 +1,164 @@
+/* ==========================================================================
+   Global Form & Input Components (HeroUI / React Aria)
+   ========================================================================== */
+
+.field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.field > label {
+  color: #3f4754;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.field [data-slot="input"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid #c7d2e1;
+  border-radius: 10px;
+  outline: none;
+  color: #172033;
+  background: #ffffff;
+  box-shadow: inset 0 1px 2px rgba(31, 55, 86, 0.04);
+}
+
+.field [data-slot="input"]::placeholder {
+  color: #8a96a8;
+}
+
+.field [data-slot="input"]:focus {
+  border-color: #1683e8;
+  box-shadow: 0 0 0 3px rgba(22, 131, 232, 0.16);
+}
+
+/* ==========================================================================
+   Global Select Component (HeroUI / React Aria)
+   ========================================================================== */
+[data-slot="select-trigger"],
+.select-trigger,
+.select-trigger-box {
+  display: flex !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 9px 12px !important;
+  border: 1px solid #c7d2e1 !important;
+  border-radius: 10px !important;
+  color: #172033 !important;
+  background: #ffffff !important;
+  font-size: 14px !important;
+  text-align: left !important;
+  box-shadow: inset 0 1px 2px rgba(31, 55, 86, 0.04) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  outline: none !important;
+  transition: all 0.15s ease !important;
+}
+
+[data-slot="select-trigger"]:hover,
+.select-trigger-box:hover {
+  border-color: #94a3b8 !important;
+}
+
+[data-slot="select-trigger"]:focus-visible,
+[data-slot="select-trigger"][data-focused="true"],
+.select-trigger-box:focus-visible {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.16) !important;
+}
+
+[data-slot="select-value"] {
+  flex: 1 !important;
+  text-align: left !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  color: inherit !important;
+}
+
+[data-slot="select-indicator"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #64748b !important;
+  flex-shrink: 0 !important;
+}
+
+/* 高 z-index Popover 下拉层，避免在模态框或浮动层中被遮挡 */
+.experience-type-popover {
+  z-index: 9999 !important;
+  min-width: 220px !important;
+  padding: 6px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16) !important;
+}
+
+.experience-type-popover [data-slot="listbox-item"] {
+  display: flex !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  color: #334155 !important;
+  cursor: pointer !important;
+  transition: all 0.1s ease !important;
+}
+
+.experience-type-popover [data-slot="listbox-item"]:hover,
+.experience-type-popover [data-slot="listbox-item"][data-focused="true"],
+.experience-type-popover [data-slot="listbox-item"][data-selected="true"] {
+  background: #e0f2fe !important;
+  color: #0284c7 !important;
+}
+
+/* 通用多行输入 Textarea 槽位 */
+[data-slot="textarea"] {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 90px;
+  padding: 10px 12px;
+  border: 1px solid #c7d2e1;
+  border-radius: 10px;
+  outline: none;
+  color: #172033;
+  background: #ffffff;
+  resize: vertical;
+}
+
+[data-slot="textarea"]:focus {
+  border-color: #1683e8;
+  box-shadow: 0 0 0 3px rgba(22, 131, 232, 0.16);
+}
+
+/* 归档切换 Checkbox 与日期栅格 */
+.archive-toggle {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.archive-toggle [data-slot="checkbox-control"] {
+  width: 18px;
+  height: 18px;
+}
+
+.date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}

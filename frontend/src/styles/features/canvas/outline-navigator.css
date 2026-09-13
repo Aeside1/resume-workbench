@@ -1,0 +1,183 @@
+/* ==========================================================================
+   Outline Navigator TOC Mini-map (大纲导航树与 TOC 小地图)
+   ========================================================================== */
+
+.outline-navigator-container {
+  width: 100%;
+}
+
+.outline-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 18px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.outline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.outline-header-title-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #475569;
+}
+
+.outline-icon {
+  color: #64748b;
+}
+
+.outline-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.outline-nav-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.outline-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 13px;
+  color: #64748b;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.outline-nav-item:hover {
+  color: #0f172a;
+  background: #f1f5f9;
+}
+
+.outline-nav-item.active {
+  color: #0284c7;
+  background: #e0f2fe;
+  font-weight: 600;
+}
+
+.outline-bullet {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  flex-shrink: 0;
+  transition: background 0.15s ease;
+}
+
+.outline-nav-item.active .outline-bullet {
+  background: #0284c7;
+}
+
+.outline-item-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.outline-item-num {
+  font-weight: 600;
+  color: inherit;
+}
+
+.outline-nav-item--parent {
+  font-weight: 650;
+  color: #1e293b;
+  font-size: 13.5px;
+}
+
+.outline-nav-item--parent .outline-bullet {
+  width: 7px;
+  height: 7px;
+}
+
+.outline-tree-branch {
+  margin-top: 4px;
+  margin-left: 9px;
+  padding-left: 10px;
+  border-left: 1.5px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.outline-branch-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 6px 2px;
+}
+
+.outline-branch-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.04em;
+}
+
+.outline-branch-count {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.outline-sub-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.outline-nav-item--child {
+  font-size: 12.5px;
+  padding: 5px 8px;
+}
+
+.outline-bullet--child {
+  width: 5px;
+  height: 5px;
+}
+
+.outline-action-section {
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.outline-add-btn {
+  width: 100% !important;
+  justify-content: center !important;
+  font-size: 12px !important;
+  color: #0284c7 !important;
+  border: 1px dashed #bae6fd !important;
+  background: #f0f9ff !important;
+  border-radius: 6px !important;
+}
+
+.outline-add-btn:hover {
+  background: #e0f2fe !important;
+}

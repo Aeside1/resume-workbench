@@ -1,0 +1,129 @@
+/* ==========================================================================
+   Focus Canvas Topbar (Scene 2 专注模式顶栏与面包屑导航)
+   ========================================================================== */
+
+.focus-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 28px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.focus-breadcrumb-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.focus-back-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.focus-back-btn:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #0f172a;
+  transform: translateX(-2px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
+}
+
+.focus-back-btn svg {
+  flex-shrink: 0;
+  transition: transform 0.18s ease;
+}
+
+.focus-breadcrumb-trail {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.focus-breadcrumb-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+}
+
+.focus-breadcrumb-link:hover {
+  color: #0284c7;
+  background: #f0f9ff;
+}
+
+.focus-breadcrumb-separator {
+  color: #cbd5e1;
+  font-size: 13px;
+  user-select: none;
+}
+
+.focus-breadcrumb-current {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  padding: 3px 6px;
+}
+
+.focus-breadcrumb-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.focus-status-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.focus-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.focus-status-pill.saved {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+}
+
+.focus-status-pill.saving {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.focus-actions-right {
+  display: flex;
+  align-items: center;
+  min-width: 32px;
+}

@@ -1,0 +1,379 @@
+/* ==========================================================================
+   Work Contents Section & Cards (工作项区域、卡片实体与内联编辑)
+   ========================================================================== */
+
+.focus-work-contents-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.work-contents-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.work-contents-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.section-badge {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.work-contents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Work Content Card */
+.work-content-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+  overflow: hidden;
+}
+
+.work-content-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.work-content-card.interactive-card {
+  cursor: pointer;
+}
+
+.work-content-card.interactive-card:hover {
+  border-color: #94a3b8;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+}
+
+.work-content-card.archived {
+  opacity: 0.72;
+  background: #fafafa;
+  border-style: dashed;
+}
+
+.work-content-card.editing,
+.work-content-card.creating-new-card {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+
+.work-content-card--active {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18), 0 4px 16px rgba(2, 132, 199, 0.08) !important;
+}
+
+.work-content-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.work-content-card--dragging {
+  opacity: 0.45;
+  border: 1.5px dashed #0284c7 !important;
+  transform: scale(0.99);
+}
+
+.work-content-card--drag-over-top {
+  border-top: 3px solid #0284c7 !important;
+}
+
+.work-content-card--drag-over-bottom {
+  border-bottom: 3px solid #0284c7 !important;
+}
+
+.work-content-title-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.work-content-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  border-radius: 4px;
+  cursor: grab;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.work-content-drag-handle:hover {
+  background: #f1f5f9;
+  color: #0284c7;
+}
+
+.work-content-drag-handle:active {
+  cursor: grabbing;
+}
+
+.archived-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #b45309;
+  background: #fef3c7;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.work-content-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 650;
+  color: #0f172a;
+  line-height: 1.4;
+}
+
+.work-content-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.edit-content-btn {
+  font-weight: 600 !important;
+}
+
+/* Typography Body */
+.work-content-typography-body {
+  padding: 16px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.typography-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.typography-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.typography-text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #334155;
+  white-space: pre-wrap;
+}
+
+.typography-text.highlight-result {
+  color: #0369a1;
+  font-weight: 500;
+}
+
+.work-content-card-footer {
+  background: #f8fafc;
+  border-top: 1px solid #edf2f7;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+}
+
+.zen-mode-btn {
+  color: #475569 !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  transition: all 0.15s ease !important;
+}
+
+.zen-mode-btn:hover {
+  color: #0284c7 !important;
+  background: #f0f9ff !important;
+}
+
+
+/* ==========================================================================
+   Work Content Inline Edit Form (工作项内联编辑表单)
+   ========================================================================== */
+.work-content-edit-form {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #ffffff;
+}
+
+.edit-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.auto-save-container {
+  display: flex;
+  align-items: center;
+  min-height: 20px;
+}
+
+.auto-save-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.auto-save-badge.saving {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.auto-save-badge.saved {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.edit-form-kicker {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0284c7;
+}
+
+.canvas-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.canvas-field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.canvas-field [data-slot="input"],
+.canvas-field [data-slot="textarea"] {
+  width: 100%;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  outline: none;
+  background: #ffffff;
+  color: #0f172a;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.canvas-field [data-slot="input"]:focus,
+.canvas-field [data-slot="textarea"]:focus {
+  border-color: #0284c7;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+}
+
+.edit-form-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* 幽灵删除按钮 */
+button.btn-delete-ghost,
+.btn-delete-ghost {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  color: #64748b !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  font-weight: 500 !important;
+  font-size: 13px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
+  transition: all 0.15s ease !important;
+}
+
+button.btn-delete-ghost:hover,
+.btn-delete-ghost:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
+}
+
+.btn-delete-ghost svg {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.btn-delete-ghost:hover svg {
+  transform: scale(1.05);
+}
+
+/* Dashed Add Button at bottom of Canvas (长画布底部虚线添加按钮) */
+.add-content-dashed-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 52px;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  background: #fbfcfe;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.add-content-dashed-btn:hover {
+  border-color: #0284c7;
+  color: #0284c7;
+  background: #f0f9ff;
+}
+
+.plus-symbol {
+  font-size: 18px;
+  font-weight: 700;
+  color: inherit;
+}
