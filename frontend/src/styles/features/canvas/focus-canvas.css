@@ -1,11 +1,14 @@
 /* ==========================================================================
    Focus Canvas Document & Dual Column Layout (Scene 2 专注长画布与双栏布局)
+
+   卡片与徽章外观由 HeroUI Card / Chip 承载；
+   此处只保留布局骨架与语义变量色值。
    ========================================================================== */
 
 .focus-canvas-wrapper {
   width: 100%;
   min-height: calc(100vh - 56px);
-  background: #f8fafc;
+  background: var(--background);
   padding: 32px 24px 80px;
   display: flex;
   justify-content: center;
@@ -44,32 +47,14 @@
   gap: 24px;
 }
 
-/* 经历概览信息卡片 */
-.focus-experience-overview {
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  padding: 28px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: all 0.2s ease;
+/* 经历概览信息卡片（外观由 HeroUI Card 提供，仅保留编辑态强调与排版） */
+.overview-card {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
-.focus-experience-overview.editing {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
-}
-
-.edit-overview-btn {
-  font-weight: 600 !important;
-  color: #64748b !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-}
-
-.edit-overview-btn:hover {
-  color: #0284c7 !important;
-  background: #f0f9ff !important;
+.overview-card--editing {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .overview-edit-form {
@@ -91,50 +76,38 @@
   gap: 16px;
 }
 
-.overview-type-pill {
-  display: inline-block;
+.overview-header-row .chip {
   margin-bottom: 8px;
-  padding: 3px 10px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-  background: #e0f2fe;
-  color: #0369a1;
-}
-
-.overview-type-pill.project {
-  background: #f3e8ff;
-  color: #7e22ce;
 }
 
 .overview-title {
   margin: 0 0 8px 0;
   font-size: 26px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--foreground);
   letter-spacing: -0.02em;
 }
 
 .overview-org-date {
   margin: 0;
   font-size: 14px;
-  color: #64748b;
+  color: var(--muted);
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
 .dot-divider {
-  color: #cbd5e1;
+  color: var(--border-secondary);
 }
 
 .overview-description-box {
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--separator);
   font-size: 14px;
   line-height: 1.6;
-  color: #334155;
+  color: var(--muted);
 }
 
 .overview-description-box p {

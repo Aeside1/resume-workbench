@@ -1,5 +1,6 @@
 import { FormEvent, useState } from 'react'
-import { Button } from '@heroui/react'
+import { Button, Card, Chip } from '@heroui/react'
+import { Plus } from 'lucide-react'
 import { Reorder, useDragControls } from 'framer-motion'
 import type { ExperienceGroup, WorkContent } from '../../api'
 import { ExperienceOverviewSection } from './ExperienceOverviewSection'
@@ -122,7 +123,9 @@ export function FocusCanvasDocument({
         <div className="work-contents-header">
           <div className="work-contents-header-title">
             <h3 className="section-title">具体工作内容</h3>
-            <span className="section-badge">{contents.length} 条</span>
+            <Chip size="sm" className="section-badge">
+              <Chip.Label>{contents.length} 条</Chip.Label>
+            </Chip>
           </div>
         </div>
 
@@ -162,10 +165,13 @@ export function FocusCanvasDocument({
           </Reorder.Group>
 
           {isCreatingNew ? (
-            <article className="work-content-card creating-new-card" aria-label="新建具体工作内容">
+            <Card className="creating-new-card" aria-label="新建具体工作内容">
               <form className="work-content-edit-form" onSubmit={handleCreateSubmit}>
                 <div className="edit-form-header">
-                  <span className="edit-form-kicker">+ 新建具体工作内容</span>
+                  <span className="edit-form-kicker">
+                    <Plus size={14} aria-hidden="true" />
+                    新建具体工作内容
+                  </span>
                 </div>
 
                 <WorkContentFormFields
@@ -190,16 +196,16 @@ export function FocusCanvasDocument({
                   </Button>
                 </div>
               </form>
-            </article>
+            </Card>
           ) : (
-            <button
-              type="button"
+            <Button
+              variant="ghost"
               className="add-content-dashed-btn"
-              onClick={onStartCreateNew}
+              onPress={onStartCreateNew}
             >
-              <span className="plus-symbol" aria-hidden="true">+</span>
+              <Plus size={18} aria-hidden="true" />
               <span className="btn-text">添加具体工作内容</span>
-            </button>
+            </Button>
           )}
         </div>
       </section>
