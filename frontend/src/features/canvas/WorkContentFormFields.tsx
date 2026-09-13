@@ -1,4 +1,4 @@
-import { Input } from '@heroui/react'
+import { Input, Label } from '@heroui/react'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
 import type { ContentDraft } from './WorkContentBlock'
 
@@ -15,8 +15,8 @@ export function WorkContentFormFields({
 }: WorkContentFormFieldsProps) {
   return (
     <>
-      <div className="canvas-field">
-        <label htmlFor={`${prefixId}-title`}>工作项标题</label>
+      <div className="field">
+        <Label htmlFor={`${prefixId}-title`}>工作项标题</Label>
         <Input
           id={`${prefixId}-title`}
           placeholder="例如：主导前端渲染性能专项优化"
@@ -26,8 +26,8 @@ export function WorkContentFormFields({
         />
       </div>
 
-      <div className="canvas-field">
-        <label id={`${prefixId}-record-label`} htmlFor={`${prefixId}-record`}>草稿正文</label>
+      <div className="field">
+        <Label id={`${prefixId}-record-label`} htmlFor={`${prefixId}-record`}>草稿正文</Label>
         <MilkdownEditor
           id={`${prefixId}-record`}
           cacheKey={`${prefixId}-record`}

@@ -1,5 +1,9 @@
 /* ==========================================================================
    Work Contents Section & Cards (工作项区域、卡片实体与内联编辑)
+
+   色值一律读取 HeroUI 语义变量；已移除 canvas-field / plus-symbol /
+   typography-section / typography-label / highlight-result / btn-delete-ghost
+   等失去引用或改由 HeroUI 变体承载的规则。
    ========================================================================== */
 
 .focus-work-contents-section {
@@ -24,15 +28,11 @@
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--foreground);
 }
 
 .section-badge {
   font-size: 12px;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  background: #f1f5f9;
-  color: #64748b;
   font-weight: 600;
 }
 
@@ -44,43 +44,39 @@
 
 /* Work Content Card */
 .work-content-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-  transition: all 0.2s ease;
+  box-shadow: var(--surface-shadow);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
+  padding: 0;
+  gap: 0;
 }
 
 .work-content-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--border-secondary);
 }
 
 .work-content-card.interactive-card {
   cursor: pointer;
 }
 
-.work-content-card.interactive-card:hover {
-  border-color: #94a3b8;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-}
-
 .work-content-card.archived {
   opacity: 0.72;
-  background: #fafafa;
+  background: var(--surface-secondary);
   border-style: dashed;
 }
 
 .work-content-card.editing,
 .work-content-card.creating-new-card {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .work-content-card--active {
-  border-color: #0284c7 !important;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18), 0 4px 16px rgba(2, 132, 199, 0.08) !important;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 .work-content-card-header {
@@ -89,21 +85,21 @@
   justify-content: space-between;
   gap: 16px;
   padding: 20px 24px 16px;
-  border-bottom: 1px solid #f8fafc;
+  border-bottom: 1px solid var(--separator);
 }
 
 .work-content-card--dragging {
   opacity: 0.45;
-  border: 1.5px dashed #0284c7 !important;
+  border: 1.5px dashed var(--accent);
   transform: scale(0.99);
 }
 
 .work-content-card--drag-over-top {
-  border-top: 3px solid #0284c7 !important;
+  border-top: 3px solid var(--accent);
 }
 
 .work-content-card--drag-over-bottom {
-  border-bottom: 3px solid #0284c7 !important;
+  border-bottom: 3px solid var(--accent);
 }
 
 .work-content-title-meta {
@@ -122,16 +118,16 @@
   padding: 0;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--muted);
   border-radius: 4px;
   cursor: grab;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, color 0.15s ease;
   flex-shrink: 0;
 }
 
 .work-content-drag-handle:hover {
-  background: #f1f5f9;
-  color: #0284c7;
+  background: var(--surface-secondary);
+  color: var(--accent);
 }
 
 .work-content-drag-handle:active {
@@ -141,8 +137,8 @@
 .archived-badge {
   font-size: 11px;
   font-weight: 600;
-  color: #b45309;
-  background: #fef3c7;
+  color: var(--warning-soft-foreground);
+  background: var(--warning-soft);
   padding: 2px 7px;
   border-radius: 4px;
 }
@@ -151,7 +147,7 @@
   margin: 0;
   font-size: 17px;
   font-weight: 650;
-  color: #0f172a;
+  color: var(--foreground);
   line-height: 1.4;
 }
 
@@ -162,10 +158,6 @@
   flex-shrink: 0;
 }
 
-.edit-content-btn {
-  font-weight: 600 !important;
-}
-
 /* Typography Body */
 .work-content-typography-body {
   padding: 16px 24px 20px;
@@ -174,64 +166,32 @@
   gap: 14px;
 }
 
-.typography-section {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.typography-label {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: #94a3b8;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
 .typography-text {
   margin: 0;
   font-size: 14px;
   line-height: 1.6;
-  color: #334155;
+  color: var(--muted);
   white-space: pre-wrap;
 }
 
-.typography-text.highlight-result {
-  color: #0369a1;
-  font-weight: 500;
-}
-
 .work-content-card-footer {
-  background: #f8fafc;
-  border-top: 1px solid #edf2f7;
+  background: var(--surface-secondary);
+  border-top: 1px solid var(--separator);
   padding: 12px 24px;
   display: flex;
   align-items: center;
 }
 
-.zen-mode-btn {
-  color: #475569 !important;
-  font-weight: 500 !important;
-  font-size: 13px !important;
-  transition: all 0.15s ease !important;
-}
-
-.zen-mode-btn:hover {
-  color: #0284c7 !important;
-  background: #f0f9ff !important;
-}
-
-
 /* ==========================================================================
    Work Content Inline Edit Form (工作项内联编辑表单)
    ========================================================================== */
+
 .work-content-edit-form {
   padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .edit-form-header {
@@ -255,55 +215,26 @@
   font-weight: 500;
   padding: 2px 8px;
   border-radius: 9999px;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .auto-save-badge.saving {
-  background-color: #f1f5f9;
-  color: #64748b;
+  background-color: var(--surface-secondary);
+  color: var(--muted);
 }
 
 .auto-save-badge.saved {
-  background-color: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
+  background-color: var(--success-soft);
+  color: var(--success-soft-foreground);
 }
 
 .edit-form-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 13px;
   font-weight: 700;
-  color: #0284c7;
-}
-
-.canvas-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.canvas-field label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #334155;
-}
-
-.canvas-field [data-slot="input"],
-.canvas-field [data-slot="textarea"] {
-  width: 100%;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  padding: 8px 12px;
-  font-size: 14px;
-  outline: none;
-  background: #ffffff;
-  color: #0f172a;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.canvas-field [data-slot="input"]:focus,
-.canvas-field [data-slot="textarea"]:focus {
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+  color: var(--accent);
 }
 
 .edit-form-actions {
@@ -314,39 +245,6 @@
   margin-top: 8px;
 }
 
-/* 幽灵删除按钮 */
-button.btn-delete-ghost,
-.btn-delete-ghost {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  color: #64748b !important;
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  font-weight: 500 !important;
-  font-size: 13px !important;
-  height: 28px !important;
-  padding: 0 8px !important;
-  border-radius: 6px !important;
-  transition: all 0.15s ease !important;
-}
-
-button.btn-delete-ghost:hover,
-.btn-delete-ghost:hover {
-  background: #fef2f2 !important;
-  color: #dc2626 !important;
-  border-color: #fecaca !important;
-}
-
-.btn-delete-ghost svg {
-  flex-shrink: 0;
-  transition: transform 0.15s ease;
-}
-
-.btn-delete-ghost:hover svg {
-  transform: scale(1.05);
-}
-
 /* Dashed Add Button at bottom of Canvas (长画布底部虚线添加按钮) */
 .add-content-dashed-btn {
   display: flex;
@@ -355,25 +253,17 @@ button.btn-delete-ghost:hover,
   gap: 8px;
   width: 100%;
   min-height: 52px;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--border-secondary);
   border-radius: 12px;
-  background: #fbfcfe;
-  color: #475569;
+  background: var(--surface);
+  color: var(--muted);
   font-size: 14px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
   margin-top: 4px;
 }
 
 .add-content-dashed-btn:hover {
-  border-color: #0284c7;
-  color: #0284c7;
-  background: #f0f9ff;
-}
-
-.plus-symbol {
-  font-size: 18px;
-  font-weight: 700;
-  color: inherit;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
 }

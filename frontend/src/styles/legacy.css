@@ -1,9 +1,13 @@
 /* ==========================================================================
    Legacy Styles (早期/遗留页面及视图组件样式)
 
-   色值一律读取 HeroUI 语义变量。已确认无引用的旧布局类
-   （app-layout / module-nav / nav-item / nav-label / nav-hint /
-   brand / brand-mark / shell / topbar / header-actions）已于 issue 03 移除。
+   色值一律读取 HeroUI 语义变量。
+   issue 03 移除了旧布局类（app-layout / module-nav / nav-* / brand* / shell / topbar /
+   header-actions）；issue 07 在删除旧 Hub 实现（ExperienceGroupsPanel /
+   ExperienceGroupList / WorkContentEditor）后，又移除了随之失去引用的
+   group-list* / stack-form / detail-header / content-list* / content-form /
+   empty-copy / experience-layout / experience-panel / section-heading /
+   group-column / content-column / group-description / notice。
    ========================================================================== */
 
 .auth-page {
@@ -45,15 +49,6 @@
   background: var(--danger-soft);
 }
 
-.notice {
-  margin: 0 0 16px;
-  padding: 10px 12px;
-  border: 1px solid var(--success);
-  border-radius: 8px;
-  color: var(--success-soft-foreground);
-  background: var(--success-soft);
-}
-
 .eyebrow {
   margin: 0 0 2px;
   color: var(--muted);
@@ -91,123 +86,9 @@
   text-align: right;
 }
 
-.experience-panel {
-  min-width: 0;
-}
-
-.section-heading {
-  margin-bottom: 18px;
-}
-
-.section-heading h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.experience-layout {
-  display: grid;
-  grid-template-columns: minmax(250px, 320px) minmax(0, 1fr);
-  gap: 24px;
-  align-items: start;
-}
-
-.group-column,
-.content-column {
-  min-width: 0;
-}
-
-.group-column > .archive-toggle {
-  margin-bottom: 10px;
-}
-
-.group-list,
-.stack-form,
-.content-card,
-.empty-state {
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-}
-
-.group-list {
-  display: grid;
-  gap: 4px;
-  padding: 8px;
-}
-
-.group-list-item {
-  display: grid;
-  gap: 2px;
-  width: 100%;
-  padding: 12px;
-  border: 0;
-  border-radius: 9px;
-  color: var(--foreground);
-  background: transparent;
-  text-align: left;
-}
-
-.group-list-item:hover,
-.group-list-item.selected {
-  color: var(--accent);
-  background: var(--accent-soft);
-}
-
-.group-list-item span,
-.group-list-item small {
-  color: var(--muted);
-  font-size: 13px;
-}
-
-.stack-form {
-  display: grid;
-  gap: 12px;
-  padding: 18px;
-  margin-top: 16px;
-}
-
-.detail-header,
-.content-list-header,
-.content-card-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.detail-header {
-  padding: 18px 20px 0;
-}
-
-.detail-header h2 {
-  margin: 0;
-  font-size: 22px;
-}
-
-.detail-header p,
-.group-description {
-  margin: 5px 20px 0;
-  color: var(--muted);
-}
-
-.content-list-header {
-  margin: 24px 20px 10px;
-}
-
-.content-list-header h3,
-.stack-form h3 {
-  margin: 0;
-}
-
-.content-list-header span {
-  color: var(--muted);
-  font-size: 14px;
-}
-
-.content-list {
-  display: grid;
-  gap: 10px;
-}
+/* --------------------------------------------------------------------------
+   工作内容卡片排版（用于 Focus Canvas 的只读展示）
+   -------------------------------------------------------------------------- */
 
 .content-card {
   padding: 16px 18px;
@@ -263,16 +144,12 @@
   white-space: pre-wrap;
 }
 
-.content-form {
-  margin-top: 18px;
-}
-
 .form-actions {
   display: flex;
   gap: 8px;
 }
 
-.empty-copy {
+.empty-state {
   padding: 22px 14px;
   color: var(--muted);
   font-size: 14px;
@@ -318,26 +195,10 @@
   margin-top: auto;
 }
 
-@media (max-width: 900px) {
-  .experience-layout {
-    grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
-    gap: 16px;
-  }
-}
-
 @media (max-width: 720px) {
   .page-heading {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .experience-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .group-list {
-    max-height: 260px;
-    overflow-y: auto;
   }
 
   .page-context {
@@ -353,12 +214,6 @@
   .date-row,
   .dashboard-grid {
     grid-template-columns: 1fr;
-  }
-
-  .content-card-heading,
-  .detail-header {
-    align-items: flex-start;
-    flex-direction: column;
   }
 
   .content-actions {

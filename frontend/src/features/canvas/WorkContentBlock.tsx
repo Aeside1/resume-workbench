@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useState, useMemo, useRef } from 'react'
 import { Button } from '@heroui/react'
+import { Check, ChevronRight, FileText, GripVertical, Maximize2, Trash2 } from 'lucide-react'
 import type { WorkContent } from '../../api'
 import { MilkdownView, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 import { WorkContentFormFields } from './WorkContentFormFields'
@@ -206,7 +207,7 @@ export function WorkContentBlock({
       if (!cardRef.current.contains(target)) {
         const isModal = !!(
           target instanceof Element &&
-          (target.closest('[role="dialog"]') || target.closest('.modal-backdrop-custom'))
+          (target.closest('[role="dialog"]'))
         )
         if (isModal) return
 
@@ -273,9 +274,7 @@ export function WorkContentBlock({
               )}
               {saveStatus === 'saved' && (
                 <span className="auto-save-badge saved" role="status">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
+                  <Check size={12} aria-hidden="true" />
                   已自动保存
                 </span>
               )}
@@ -305,14 +304,7 @@ export function WorkContentBlock({
                 role="button"
                 tabIndex={0}
               >
-                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="9" cy="5" r="1.2" fill="currentColor" />
-                  <circle cx="9" cy="12" r="1.2" fill="currentColor" />
-                  <circle cx="9" cy="19" r="1.2" fill="currentColor" />
-                  <circle cx="15" cy="5" r="1.2" fill="currentColor" />
-                  <circle cx="15" cy="12" r="1.2" fill="currentColor" />
-                  <circle cx="15" cy="19" r="1.2" fill="currentColor" />
-                </svg>
+                <GripVertical size={14} aria-hidden="true" />
               </span>
               {item.archived && <span className="archived-badge">已归档</span>}
               <h3 className="work-content-title">
@@ -343,12 +335,7 @@ export function WorkContentBlock({
                 onClick={(e) => e.stopPropagation()}
                 aria-label="展开专注模式"
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: 4 }}>
-                  <polyline points="15 3 21 3 21 9" />
-                  <polyline points="9 21 3 21 3 15" />
-                  <line x1="21" y1="3" x2="14" y2="10" />
-                  <line x1="3" y1="21" x2="10" y2="14" />
-                </svg>
+                <Maximize2 size={13} aria-hidden="true" />
                 展开专注
               </Button>
               <Button
@@ -362,18 +349,11 @@ export function WorkContentBlock({
               </Button>
               <Button
                 size="sm"
-                variant="ghost"
-                className="btn-delete-ghost"
+                variant="danger-soft"
                 onPress={() => setIsDeleteModalOpen(true)}
                 onClick={(e) => e.stopPropagation()}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M3 6h18" />
-                  <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                  <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                  <line x1="10" y1="11" x2="10" y2="17" />
-                  <line x1="14" y1="11" x2="14" y2="17" />
-                </svg>
+                <Trash2 size={13} aria-hidden="true" />
                 删除
               </Button>
             </div>
@@ -395,19 +375,11 @@ export function WorkContentBlock({
               onPress={() => onOpenDrawer?.()}
               aria-label="简历描述提炼"
             >
-              <svg className="resume-trigger-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
+              <FileText className="resume-trigger-icon" size={15} aria-hidden="true" />
               <span className="resume-trigger-label">
                 简历描述提炼
               </span>
-              <svg className="resume-trigger-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
+              <ChevronRight className="resume-trigger-arrow" size={14} aria-hidden="true" />
             </Button>
           </footer>
         </div>
