@@ -33,6 +33,7 @@
 @import "./styles/features/canvas/outline-navigator.css";
 @import "./styles/features/canvas/work-content.css";
 @import "./styles/features/canvas/resume-drawer.css";
+@import "./styles/features/canvas/zen-editor.css";
 
 /* 5.3 Rich-text Editor: Milkdown */
 @import "./styles/features/editor/milkdown-editor.css";

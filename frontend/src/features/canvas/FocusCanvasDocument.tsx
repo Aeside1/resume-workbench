@@ -21,6 +21,7 @@ export type FocusCanvasDocumentProps = {
   onArchiveContent?: (item: WorkContent) => void
   activeDrawerWorkContentId?: number | null
   onOpenDrawer?: (item: WorkContent) => void
+  onOpenZenMode?: (item: WorkContent) => void
   onStartCreateNew: () => void
   onCancelCreateNew: () => void
   onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
@@ -49,6 +50,7 @@ export function FocusCanvasDocument({
   onArchiveContent,
   activeDrawerWorkContentId,
   onOpenDrawer,
+  onOpenZenMode,
   onStartCreateNew,
   onCancelCreateNew,
   onUpdateGroup
@@ -148,6 +150,7 @@ export function FocusCanvasDocument({
                 onArchiveContent={onArchiveContent}
                 activeDrawerWorkContentId={activeDrawerWorkContentId}
                 onOpenDrawer={onOpenDrawer}
+                onOpenZenMode={onOpenZenMode}
                 onDragStart={handleDragStart}
 
                 onDragOver={handleDragOver}
@@ -219,6 +222,7 @@ function FocusWorkContentItem({
   onArchiveContent,
   activeDrawerWorkContentId,
   onOpenDrawer,
+  onOpenZenMode,
   onDragStart,
   onDragOver,
   onDragLeave,
@@ -239,6 +243,7 @@ function FocusWorkContentItem({
   onArchiveContent?: (item: WorkContent) => void
   activeDrawerWorkContentId?: number | null
   onOpenDrawer?: (item: WorkContent) => void
+  onOpenZenMode?: (item: WorkContent) => void
   onDragStart: (e: React.DragEvent, index: number) => void
   onDragOver: (e: React.DragEvent, index: number) => void
   onDragLeave: (e: React.DragEvent, index: number) => void
@@ -272,6 +277,7 @@ function FocusWorkContentItem({
         onDelete={() => onDeleteContent(item)}
         onArchive={() => onArchiveContent?.(item)}
         onOpenDrawer={() => onOpenDrawer?.(item)}
+        onOpenZenMode={() => onOpenZenMode?.(item)}
         onDragStart={(e) => onDragStart(e, index)}
         onDragOver={(e) => onDragOver(e, index)}
         onDragLeave={(e) => onDragLeave(e, index)}

@@ -1,0 +1,462 @@
+/* ==========================================================================
+   Zen Focus Editor (全屏专注写作工作台)
+   遵从 ITCSS 架构与 AGENTS.md 规范：
+   - 严禁硬编码 Emoji
+   - 全面适配 HeroUI 深色/浅色语义主题
+   - 纯矢量图标与语义变量联动
+   ========================================================================== */
+
+/* 1. 顶层全屏覆盖层 */
+.zen-focus-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+  background: var(--surface, #ffffff);
+  color: var(--foreground, #0f172a);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: zenFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes zenFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 2. 顶部极简 Topbar */
+.zen-topbar {
+  height: 54px;
+  min-height: 54px;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  user-select: none;
+  z-index: 10;
+}
+
+.zen-topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  flex: 1;
+}
+
+.zen-exit-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 10px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  color: var(--muted-foreground, #64748b) !important;
+  transition: all 0.15s ease !important;
+  flex-shrink: 0 !important;
+}
+
+.zen-exit-btn:hover {
+  color: var(--foreground, #0f172a) !important;
+  background: color-mix(in oklch, var(--foreground, #0f172a) 6%, transparent) !important;
+}
+
+.zen-exit-text {
+  letter-spacing: -0.01em;
+}
+
+.zen-shortcut-kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 2px 5px;
+  border-radius: 4px;
+  color: var(--muted-foreground, #64748b);
+  background: color-mix(in oklch, var(--foreground, #0f172a) 5%, transparent);
+  border: 1px solid var(--border, #cbd5e1);
+  margin-left: 2px;
+}
+
+/* 层级面包屑导航 */
+.zen-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--muted-foreground, #64748b);
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.zen-breadcrumb-group {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 240px;
+  font-weight: 500;
+}
+
+.zen-breadcrumb-separator {
+  color: var(--border, #94a3b8);
+  font-weight: 300;
+  flex-shrink: 0;
+}
+
+.zen-breadcrumb-item-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 320px;
+  font-weight: 600;
+  color: var(--foreground, #0f172a);
+}
+
+/* Topbar 右侧操作与状态 */
+.zen-topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.zen-save-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.zen-save-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 3px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.zen-save-badge.saving {
+  color: var(--primary, #0284c7);
+  background: color-mix(in oklch, var(--primary, #0284c7) 10%, transparent);
+}
+
+.zen-spinner-icon {
+  animation: zenSpin 1s linear infinite;
+}
+
+@keyframes zenSpin {
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.zen-save-badge.saved {
+  color: #16a34a;
+  background: rgba(22, 163, 74, 0.1);
+}
+
+.zen-save-badge.idle {
+  color: var(--muted-foreground, #94a3b8);
+}
+
+.zen-action-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.zen-copy-md-btn {
+  color: var(--foreground, #334155) !important;
+  border: 1px solid var(--border, #cbd5e1) !important;
+  background: var(--surface, #ffffff) !important;
+}
+
+.zen-copy-md-btn:hover {
+  background: color-mix(in oklch, var(--foreground, #0f172a) 4%, transparent) !important;
+  border-color: var(--muted-foreground, #94a3b8) !important;
+}
+
+.zen-copy-md-btn--copied {
+  color: #16a34a !important;
+  border-color: #86efac !important;
+  background: rgba(22, 163, 74, 0.08) !important;
+}
+
+.zen-toggle-companion-btn {
+  border: 1px solid var(--border, #cbd5e1) !important;
+}
+
+/* 3. 左右双栏工作区 */
+.zen-workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+  background: var(--surface, #ffffff);
+}
+
+/* 4. 左侧主写作区 */
+.zen-main-writer {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+  background: var(--surface, #ffffff);
+  transition: flex 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.zen-main-writer--with-companion {
+  flex: 7; /* 约 70% 宽 */
+}
+
+.zen-main-writer--full {
+  flex: 1; /* 100% 宽 */
+}
+
+.zen-writer-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 24px;
+  scroll-behavior: smooth;
+}
+
+.zen-writer-canvas {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 44px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 大标题无边框极简输入 */
+.zen-title-container {
+  width: 100%;
+}
+
+.zen-title-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--foreground, #0f172a);
+  letter-spacing: -0.02em;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.zen-title-input::placeholder {
+  color: var(--muted-foreground, #94a3b8);
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.zen-title-input:focus {
+  border-bottom-color: color-mix(in oklch, var(--primary, #0284c7) 30%, transparent);
+}
+
+/* 宽阔 Markdown 编辑区域 */
+.zen-editor-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.zen-editor-wrapper .milkdown-editor-wrapper {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.zen-editor-wrapper .milkdown-textarea {
+  min-height: 480px !important;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  border-radius: 8px !important;
+  padding: 16px !important;
+  border: 1px solid var(--border, #e2e8f0) !important;
+  background: var(--surface, #ffffff) !important;
+  color: var(--foreground, #1e293b) !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+.zen-editor-wrapper .milkdown-textarea:focus {
+  border-color: var(--primary, #0284c7) !important;
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary, #0284c7) 15%, transparent) !important;
+}
+
+/* 5. 右侧伴随提炼栏 */
+.zen-companion-sidebar {
+  flex: 3; /* 约 30% 宽 */
+  min-width: 360px;
+  max-width: 460px;
+  background: color-mix(in oklch, var(--surface, #ffffff) 97%, var(--foreground, #000000) 3%);
+  border-left: 1px solid var(--border, #e2e8f0);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  animation: companionSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes companionSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.zen-companion-header {
+  height: 50px;
+  min-height: 50px;
+  padding: 0 16px 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border, #e2e8f0);
+  background: var(--surface, #ffffff);
+}
+
+.zen-companion-header-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zen-companion-icon {
+  color: var(--primary, #0284c7);
+  flex-shrink: 0;
+}
+
+.zen-companion-heading {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground, #0f172a);
+}
+
+.zen-companion-close-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  padding: 0 !important;
+  border-radius: 6px !important;
+  color: var(--muted-foreground, #64748b) !important;
+}
+
+.zen-companion-close-btn:hover {
+  color: var(--foreground, #0f172a) !important;
+  background: color-mix(in oklch, var(--foreground, #0f172a) 6%, transparent) !important;
+}
+
+.zen-companion-close-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.zen-companion-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 6. 复用版本流适配 */
+.resume-versions-feed {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.resume-versions-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 18px;
+}
+
+/* 7. 深色模式全面适配 (Dark Mode) */
+.dark .zen-focus-overlay {
+  background: var(--surface, #0f172a);
+  color: var(--foreground, #f8fafc);
+}
+
+.dark .zen-topbar {
+  background: var(--surface, #0f172a);
+  border-bottom-color: var(--border, #1e293b);
+}
+
+.dark .zen-workspace {
+  background: var(--surface, #0f172a);
+}
+
+.dark .zen-main-writer {
+  background: var(--surface, #0f172a);
+}
+
+.dark .zen-title-input {
+  color: var(--foreground, #f8fafc);
+}
+
+.dark .zen-editor-wrapper .milkdown-textarea {
+  background: var(--surface, #1e293b) !important;
+  border-color: var(--border, #334155) !important;
+  color: var(--foreground, #f8fafc) !important;
+}
+
+.dark .zen-companion-sidebar {
+  background: color-mix(in oklch, var(--surface, #0f172a) 96%, #000000 4%);
+  border-left-color: var(--border, #1e293b);
+}
+
+.dark .zen-companion-header {
+  background: var(--surface, #0f172a);
+  border-bottom-color: var(--border, #1e293b);
+}
+
+.dark .zen-shortcut-kbd {
+  color: var(--muted-foreground, #94a3b8);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--border, #334155);
+}
+
+.dark .zen-save-badge.saved {
+  color: #4ade80;
+  background: rgba(74, 222, 128, 0.12);
+}

@@ -5,6 +5,7 @@ import { useToast } from '../../components/ui/Toast'
 import { OutlineNavigator } from './OutlineNavigator'
 import { FocusCanvasDocument } from './FocusCanvasDocument'
 import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
+import { ZenFocusEditor } from './ZenFocusEditor'
 import {
   parseSupplementaryNotes,
   serializeSupplementaryNotes,
@@ -33,6 +34,7 @@ export function FocusCanvasContainer({
   const [contents, setContents] = useState<WorkContent[]>([])
   const [editingContentId, setEditingContentId] = useState<number | null>(null)
   const [activeDrawerWorkContentId, setActiveDrawerWorkContentId] = useState<number | null>(null)
+  const [zenModeWorkContentId, setZenModeWorkContentId] = useState<number | null>(null)
   const [isCreatingNew, setIsCreatingNew] = useState(false)
   const [activeNavId, setActiveNavId] = useState<string>('section-overview')
   const [showArchived, setShowArchived] = useState(false)
@@ -46,8 +48,8 @@ export function FocusCanvasContainer({
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    onDirtyChange?.(editingContentId !== null || isCreatingNew)
-  }, [editingContentId, isCreatingNew, onDirtyChange])
+    onDirtyChange?.(editingContentId !== null || isCreatingNew || zenModeWorkContentId !== null)
+  }, [editingContentId, isCreatingNew, zenModeWorkContentId, onDirtyChange])
 
   useEffect(() => {
     api.workContents(session.token, group.id, showArchived)
@@ -202,6 +204,22 @@ export function FocusCanvasContainer({
     setActiveDrawerWorkContentId(null)
   }
 
+  const handleOpenZenMode = (item: WorkContent) => {
+    setActiveDrawerWorkContentId(null)
+    setZenModeWorkContentId(item.id)
+  }
+
+  const handleCloseZenMode = () => {
+    const lastId = zenModeWorkContentId
+    setZenModeWorkContentId(null)
+    if (lastId !== null) {
+      setTimeout(() => {
+        const el = document.getElementById(`work-content-${lastId}`)
+        el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }, 50)
+    }
+  }
+
   const handleUpdateDrawerVersions = async (
     workContentId: number,
     versions: ResumeDescriptionVersion[]
@@ -294,6 +312,7 @@ export function FocusCanvasContainer({
             onArchiveContent={handleArchiveContent}
             activeDrawerWorkContentId={activeDrawerWorkContentId}
             onOpenDrawer={handleOpenDrawer}
+            onOpenZenMode={handleOpenZenMode}
             onStartCreateNew={() => {
 
               setEditingContentId(null)
@@ -330,6 +349,15 @@ export function FocusCanvasContainer({
         isOpen={activeDrawerWorkContentId !== null}
         workContent={contents.find((item) => item.id === activeDrawerWorkContentId) ?? null}
         onClose={handleCloseDrawer}
+        onUpdateVersions={handleUpdateDrawerVersions}
+      />
+
+      <ZenFocusEditor
+        isOpen={zenModeWorkContentId !== null}
+        group={currentGroup}
+        workContent={contents.find((item) => item.id === zenModeWorkContentId) ?? null}
+        onClose={handleCloseZenMode}
+        onSaveContent={handleSaveContent}
         onUpdateVersions={handleUpdateDrawerVersions}
       />
     </div>
