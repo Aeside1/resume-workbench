@@ -1537,35 +1537,66 @@ button.btn-danger-solid:active:not(:disabled),
 }
 
 .work-content-card-footer {
-  background: #fbfcfe;
-  border-top: 1px solid #f1f5f9;
+  background: #f8fafc;
+  border-top: 1px solid #edf2f7;
   padding: 12px 24px;
   display: flex;
   align-items: center;
 }
 
-/* Resume Description Capsule Pill Button */
-.resume-desc-pill-btn {
+/* Resume Description Drawer Trigger Button (专业实体边框按键) */
+.resume-desc-trigger-btn {
   display: inline-flex !important;
   align-items: center !important;
-  gap: 6px !important;
-  height: 32px !important;
+  gap: 8px !important;
+  height: 34px !important;
   padding: 0 14px !important;
-  border-radius: 9999px !important;
+  border-radius: 8px !important;
   font-size: 13px !important;
-  font-weight: 500 !important;
-  color: #0284c7 !important;
-  background: #f0f9ff !important;
-  border: 1px solid #bae6fd !important;
+  font-weight: 600 !important;
+  color: #1e293b !important;
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   cursor: pointer !important;
   transition: all 0.15s ease-in-out !important;
 }
 
-.resume-desc-pill-btn:hover {
+.resume-desc-trigger-btn .resume-trigger-icon {
+  color: #0284c7;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+}
+
+.resume-desc-trigger-btn .resume-trigger-label {
+  letter-spacing: 0.01em;
+}
+
+.resume-desc-trigger-btn .resume-trigger-arrow {
+  color: #64748b;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.resume-desc-trigger-btn:hover {
+  background: #f0f9ff !important;
+  border-color: #0284c7 !important;
+  color: #0284c7 !important;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.12) !important;
+}
+
+.resume-desc-trigger-btn:hover .resume-trigger-icon {
+  color: #0284c7;
+}
+
+.resume-desc-trigger-btn:hover .resume-trigger-arrow {
+  color: #0284c7;
+  transform: translateX(2px);
+}
+
+.resume-desc-trigger-btn:active {
+  transform: scale(0.98);
   background: #e0f2fe !important;
-  border-color: #7dd3fc !important;
-  color: #0369a1 !important;
-  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.12) !important;
 }
 
 .zen-mode-btn {
@@ -1579,6 +1610,7 @@ button.btn-danger-solid:active:not(:disabled),
   color: #0284c7 !important;
   background: #f0f9ff !important;
 }
+
 
 
 /* Resume Description Tabs */
@@ -2382,10 +2414,68 @@ mark.md-highlight {
   color: #334155;
 }
 
+/* 标题层级排版（包含阅读态与写时渲染实时编辑态） */
+.markdown-body-render h1,
+.milkdown-live-content h1 {
+  font-size: 1.35rem !important;
+  font-weight: 750 !important;
+  color: #0f172a !important;
+  margin: 18px 0 8px 0 !important;
+  line-height: 1.35 !important;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 6px;
+}
+
+.markdown-body-render h2,
+.milkdown-live-content h2 {
+  font-size: 1.18rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin: 16px 0 6px 0 !important;
+  line-height: 1.4 !important;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 4px;
+}
+
+.markdown-body-render h3,
+.milkdown-live-content h3 {
+  font-size: 1.05rem !important;
+  font-weight: 650 !important;
+  color: #1e293b !important;
+  margin: 14px 0 4px 0 !important;
+  line-height: 1.45 !important;
+}
+
+.markdown-body-render h4,
+.milkdown-live-content h4 {
+  font-size: 0.95rem !important;
+  font-weight: 650 !important;
+  color: #334155 !important;
+  margin: 12px 0 4px 0 !important;
+  line-height: 1.5 !important;
+}
+
+.markdown-body-render h5,
+.markdown-body-render h6,
+.milkdown-live-content h5,
+.milkdown-live-content h6 {
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: #475569 !important;
+  margin: 10px 0 4px 0 !important;
+  line-height: 1.5 !important;
+}
+
+.markdown-body-render > *:first-child,
+.milkdown-live-content > *:first-child {
+  margin-top: 0 !important;
+}
+
 .markdown-body-render strong {
   color: #0f172a;
   font-weight: 600;
 }
+
 
 .markdown-body-render code {
   background: #f1f5f9;

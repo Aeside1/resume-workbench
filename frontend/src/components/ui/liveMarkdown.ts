@@ -24,6 +24,16 @@ export const liveParser = new MarkdownParser(liveSchema, tokenizer, {
   // 工作记录既有内容中的单换行仍然按可见换行处理。
   softbreak: { node: 'hard_break' },
 })
+
+// 智能增强：兼容中文输入中常见的行首未空格 #标题 格式（如 #核心方案 -> # 核心方案）
+const originalParse = liveParser.parse.bind(liveParser)
+liveParser.parse = function (text: string) {
+  const normalized = typeof text === 'string'
+    ? text.replace(/^(\s*#{1,6})([^#\s])/gm, '$1 $2')
+    : text
+  return originalParse(normalized)
+}
+
 export const liveSerializer = new MarkdownSerializer({
   ...defaultMarkdownSerializer.nodes,
   bullet_list(state, node) {
@@ -43,6 +53,7 @@ export function serializeMarkdown(doc: ProseNode): string {
 
 export function markdownToHtml(markdown: string): string {
   const container = document.createElement('div')
-  container.append(DOMSerializer.fromSchema(liveSchema).serializeFragment(liveParser.parse(markdown).content))
+  container.append(DOMSerializer.fromSchema(liveSchema).serializeFragment(liveParser.parse(markdown || '').content))
   return container.innerHTML
 }
+

@@ -28,4 +28,13 @@ describe('工作记录 Markdown 往返', () => {
     expect(html).not.toContain('<img')
     expect(html).not.toContain('href="javascript:')
   })
+
+  it('支持各类 # 标题的正确解析与渲染（包含各级标题与行首无空格容错）', () => {
+    expect(markdownToHtml('# 一级标题')).toContain('<h1>一级标题</h1>')
+    expect(markdownToHtml('## 二级标题')).toContain('<h2>二级标题</h2>')
+    expect(markdownToHtml('### 三级标题')).toContain('<h3>三级标题</h3>')
+    expect(markdownToHtml('#无空格标题')).toContain('<h1>无空格标题</h1>')
+    expect(markdownToHtml('###技术方案')).toContain('<h3>技术方案</h3>')
+  })
 })
+

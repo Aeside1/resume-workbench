@@ -66,12 +66,12 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     // 验证旧有的 4 个死板表单分割标题在阅读态已不作为独立 section 标签存在
     expect(screen.queryByRole('heading', { level: 4, name: '背景与难点' })).not.toBeInTheDocument()
 
-    // 验证旧有的平铺简历描述 Tab 已移除，替换为极简胶囊按钮
+    // 验证旧有的平铺简历描述 Tab 已移除，替换为专业实体按钮“简历描述提炼”
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /📝 简历描述 \(1 个版本\) →/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /简历描述提炼/ })).toBeInTheDocument()
   })
 
-  it('点击底部胶囊按钮触发 onOpenDrawer 回调', () => {
+  it('点击底部简历描述提炼按钮触发 onOpenDrawer 回调', () => {
     const handleOpenDrawer = vi.fn()
 
     render(
@@ -88,10 +88,11 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       />
     )
 
-    const capsuleBtn = screen.getByRole('button', { name: /📝 简历描述 \(1 个版本\) →/ })
-    fireEvent.click(capsuleBtn)
+    const drawerBtn = screen.getByRole('button', { name: /简历描述提炼/ })
+    fireEvent.click(drawerBtn)
     expect(handleOpenDrawer).toHaveBeenCalledTimes(1)
   })
+
 
   it('卡片头部保留 6 点抓手手柄，新增 ⛶ 展开专注 按钮并响应点击回调；双击标题亦进入专注模式', () => {
     const handleOpenZenMode = vi.fn()
@@ -206,10 +207,10 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     expect(handleCancel).toHaveBeenCalledTimes(1)
   })
 
-  it('富文本排版支持多层列表嵌套、==trade off== 高亮与代码块', () => {
+  it('富文本排版支持各类 # 标题、多层列表嵌套、==trade off== 高亮与代码块', () => {
     const richMarkdownItem: WorkContent = {
       ...mockWorkItem,
-      detailed_record: '- 一级项目目标\n  - 二级核心难点\n    - 三级压测指标\n> 架构决策说明\n\n```ts\nconst optimized = true;\n```\n\n针对内存泄漏进行 ==trade off== 权衡。',
+      detailed_record: '# 架构设计核心\n## 渲染性能瓶颈\n- 一级项目目标\n  - 二级核心难点\n    - 三级压测指标\n> 架构决策说明\n\n```ts\nconst optimized = true;\n```\n\n针对内存泄漏进行 ==trade off== 权衡。',
       technical_materials: null,
       result_data: null,
       supplementary_notes: JSON.stringify({ note: '', versions: [] })
@@ -228,6 +229,10 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       />
     )
 
+    // 验证各级 # 标题正常渲染为 heading 节点
+    expect(screen.getByRole('heading', { level: 1, name: '架构设计核心' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: '渲染性能瓶颈' })).toBeInTheDocument()
+
     // 验证列表
     expect(screen.getByText('一级项目目标')).toBeInTheDocument()
     expect(screen.getByText('二级核心难点')).toBeInTheDocument()
@@ -241,8 +246,9 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     const highlightEl = screen.getByText('trade off')
     expect(highlightEl.tagName.toLowerCase()).toBe('mark')
 
-    // 验证 0 个版本时的胶囊按钮
-    expect(screen.getByRole('button', { name: /📝 简历描述 \(0 个版本\) →/ })).toBeInTheDocument()
+    // 验证专业实体按钮“简历描述提炼”
+    expect(screen.getByRole('button', { name: /简历描述提炼/ })).toBeInTheDocument()
   })
 })
+
 

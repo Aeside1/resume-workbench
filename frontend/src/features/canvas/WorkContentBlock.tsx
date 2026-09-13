@@ -276,12 +276,23 @@ export function WorkContentBlock({
           <footer className="work-content-card-footer" onClick={(e) => e.stopPropagation()}>
             <Button
               size="sm"
-              variant="ghost"
-              className="resume-desc-pill-btn"
+              variant="secondary"
+              className="resume-desc-trigger-btn"
               onPress={() => onOpenDrawer?.()}
               onClick={(e) => e.stopPropagation()}
+              aria-label="打开简历描述提炼抽屉"
             >
-              📝 简历描述 ({parsedData.versions.length} 个版本) →
+              <svg className="resume-trigger-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              <span className="resume-trigger-label">简历描述提炼</span>
+              <svg className="resume-trigger-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </Button>
           </footer>
         </div>
@@ -289,5 +300,6 @@ export function WorkContentBlock({
     </article>
   )
 }
+
 
 
