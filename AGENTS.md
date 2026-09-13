@@ -29,6 +29,28 @@
 5. **严禁在界面与文案中使用 Emoji 字符**：
    全项目严禁在任何界面展示文本、空状态占位符、操作引导、按钮图标或系统提示中硬编码 Emoji 字符（如 📝、💡、🚀 等），杜绝 AI Demo 的廉价玩具质感。空状态与各类视觉传达应统一使用框架内置标准矢量图标组件或纯净利落的工程级排版布局。
 
+## 并行工作区与本地环境隔离
+
+当使用 `git worktree` 并行开发（例如实验分支与 `main` 同时运行）时，严禁与主工作区共用同一套 Docker 容器与端口，必须为当前工作区创建独立的一套：
+
+1. **独立 compose 项目名**：
+   一律用 `-p` 指定专属项目名（如 `-p resume-workbench-<slug>`），使容器、网络与数据卷自动带前缀，与主工作区彻底隔离。严禁对主工作区的栈执行 `down`、`stop` 或重建。
+2. **端口不得与主工作区冲突**：
+   主工作区默认占用 `5173`（web）、`8000`（api）、`5432`（db）。并行工作区必须改用另一组端口（约定自 `5174` / `8001` / `5433` 起顺延），启动前先用 `docker ps` 确认未被占用。
+3. **隔离配置以本地文件维护，不进版本库**：
+   覆盖用的 compose 文件放在已被 `.gitignore` 忽略的 `.worktrees/` 下。注意 Compose 合并时对 `ports` 是**追加而非替换**（`-f` 叠加会导致新旧端口同时保留、依旧冲突），因此必须写**独立完整的 compose 文件**，并用 `--project-directory` 指向当前工作区以保证 `build` 上下文正确。
+4. **前端 API 地址与后端 CORS 必须指向本工作区**：
+   前端构建期用 `--build-arg VITE_API_URL=http://localhost:<api端口>` 注入，否则会回退到默认的 `8000` 而把页面请求打到主工作区的 API；后端用 `CORS_ORIGINS` 环境变量（逗号分隔）放开本工作区的来源端口，否则浏览器会因跨源被拦截。
+5. **启动与验证**：
+   在 worktree 根目录执行：
+
+   ```bash
+   docker compose -p resume-workbench-<slug> --project-directory . \
+     -f ../docker-compose.<slug>.yml up -d --build
+   ```
+
+   启动后必须确认三点：`docker ps` 中两套容器端口互不冲突；`curl http://localhost:<api端口>/api/health` 返回 `{"status":"ok"}`；前端首页可访问。
+
 ## Git 协作规范
 
 1. **Commit Message 统一使用中文**：
