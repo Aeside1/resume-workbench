@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { Button, CloseIcon } from '@heroui/react'
+import { Button } from '@heroui/react'
 import type { ExperienceGroup, WorkContent } from '../../api'
-import { toast } from '../../components/ui/Toast'
-import { copyToClipboard } from '../../utils/clipboard'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
 import {
   parseSupplementaryNotes,
@@ -49,7 +47,6 @@ export function ZenFocusEditor({
 
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [isCompanionOpen, setIsCompanionOpen] = useState(true)
-  const [isMarkdownCopied, setIsMarkdownCopied] = useState(false)
 
   const draftRef = useRef(draft)
   draftRef.current = draft
@@ -178,19 +175,6 @@ export function ZenFocusEditor({
     onClose()
   }
 
-  const handleCopyFullMarkdown = async () => {
-    if (!workContent) return
-    const fullMarkdown = `# ${draft.title.trim()}\n\n${draft.detailed_record.trim()}`
-    const success = await copyToClipboard(fullMarkdown)
-    if (success) {
-      setIsMarkdownCopied(true)
-      toast.success('已复制整篇 Markdown 到剪贴板')
-      setTimeout(() => setIsMarkdownCopied(false), 2000)
-    } else {
-      toast.error('复制失败，请手动选择复制')
-    }
-  }
-
   if (!isOpen || !workContent) return null
 
   const breadcrumbOrg = group.organization ? `${group.organization} · ` : ''
@@ -250,40 +234,7 @@ export function ZenFocusEditor({
                 <span>已自动保存</span>
               </span>
             )}
-            {saveStatus === 'idle' && (
-              <span className="zen-save-badge idle" role="status">
-                <svg width="8" height="8" viewBox="0 0 8 8" fill="currentColor" aria-hidden="true">
-                  <circle cx="4" cy="4" r="3" />
-                </svg>
-                <span>已就绪</span>
-              </span>
-            )}
           </div>
-
-          <Button
-            size="sm"
-            variant="ghost"
-            className={`zen-action-btn zen-copy-md-btn ${isMarkdownCopied ? 'zen-copy-md-btn--copied' : ''}`}
-            onPress={handleCopyFullMarkdown}
-            aria-label="复制整篇 Markdown"
-          >
-            {isMarkdownCopied ? (
-              <>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                <span>已复制</span>
-              </>
-            ) : (
-              <>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg>
-                <span>复制整篇 Markdown</span>
-              </>
-            )}
-          </Button>
 
           <Button
             size="sm"
@@ -356,15 +307,6 @@ export function ZenFocusEditor({
                 </svg>
                 <h3 className="zen-companion-heading">简历描述提炼</h3>
               </div>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="zen-companion-close-btn"
-                aria-label="关闭伴随提炼栏"
-                onPress={() => setIsCompanionOpen(false)}
-              >
-                <CloseIcon className="zen-companion-close-icon" />
-              </Button>
             </header>
 
             <div className="zen-companion-body">

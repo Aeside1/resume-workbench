@@ -171,40 +171,6 @@
   background: rgba(22, 163, 74, 0.1);
 }
 
-.zen-save-badge.idle {
-  color: var(--muted-foreground, #94a3b8);
-}
-
-.zen-action-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  height: 32px !important;
-  padding: 0 12px !important;
-  border-radius: 6px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-  transition: all 0.15s ease !important;
-}
-
-.zen-copy-md-btn {
-  color: var(--foreground, #334155) !important;
-  border: 1px solid var(--border, #cbd5e1) !important;
-  background: var(--surface, #ffffff) !important;
-}
-
-.zen-copy-md-btn:hover {
-  background: color-mix(in oklch, var(--foreground, #0f172a) 4%, transparent) !important;
-  border-color: var(--muted-foreground, #94a3b8) !important;
-}
-
-.zen-copy-md-btn--copied {
-  color: #16a34a !important;
-  border-color: #86efac !important;
-  background: rgba(22, 163, 74, 0.08) !important;
-}
-
 .zen-toggle-companion-btn {
   border: 1px solid var(--border, #cbd5e1) !important;
 }
@@ -366,25 +332,6 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--foreground, #0f172a);
-}
-
-.zen-companion-close-btn {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  padding: 0 !important;
-  border-radius: 6px !important;
-  color: var(--muted-foreground, #64748b) !important;
-}
-
-.zen-companion-close-btn:hover {
-  color: var(--foreground, #0f172a) !important;
-  background: color-mix(in oklch, var(--foreground, #0f172a) 6%, transparent) !important;
-}
-
-.zen-companion-close-icon {
-  width: 14px;
-  height: 14px;
 }
 
 .zen-companion-body {

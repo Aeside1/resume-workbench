@@ -60,6 +60,44 @@ const exitCodeBlockOnDoubleEnter: Command = (state, dispatch) => {
   return false
 }
 
+// 缩进命令：优先列表项向内缩进；若不在列表中则插入 2 个空格；始终拦截防止浏览器切换焦点
+const createIndentCommand = (listItemType: any): Command => {
+  const sink = sinkListItem(listItemType)
+  return (state, dispatch) => {
+    if (sink(state, dispatch)) return true
+    if (dispatch) {
+      const { $from, $to } = state.selection
+      if ($from.sameParent($to) && $from.parent.isTextblock) {
+        dispatch(state.tr.replaceSelectionWith(state.schema.text('  ')).scrollIntoView())
+        return true
+      }
+    }
+    return true
+  }
+}
+
+// 反向缩进命令：优先列表项向外提升；若在顶层或普通文本，尝试删除光标前空格；始终拦截防止浏览器 Shift+Tab 跳焦
+const createOutdentCommand = (listItemType: any): Command => {
+  const lift = liftListItem(listItemType)
+  return (state, dispatch) => {
+    if (lift(state, dispatch)) return true
+    if (dispatch) {
+      const { $from } = state.selection
+      const textBefore = $from.parent.textBetween(0, $from.parentOffset)
+      if (textBefore.endsWith('  ')) {
+        const tr = state.tr.delete($from.pos - 2, $from.pos)
+        dispatch(tr.scrollIntoView())
+        return true
+      } else if (textBefore.endsWith(' ')) {
+        const tr = state.tr.delete($from.pos - 1, $from.pos)
+        dispatch(tr.scrollIntoView())
+        return true
+      }
+    }
+    return true
+  }
+}
+
 export function createLiveEditorState(content: string | ProseNode) {
   const { nodes, marks } = liveSchema
   return EditorState.create({
@@ -93,8 +131,8 @@ export function createLiveEditorState(content: string | ProseNode) {
         ),
         'Mod-Enter': exitCode,
         'Shift-Enter': chainCommands(exitCode, insertBreak),
-        Tab: sinkListItem(nodes.list_item),
-        'Shift-Tab': liftListItem(nodes.list_item),
+        Tab: createIndentCommand(nodes.list_item),
+        'Shift-Tab': createOutdentCommand(nodes.list_item),
       }),
       keymap(baseKeymap),
       history(),

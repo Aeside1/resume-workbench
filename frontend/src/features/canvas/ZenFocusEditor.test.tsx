@@ -82,7 +82,7 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     expect(screen.getByText('重构可视化拖拽画布核心渲染引擎')).toBeInTheDocument()
 
     // 3. 验证 Topbar 操作项
-    expect(screen.getByRole('button', { name: '复制整篇 Markdown' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '复制整篇 Markdown' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '收起伴随栏' })).toBeInTheDocument()
 
     // 4. 验证左侧主写作区大标题输入与正文
@@ -164,29 +164,7 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     }, { timeout: 2000 })
   })
 
-  it('点击“复制整篇 Markdown”快捷按钮，将大标题与自由底稿格式化复制到剪贴板', async () => {
-    render(
-      <ZenFocusEditor
-        isOpen={true}
-        group={mockGroup}
-        workContent={mockWorkContent}
-        onClose={vi.fn()}
-        onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
-      />
-    )
-
-    const copyBtn = screen.getByRole('button', { name: '复制整篇 Markdown' })
-    fireEvent.click(copyBtn)
-
-    const expectedCopiedText = `# 重构可视化拖拽画布核心渲染引擎\n\n${mockWorkContent.detailed_record}`
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(expectedCopiedText)
-
-    // 验证复制视觉状态切换为“已复制”
-    expect(await screen.findByText('已复制')).toBeInTheDocument()
-  })
-
-  it('支持在右侧伴随提炼栏临时收起与重新展开（单栏/双栏切换）', () => {
+  it('支持仅通过 Topbar 伴随栏切换按钮收起与重新展开伴随栏', () => {
     render(
       <ZenFocusEditor
         isOpen={true}
@@ -201,17 +179,17 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     // 默认双栏状态
     expect(screen.getByLabelText('伴随提炼栏')).toBeInTheDocument()
 
-    // 1. 点击伴随栏右上角收起按钮
-    const companionCloseBtn = screen.getByRole('button', { name: '关闭伴随提炼栏' })
-    fireEvent.click(companionCloseBtn)
+    // 1. 点击 Topbar 上的“收起伴随栏”按钮收起侧栏
+    const toggleCollapseBtn = screen.getByRole('button', { name: '收起伴随栏' })
+    fireEvent.click(toggleCollapseBtn)
 
-    // 验证伴随栏已收起，Topbar 按钮文案变为“展开伴随栏”
+    // 验证伴随栏已收起，Topbar 按钮文案切换为“展开伴随栏”
     expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument()
-    const toggleBtn = screen.getByRole('button', { name: '展开伴随栏' })
-    expect(toggleBtn).toBeInTheDocument()
+    const toggleExpandBtn = screen.getByRole('button', { name: '展开伴随栏' })
+    expect(toggleExpandBtn).toBeInTheDocument()
 
-    // 2. 点击 Topbar 上的“展开伴随栏”按钮
-    fireEvent.click(toggleBtn)
+    // 2. 再次点击 Topbar 上的“展开伴随栏”按钮重新展开
+    fireEvent.click(toggleExpandBtn)
     expect(screen.getByLabelText('伴随提炼栏')).toBeInTheDocument()
   })
 
