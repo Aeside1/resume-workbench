@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { Button } from '@heroui/react'
 import type { Session } from '../session'
+import { ThemeToggle } from '../components/ui/ThemeToggle'
 
 export type AppShellMode = 'hub' | 'focus' | 'focus-canvas'
 
@@ -60,6 +61,7 @@ export function AppShell({
           </nav>
 
           <div className="sidebar-footer">
+            <ThemeToggle />
             <Button
               variant="ghost"
               className="sidebar-logout-btn"

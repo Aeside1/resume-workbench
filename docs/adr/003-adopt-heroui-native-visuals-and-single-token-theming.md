@@ -12,7 +12,7 @@
 ADR 001 第 2.3 节早已明确设计系统决策：**"严格遵循 HeroUI 设计规范，提供浅色（Light）与深色（Dark）双主题支持"**。然而该决策在此后的实现中并未真正落地：
 
 1. **HeroUI 仅有名义接入**：21 个非测试组件文件中 import 了 `@heroui/react`，但实际仅使用了 `Button`、`Card`、`Modal`、`Input`、`Select` 等极少数组件。界面主体由约 380 处原生 HTML 元素 + 自定义 CSS 堆叠而成。
-2. **主题切换完全缺失**：`main.tsx` 未包裹 `HeroUIProvider`，未引入任何主题 Provider，`index.html` 上没有 `.dark` 或 `data-theme` 属性。深浅色切换从零开始都不存在。
+2. **主题切换完全缺失**：`main.tsx` 未接入任何主题机制，`index.html` 上没有 `.dark` 或 `data-theme` 属性。深浅色切换从零开始都不存在。
 3. **色值全面硬编码**：`frontend/src/styles/` 下 19 个 CSS 文件中共有 566 处硬编码 hex 色值（78 个唯一值），另有大量 `rgba()` 阴影与透明色，全部没有 `.dark` 变体，也完全未使用 HeroUI 的语义化 CSS 变量。
 4. **风格与框架持续对抗**：自定义 CSS 通过 `!important` 反复覆盖 HeroUI 组件默认样式（例如 `.sidebar-nav-item` 多达 12 个 `!important`），形成"引入框架却手工重写框架"的高维护成本状态。
 

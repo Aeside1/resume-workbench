@@ -4,6 +4,45 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f4f6fa" />
+    <script>
+      // 首帧前应用已保存的主题，避免深浅色切换时的白屏闪烁；
+      // 并让浏览器 chrome 主题色跟随主题 token，而非固定浅色。
+      ;(function () {
+        var STORAGE_KEY = 'heroui-theme'
+        var root = document.documentElement
+
+        // 同步 <meta name="theme-color">：样式就绪后取主题 token，静态值仅作首帧兜底。
+        function syncThemeColor() {
+          var meta = document.querySelector('meta[name="theme-color"]')
+          if (!meta) return
+          var background = getComputedStyle(root).getPropertyValue('--background').trim()
+          if (background) meta.setAttribute('content', background)
+        }
+
+        // 1. 首帧前应用主题（存储键与 HeroUI useTheme 的约定一致）。
+        try {
+          var stored = localStorage.getItem(STORAGE_KEY) || 'system'
+          var resolved =
+            stored === 'system'
+              ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+              : stored
+          root.classList.add(resolved)
+          root.setAttribute('data-theme', resolved)
+        } catch (error) {
+          // 读取失败时回退到样式表默认的浅色主题。
+        }
+
+        // 2. 样式就绪及后续主题切换时，保持浏览器主题色同步。
+        syncThemeColor()
+        document.addEventListener('DOMContentLoaded', syncThemeColor)
+        new MutationObserver(syncThemeColor).observe(root, {
+          attributes: true,
+          attributeFilter: ['class']
+        })
+      })()
+    </script>
     <title>简历工作台</title>
   </head>
   <body>
