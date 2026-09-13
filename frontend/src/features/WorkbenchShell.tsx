@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Card } from '@heroui/react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { ArrowRight, FileText, LayoutGrid, Layers } from 'lucide-react'
+import { motion } from 'framer-motion'
 import type { ExperienceGroup } from '../api'
 import type { Session } from '../session'
 import { AppShell, AppShellMode } from './AppShell'
@@ -52,12 +53,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         fullWidth
         onPress={() => handleNavClick('dashboard')}
       >
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <rect width="7" height="7" x="3" y="3" rx="1" />
-          <rect width="7" height="7" x="14" y="3" rx="1" />
-          <rect width="7" height="7" x="14" y="14" rx="1" />
-          <rect width="7" height="7" x="3" y="14" rx="1" />
-        </svg>
+        <LayoutGrid size={18} aria-hidden="true" />
         <span>工作台概览</span>
       </Button>
       <Button
@@ -65,11 +61,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         fullWidth
         onPress={() => handleNavClick('experiences')}
       >
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2" />
-          <polyline points="2 17 12 22 22 17" />
-          <polyline points="2 12 12 17 22 12" />
-        </svg>
+        <Layers size={18} aria-hidden="true" />
         <span>经历内容</span>
       </Button>
       <Button
@@ -77,13 +69,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         fullWidth
         onPress={() => handleNavClick('plans')}
       >
-        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" x2="8" y1="13" y2="13" />
-          <line x1="16" x2="8" y1="17" y2="17" />
-          <line x1="10" x2="8" y1="9" y2="9" />
-        </svg>
+        <FileText size={18} aria-hidden="true" />
         <span>简历方案</span>
       </Button>
     </>
@@ -142,25 +128,36 @@ export function WorkbenchShell({ session, onLogout }: Props) {
                 </div>
                 <p className="page-context">查看最近编辑的内容</p>
               </div>
-              <Card className="dashboard-empty">
+              <Card>
                 <Card.Header>
                   <Card.Title>继续整理你的职业经历</Card.Title>
                   <Card.Description>从经历内容开始，沉淀可复用的具体工作内容。</Card.Description>
                 </Card.Header>
                 <Card.Content>
                   <div className="dashboard-grid">
-                    <button className="dashboard-entry" onClick={() => handleNavClick('experiences')}>
+                    <Button
+                      variant="secondary"
+                      className="dashboard-entry"
+                      onPress={() => handleNavClick('experiences')}
+                    >
                       <span className="entry-kicker">内容资产</span>
                       <strong>经历内容</strong>
-                      <p>创建实习或项目经历，记录工作贡献。</p>
-                      <span className="entry-action">进入经历内容 →</span>
-                    </button>
-                    <button className="dashboard-entry muted-entry" onClick={() => handleNavClick('plans')}>
+                      <span className="entry-copy">创建实习或项目经历，记录工作贡献。</span>
+                      <span className="entry-action">
+                        进入经历内容
+                        <ArrowRight size={14} aria-hidden="true" />
+                      </span>
+                    </Button>
+                    <Button
+                      variant="tertiary"
+                      className="dashboard-entry dashboard-entry--muted"
+                      onPress={() => handleNavClick('plans')}
+                    >
                       <span className="entry-kicker">组合输出</span>
                       <strong>简历方案</strong>
-                      <p>后续可按目标岗位组合简历描述。</p>
+                      <span className="entry-copy">后续可按目标岗位组合简历描述。</span>
                       <span className="entry-action">即将开始</span>
-                    </button>
+                    </Button>
                   </div>
                 </Card.Content>
               </Card>
@@ -168,7 +165,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           )}
 
           {view === 'plans' && (
-            <Card className="dashboard-empty">
+            <Card>
               <Card.Header>
                 <Card.Title>简历方案</Card.Title>
                 <Card.Description>简历方案将在经历描述模块完成后开放。</Card.Description>

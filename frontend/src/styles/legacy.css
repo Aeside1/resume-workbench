@@ -1,7 +1,9 @@
 /* ==========================================================================
    Legacy Styles (早期/遗留页面及视图组件样式)
-   包含旧版 Auth、早期 Layout、Workbench 初始形态及过时栅格类。
-   独立隔离维护，后续待页面全面升级后逐步清理退役。
+
+   色值一律读取 HeroUI 语义变量。已确认无引用的旧布局类
+   （app-layout / module-nav / nav-item / nav-label / nav-hint /
+   brand / brand-mark / shell / topbar / header-actions）已于 issue 03 移除。
    ========================================================================== */
 
 .auth-page {
@@ -10,18 +12,13 @@
   place-items: center;
   padding: 32px 20px;
   overflow-x: hidden;
-  background: radial-gradient(circle at 20% 10%, #dceaff 0, transparent 35%), #f4f6fa;
+  background: var(--background);
 }
 
 .auth-card {
   width: min(420px, calc(100vw - 40px));
   max-width: 100%;
   min-width: 0;
-  padding: 28px;
-  border: 1px solid #d9e2ef;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 18px 45px rgba(31, 55, 86, 0.12);
 }
 
 .auth-card [data-slot="card-description"] {
@@ -35,142 +32,34 @@
 }
 
 .muted {
-  color: #667085;
+  color: var(--muted);
   margin-top: 0;
 }
 
 .error {
   margin: 0;
   padding: 10px 12px;
-  border: 1px solid #f7c4ba;
+  border: 1px solid var(--danger);
   border-radius: 8px;
-  color: #b42318;
-  background: #fff0ed;
+  color: var(--danger-soft-foreground);
+  background: var(--danger-soft);
 }
 
 .notice {
   margin: 0 0 16px;
   padding: 10px 12px;
-  border: 1px solid #afd7c2;
+  border: 1px solid var(--success);
   border-radius: 8px;
-  color: #14633d;
-  background: #ecfdf3;
-}
-
-.shell {
-  width: min(100%, 1440px);
-  margin: 0 auto;
-  padding: 24px clamp(20px, 3vw, 48px) 56px;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  min-height: 70px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #dce3ed;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-
-.brand-mark {
-  display: grid;
-  width: 38px;
-  height: 38px;
-  place-items: center;
-  flex: 0 0 auto;
-  border-radius: 11px;
-  color: #ffffff;
-  background: #1683e8;
-  font-weight: 800;
-  box-shadow: 0 5px 12px rgba(22, 131, 232, 0.24);
-}
-
-.brand h1 {
-  margin: 0;
-  font-size: 30px;
-  letter-spacing: 0;
+  color: var(--success-soft-foreground);
+  background: var(--success-soft);
 }
 
 .eyebrow {
   margin: 0 0 2px;
-  color: #75839a;
+  color: var(--muted);
   font-size: 11px;
   font-weight: 750;
   letter-spacing: 0.12em;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  color: #667085;
-  font-size: 14px;
-}
-
-.app-layout {
-  display: grid;
-  grid-template-columns: 208px minmax(0, 1fr);
-  gap: clamp(24px, 4vw, 48px);
-  align-items: start;
-}
-
-.module-nav {
-  display: grid;
-  gap: 5px;
-  padding: 12px 0;
-}
-
-.nav-label {
-  margin: 0 12px 7px;
-  color: #8a96a8;
-  font-size: 11px;
-  font-weight: 750;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.nav-item {
-  display: flex;
-  width: 100%;
-  min-height: 42px;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 9px;
-  color: #536176;
-  font-weight: 600;
-  text-align: left;
-}
-
-.nav-item:hover {
-  color: #0b5fae;
-  background: #eaf3ff;
-}
-
-.nav-item.active {
-  color: #0b5fae;
-  background: #e4f0ff;
-  box-shadow: inset 3px 0 #1683e8;
-}
-
-.nav-hint {
-  margin-left: auto;
-  color: #98a2b3;
-  font-size: 11px;
-  font-weight: 500;
-}
-
-.app-main {
-  min-width: 0;
 }
 
 .workbench-view-container {
@@ -197,7 +86,7 @@
 
 .page-context {
   margin: 0 0 2px;
-  color: #667085;
+  color: var(--muted);
   font-size: 14px;
   text-align: right;
 }
@@ -234,11 +123,10 @@
 .group-list,
 .stack-form,
 .content-card,
-.dashboard-empty,
 .empty-state {
-  border: 1px solid #d9e2ef;
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: #ffffff;
+  background: var(--surface);
 }
 
 .group-list {
@@ -254,20 +142,20 @@
   padding: 12px;
   border: 0;
   border-radius: 9px;
-  color: #26364b;
+  color: var(--foreground);
   background: transparent;
   text-align: left;
 }
 
 .group-list-item:hover,
 .group-list-item.selected {
-  color: #0b5fae;
-  background: #eaf3ff;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .group-list-item span,
 .group-list-item small {
-  color: #667085;
+  color: var(--muted);
   font-size: 13px;
 }
 
@@ -299,7 +187,7 @@
 .detail-header p,
 .group-description {
   margin: 5px 20px 0;
-  color: #667085;
+  color: var(--muted);
 }
 
 .content-list-header {
@@ -312,7 +200,7 @@
 }
 
 .content-list-header span {
-  color: #667085;
+  color: var(--muted);
   font-size: 14px;
 }
 
@@ -332,7 +220,7 @@
 .content-title {
   padding: 0;
   border: 0;
-  color: #172033;
+  color: var(--foreground);
   background: none;
   font-size: 17px;
   font-weight: 650;
@@ -340,7 +228,7 @@
 }
 
 .content-title:hover {
-  color: #0b5fae;
+  color: var(--accent);
 }
 
 .content-actions {
@@ -352,7 +240,7 @@
 
 .content-card > p {
   margin: 10px 0;
-  color: #3f4754;
+  color: var(--muted);
   white-space: pre-wrap;
 }
 
@@ -364,13 +252,13 @@
 }
 
 .content-card dt {
-  color: #667085;
+  color: var(--muted);
   font-size: 12px;
 }
 
 .content-card dd {
   margin: 3px 0 0;
-  color: #26364b;
+  color: var(--foreground);
   overflow-wrap: anywhere;
   white-space: pre-wrap;
 }
@@ -386,51 +274,42 @@
 
 .empty-copy {
   padding: 22px 14px;
-  color: #667085;
+  color: var(--muted);
   font-size: 14px;
   text-align: center;
 }
 
-.dashboard-empty {
-  padding: 24px;
-}
-
+/* 工作台概览入口 */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
-  margin-top: 20px;
+  margin-top: 12px;
 }
 
 .dashboard-entry {
-  display: grid;
-  gap: 6px;
+  display: grid !important;
+  justify-items: start !important;
+  gap: 6px !important;
   min-height: 170px;
-  padding: 20px;
-  border: 1px solid #d9e2ef;
-  border-radius: 13px;
-  color: #172033;
-  background: #f8fbff;
-  text-align: left;
-}
-
-.dashboard-entry:hover {
-  border-color: #1683e8;
-  background: #eef6ff;
+  padding: 20px !important;
+  text-align: left !important;
 }
 
 .dashboard-entry strong {
   font-size: 20px;
 }
 
-.dashboard-entry p {
-  margin: 0;
-  color: #667085;
+.entry-copy {
+  color: var(--muted);
 }
 
 .entry-kicker,
 .entry-action {
-  color: #1683e8;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
   font-size: 12px;
   font-weight: 700;
 }
@@ -439,32 +318,7 @@
   margin-top: auto;
 }
 
-.muted-entry {
-  color: #667085;
-  background: #fafbfc;
-}
-
 @media (max-width: 900px) {
-  .app-layout {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-  .module-nav {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow-x: auto;
-    padding: 0 0 8px;
-    border-bottom: 1px solid #dce3ed;
-  }
-  .nav-label {
-    display: none;
-  }
-  .nav-item {
-    width: auto;
-    flex: 0 0 auto;
-    white-space: nowrap;
-  }
   .experience-layout {
     grid-template-columns: minmax(220px, 280px) minmax(0, 1fr);
     gap: 16px;
@@ -472,29 +326,24 @@
 }
 
 @media (max-width: 720px) {
-  .shell {
-    padding: 18px 16px 40px;
-  }
-  .topbar,
   .page-heading {
     align-items: flex-start;
     flex-direction: column;
   }
-  .header-actions {
-    width: 100%;
-    justify-content: space-between;
-  }
+
   .experience-layout {
     grid-template-columns: 1fr;
   }
+
   .group-list {
     max-height: 260px;
     overflow-y: auto;
   }
+
   .page-context {
     text-align: left;
   }
-  .brand h1,
+
   .workbench-title {
     font-size: 26px;
   }
@@ -505,14 +354,17 @@
   .dashboard-grid {
     grid-template-columns: 1fr;
   }
+
   .content-card-heading,
   .detail-header {
     align-items: flex-start;
     flex-direction: column;
   }
+
   .content-actions {
     justify-content: flex-start;
   }
+
   .content-card dl {
     grid-template-columns: 1fr;
   }
