@@ -1,4 +1,22 @@
 import { type ReactNode } from 'react'
+import { Button, Tooltip } from '@heroui/react'
+import {
+  Bold,
+  Code,
+  Heading1,
+  Heading2,
+  Heading3,
+  Highlighter,
+  Italic,
+  List,
+  ListOrdered,
+  Pilcrow,
+  Redo2,
+  SquareCode,
+  Strikethrough,
+  TextQuote,
+  Undo2
+} from 'lucide-react'
 import type { EditorView } from '@milkdown/prose/view'
 import { EditorState, type Command } from '@milkdown/prose/state'
 import type { MarkType, NodeType } from '@milkdown/prose/model'
@@ -49,24 +67,22 @@ interface ToolbarButtonProps {
 
 function ToolbarButton({ title, isActive, disabled, onClick, children }: ToolbarButtonProps) {
   return (
-    <button
-      type="button"
-      className={`milkdown-toolbar-btn ${isActive ? 'is-active' : ''}`}
-      title={title}
-      aria-label={title}
-      disabled={disabled}
-      onMouseDown={(e) => {
-        // 关键：阻止失焦，保持 ProseMirror 选区
-        e.preventDefault()
-      }}
-      onClick={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        onClick()
-      }}
-    >
-      {children}
-    </button>
+    <Tooltip>
+      <Button
+        isIconOnly
+        size="sm"
+        variant="ghost"
+        className={`milkdown-toolbar-btn${isActive ? ' is-active' : ''}`}
+        aria-label={title}
+        isDisabled={disabled}
+        // 关键：按压工具栏按钮时不把焦点从 ProseMirror 编辑器移走，保持选区
+        preventFocusOnPress
+        onPress={onClick}
+      >
+        {children}
+      </Button>
+      <Tooltip.Content>{title}</Tooltip.Content>
+    </Tooltip>
   )
 }
 
@@ -128,19 +144,13 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
           title="撤销 (Ctrl+Z)"
           onClick={() => execute(undo)}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 7v6h6" />
-            <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13" />
-          </svg>
+          <Undo2 size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="重做 (Ctrl+Y)"
           onClick={() => execute(redo)}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M21 7v6h-6" />
-            <path d="M3 17a9 9 0 0 1 9-9 9 9 0 0 1 6 2.3L21 13" />
-          </svg>
+          <Redo2 size={14} aria-hidden="true" />
         </ToolbarButton>
       </div>
 
@@ -153,28 +163,28 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
           isActive={isBlockActive(state, nodes.paragraph)}
           onClick={() => execute(setBlockType(nodes.paragraph))}
         >
-          <span className="toolbar-text-icon">P</span>
+          <Pilcrow size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="一级标题 (# )"
           isActive={isBlockActive(state, nodes.heading, { level: 1 })}
           onClick={() => execute(setBlockType(nodes.heading, { level: 1 }))}
         >
-          <span className="toolbar-text-icon">H1</span>
+          <Heading1 size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="二级标题 (## )"
           isActive={isBlockActive(state, nodes.heading, { level: 2 })}
           onClick={() => execute(setBlockType(nodes.heading, { level: 2 }))}
         >
-          <span className="toolbar-text-icon">H2</span>
+          <Heading2 size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="三级标题 (### )"
           isActive={isBlockActive(state, nodes.heading, { level: 3 })}
           onClick={() => execute(setBlockType(nodes.heading, { level: 3 }))}
         >
-          <span className="toolbar-text-icon">H3</span>
+          <Heading3 size={14} aria-hidden="true" />
         </ToolbarButton>
       </div>
 
@@ -187,52 +197,35 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
           isActive={isMarkActive(state, marks.strong)}
           onClick={() => execute(toggleMark(marks.strong))}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M6 4h8a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
-            <path d="M6 12h9a4 4 0 0 1 4 4 4 4 0 0 1-4 4H6z" />
-          </svg>
+          <Bold size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="斜体 (*文本*)"
           isActive={isMarkActive(state, marks.em)}
           onClick={() => execute(toggleMark(marks.em))}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="19" y1="4" x2="10" y2="4" />
-            <line x1="14" y1="20" x2="5" y2="20" />
-            <line x1="15" y1="4" x2="9" y2="20" />
-          </svg>
+          <Italic size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="删除线 (~~文本~~)"
           isActive={isMarkActive(state, marks.strikethrough)}
           onClick={() => execute(toggleMark(marks.strikethrough))}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M16 4H9a3 3 0 0 0-2.83 4" />
-            <path d="M14 12a4 4 0 0 1 0 8H6" />
-            <line x1="4" y1="12" x2="20" y2="12" />
-          </svg>
+          <Strikethrough size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="亮点/Trade-off高亮 (==文本==)"
           isActive={isMarkActive(state, marks.highlight)}
           onClick={() => execute(toggleMark(marks.highlight))}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="m9 11-6 6v3h3l6-6" />
-            <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
-          </svg>
+          <Highlighter size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="行内代码 (`代码`)"
           isActive={isMarkActive(state, marks.code)}
           onClick={() => execute(toggleMark(marks.code))}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <polyline points="16 18 22 12 16 6" />
-            <polyline points="8 6 2 12 8 18" />
-          </svg>
+          <Code size={14} aria-hidden="true" />
         </ToolbarButton>
       </div>
 
@@ -245,50 +238,28 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
           isActive={isNodeInParents(state, nodes.blockquote)}
           onClick={toggleBlockquote}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
-            <path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z" />
-          </svg>
+          <TextQuote size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="无序列表 (- 列表)"
           isActive={isNodeInParents(state, nodes.bullet_list)}
           onClick={toggleBulletList}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="8" y1="6" x2="21" y2="6" />
-            <line x1="8" y1="12" x2="21" y2="12" />
-            <line x1="8" y1="18" x2="21" y2="18" />
-            <line x1="3" y1="6" x2="3.01" y2="6" />
-            <line x1="3" y1="12" x2="3.01" y2="12" />
-            <line x1="3" y1="18" x2="3.01" y2="18" />
-          </svg>
+          <List size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="有序列表 (1. 列表)"
           isActive={isNodeInParents(state, nodes.ordered_list)}
           onClick={toggleOrderedList}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <line x1="10" y1="6" x2="21" y2="6" />
-            <line x1="10" y1="12" x2="21" y2="12" />
-            <line x1="10" y1="18" x2="21" y2="18" />
-            <line x1="4" y1="6" x2="5" y2="6" />
-            <line x1="5" y1="6" x2="5" y2="10" />
-            <path d="M4 10h2" />
-            <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
-          </svg>
+          <ListOrdered size={14} aria-hidden="true" />
         </ToolbarButton>
         <ToolbarButton
           title="代码块 (```代码```)"
           isActive={isBlockActive(state, nodes.code_block) || isNodeInParents(state, nodes.code_block)}
           onClick={toggleCodeBlock}
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <rect width="18" height="18" x="3" y="3" rx="2" />
-            <path d="m9 10-2 2 2 2" />
-            <path d="m15 10 2 2-2 2" />
-          </svg>
+          <SquareCode size={14} aria-hidden="true" />
         </ToolbarButton>
       </div>
     </div>

@@ -1,5 +1,8 @@
 /* ==========================================================================
-   Milkdown Editor Integrated Toolbar (富文本悬浮与写时工具栏)
+   Milkdown Editor Integrated Toolbar (富文本写时工具栏)
+
+   按钮一律由 HeroUI Button（isIconOnly + ghost）承载，图标取自 lucide；
+   本文件只保留工具栏的栅格排版与选中态语义色。
    ========================================================================== */
 
 .milkdown-toolbar {
@@ -8,8 +11,8 @@
   flex-wrap: wrap;
   gap: 3px;
   padding: 5px 8px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--surface-secondary);
+  border-bottom: 1px solid var(--separator);
   user-select: none;
 }
 
@@ -22,55 +25,20 @@
 .milkdown-toolbar-divider {
   width: 1px;
   height: 16px;
-  background-color: #cbd5e1;
+  background-color: var(--border);
   margin: 0 4px;
 }
 
-.milkdown-toolbar-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: 5px;
-  background: transparent;
-  color: #475569;
-  cursor: pointer;
-  transition: all 0.12s ease-in-out;
-  font-family: inherit;
-}
-
-.milkdown-toolbar-btn:hover:not(:disabled) {
-  background-color: #e2e8f0;
-  color: #0f172a;
-}
-
-.milkdown-toolbar-btn:active:not(:disabled) {
-  background-color: #cbd5e1;
-}
-
+/* 选中态：沿用 HeroUI Button 的局部变量扩展点，不覆盖框架外观 */
 .milkdown-toolbar-btn.is-active {
-  background-color: #e0f2fe;
-  color: #0284c7;
-  border-color: #bae6fd;
-  font-weight: 600;
-}
-
-.milkdown-toolbar-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
-
-.toolbar-text-icon {
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
+  --button-bg: var(--accent-soft);
+  --button-bg-hover: var(--accent-soft-hover);
+  --button-bg-pressed: var(--accent-soft-hover);
+  --button-fg: var(--accent-soft-foreground);
 }
 
 .milkdown-toolbar-skeleton {
   height: 38px;
-  background-color: #f8fafc;
-  border-bottom: 1px solid #e2e8f0;
+  background-color: var(--surface-secondary);
+  border-bottom: 1px solid var(--separator);
 }

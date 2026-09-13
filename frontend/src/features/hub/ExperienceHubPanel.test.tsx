@@ -173,7 +173,7 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     await waitFor(() => {
       expect(mocked.archiveExperienceGroup).toHaveBeenCalledWith('test-token', 101)
-      expect(screen.getByRole('status')).toHaveTextContent(/已移至归档箱/)
+      expect(screen.getByRole('alert')).toHaveTextContent(/已移至归档箱/)
     })
 
     // 归档后离开在用经历列表
@@ -201,7 +201,7 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     await waitFor(() => {
       expect(mocked.restoreExperienceGroup).toHaveBeenCalledWith('test-token', 101)
-      expect(screen.getByRole('status')).toHaveTextContent(/已恢复到在用经历列表/)
+      expect(screen.getByRole('alert')).toHaveTextContent(/已恢复到在用经历列表/)
     })
 
     // 恢复后离开归档箱
@@ -243,7 +243,7 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
 
     await waitFor(() => {
       expect(mocked.deleteExperienceGroup).toHaveBeenCalledWith('test-token', 101)
-      expect(screen.getByRole('status')).toHaveTextContent(/已彻底删除/)
+      expect(screen.getByRole('alert')).toHaveTextContent(/已彻底删除/)
     })
 
     expect(screen.queryByText('微信支付平台实习')).not.toBeInTheDocument()

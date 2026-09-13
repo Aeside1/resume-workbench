@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { MilkdownEditor } from './MilkdownView'
 import { MilkdownToolbar } from './MilkdownToolbar'
+import { pasteMarkdown } from '../../test/pasteMarkdown'
 
 beforeAll(() => {
   Range.prototype.getBoundingClientRect = () => new DOMRect()
@@ -60,23 +61,26 @@ describe('MilkdownToolbar Markdown 富文本工具栏', () => {
     expect(screen.queryByRole('toolbar')).not.toBeInTheDocument()
   })
 
-  it('点击工具栏按钮触发对应的 ProseMirror 操作命令，并阻止默认失焦', () => {
+  it('点击工具栏按钮触发对应的 ProseMirror 操作命令并保持正文不被破坏', () => {
     const handleChange = vi.fn()
     render(
       <MilkdownEditor
-        value="测试文本"
+        value="一段测试普通文本"
         onChange={handleChange}
       />
     )
 
-    const boldBtn = screen.getByRole('button', { name: '粗体 (**文本**)' })
-    // 验证 mousedown 会阻止默认事件（保持选区不失焦）
-    const mousedownEvent = new MouseEvent('mousedown', { cancelable: true, bubbles: true })
-    boldBtn.dispatchEvent(mousedownEvent)
-    expect(mousedownEvent.defaultPrevented).toBe(true)
+    const editor = screen.getByRole('textbox')
+    fireEvent.focus(editor)
 
-    // 点击按钮
-    fireEvent.click(boldBtn)
+    // 无序列表 Toggle：一次包裹为 ul，再次还原为段落
+    const listBtn = screen.getByRole('button', { name: '无序列表 (- 列表)' })
+    fireEvent.click(listBtn)
+    expect(editor.querySelector('ul')).toBeInTheDocument()
+
+    fireEvent.click(listBtn)
+    expect(editor.querySelector('ul')).not.toBeInTheDocument()
+    expect(editor.querySelector('p')).toHaveTextContent('一段测试普通文本')
   })
 
   it('高亮按钮使用规范的矢量 SVG 图标，杜绝生硬突兀的文本', () => {

@@ -24,8 +24,8 @@ function TestComponent({ onAction }: { onAction?: () => void }) {
   )
 }
 
-describe('基于 sonner 的 Toast 组件与 API 测试', () => {
-  it('在 ToastProvider 下可以正常弹出 Toast 并带有 role="status"', async () => {
+describe('基于 HeroUI Toast 的提示组件与 API 测试', () => {
+  it('在 ToastProvider 下可以正常弹出 Toast 并落在无障碍提示区域中', async () => {
     render(
       <ToastProvider>
         <TestComponent />
@@ -35,9 +35,9 @@ describe('基于 sonner 的 Toast 组件与 API 测试', () => {
     fireEvent.click(screen.getByText('触发成功提示'))
 
     await waitFor(() => {
-      const statusElem = screen.getByRole('status')
-      expect(statusElem).toBeInTheDocument()
-      expect(statusElem).toHaveTextContent('操作成功完成')
+      const alertRegion = screen.getByRole('alert')
+      expect(alertRegion).toBeInTheDocument()
+      expect(alertRegion).toHaveTextContent('操作成功完成')
     })
   })
 

@@ -147,7 +147,7 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: '归档经历分组' })).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: '归档经历分组' }))
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('已移至归档箱'))
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('已移至归档箱'))
     expect(screen.queryByRole('button', { name: '归档经历分组' })).not.toBeInTheDocument()
 
     // 切换到归档箱，可以恢复或彻底删除
@@ -162,7 +162,7 @@ describe('认证后的工作台', () => {
 
     await waitFor(() => {
       expect(mocked.deleteExperienceGroup).toHaveBeenCalledWith('token', 10)
-      expect(screen.getByRole('status')).toHaveTextContent('已彻底删除')
+      expect(screen.getByRole('alert')).toHaveTextContent('已彻底删除')
     })
   })
 })
