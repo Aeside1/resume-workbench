@@ -48,9 +48,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const navigationButtons = (
     <>
       <Button
-        variant="ghost"
+        variant={view === 'dashboard' ? 'secondary' : 'ghost'}
+        fullWidth
         onPress={() => handleNavClick('dashboard')}
-        className={`sidebar-nav-item ${view === 'dashboard' ? 'active' : ''}`}
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect width="7" height="7" x="3" y="3" rx="1" />
@@ -61,9 +61,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         <span>工作台概览</span>
       </Button>
       <Button
-        variant="ghost"
+        variant={view === 'experiences' ? 'secondary' : 'ghost'}
+        fullWidth
         onPress={() => handleNavClick('experiences')}
-        className={`sidebar-nav-item ${view === 'experiences' ? 'active' : ''}`}
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -73,9 +73,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         <span>经历内容</span>
       </Button>
       <Button
-        variant="ghost"
+        variant={view === 'plans' ? 'secondary' : 'ghost'}
+        fullWidth
         onPress={() => handleNavClick('plans')}
-        className={`sidebar-nav-item ${view === 'plans' ? 'active' : ''}`}
       >
         <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />

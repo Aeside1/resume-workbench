@@ -184,6 +184,8 @@ describe('AppShell 专注模式切换', () => {
       </AppShell>
     )
 
-    expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('✓ 所有修改已保存')
+    // 成功态的前置勾号已改用 HeroUI SuccessIcon（AGENTS.md 规则 4：禁止以纯文本字符充当图标），
+    // 因此断言只校验文案本身。
+    expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('所有修改已保存')
   })
 })

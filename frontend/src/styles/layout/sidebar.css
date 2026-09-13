@@ -1,13 +1,16 @@
 /* ==========================================================================
    App Sidebar Topology (Hub Mode 侧边栏与用户卡片)
+
+   视觉实体已交由 HeroUI Card / Avatar / Button 承载；
+   此处只保留布局骨架与语义变量色值，不再自研组件外观。
    ========================================================================== */
 
 .app-sidebar {
   width: 240px;
   flex: 0 0 240px;
   min-height: 100vh;
-  background: #ffffff;
-  border-right: 1px solid #e2e8f0;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -20,27 +23,10 @@
   padding: 16px 14px 12px;
 }
 
-.sidebar-user-card {
-  position: relative;
-  display: flex;
+.sidebar-user-content {
+  flex-direction: row;
   align-items: center;
   gap: 10px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
-}
-
-.user-card-avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: #e2e8f0;
-  color: #475569;
-  flex-shrink: 0;
 }
 
 .user-card-info {
@@ -53,7 +39,7 @@
 .user-title {
   font-size: 13px;
   font-weight: 600;
-  color: #0f172a;
+  color: var(--foreground);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -61,7 +47,7 @@
 
 .user-email {
   font-size: 11px;
-  color: #64748b;
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -75,59 +61,11 @@
   flex: 1;
 }
 
-.sidebar-nav-item {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  gap: 10px !important;
-  width: 100% !important;
-  height: 40px !important;
-  padding: 0 12px !important;
-  border-radius: 8px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  color: #475569 !important;
-  text-align: left !important;
-  background: transparent !important;
-  border: none !important;
-  box-shadow: none !important;
-  transition: all 0.15s ease !important;
-}
-
-.sidebar-nav-item:hover {
-  background: #f1f5f9 !important;
-  color: #0f172a !important;
-}
-
-.sidebar-nav-item.active {
-  background: #e0f2fe !important;
-  color: #0284c7 !important;
-  font-weight: 600 !important;
-}
-
-.sidebar-nav-item svg {
-  flex-shrink: 0;
-  color: inherit;
-}
-
 .sidebar-footer {
   padding: 14px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--separator);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
-}
-
-.sidebar-logout-btn {
-  width: 100% !important;
-  justify-content: flex-start !important;
-  color: #64748b !important;
-  font-size: 13px !important;
-  padding: 0 8px !important;
-}
-
-.sidebar-logout-btn:hover {
-  color: #b42318 !important;
-  background: #fef2f2 !important;
 }
