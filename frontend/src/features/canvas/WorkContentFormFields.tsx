@@ -27,48 +27,16 @@ export function WorkContentFormFields({
       </div>
 
       <div className="canvas-field">
-        <label id={`${prefixId}-record-label`} htmlFor={`${prefixId}-record`}>背景与难点</label>
+        <label id={`${prefixId}-record-label`} htmlFor={`${prefixId}-record`}>草稿正文</label>
         <MilkdownEditor
           id={`${prefixId}-record`}
-          placeholder="描述该工作的背景痛点、业务诉求或技术难点..."
-          rows={3}
+          placeholder="自由记录项目背景、技术方案材料、量化数据、==trade off== 与思考复盘..."
+          rows={8}
           value={draft.detailed_record}
           onChange={(val) => onChange({ ...draft, detailed_record: val })}
-        />
-      </div>
-
-      <div className="canvas-field">
-        <label id={`${prefixId}-materials-label`} htmlFor={`${prefixId}-materials`}>技术方案与材料</label>
-        <MilkdownEditor
-          id={`${prefixId}-materials`}
-          placeholder="记录采用的架构方案、关键技术栈、设计文档或材料链接..."
-          rows={3}
-          value={draft.technical_materials}
-          onChange={(val) => onChange({ ...draft, technical_materials: val })}
-        />
-      </div>
-
-      <div className="canvas-field">
-        <label id={`${prefixId}-result-label`} htmlFor={`${prefixId}-result`}>量化结果数据</label>
-        <MilkdownEditor
-          id={`${prefixId}-result`}
-          placeholder="说明带来的实际收益、性能提升百分比或关键量化业务指标..."
-          rows={2}
-          value={draft.result_data}
-          onChange={(val) => onChange({ ...draft, result_data: val })}
-        />
-      </div>
-
-      <div className="canvas-field">
-        <label id={`${prefixId}-notes-label`} htmlFor={`${prefixId}-notes`}>补充说明</label>
-        <MilkdownEditor
-          id={`${prefixId}-notes`}
-          placeholder="可记录专利、团队内分享或后续扩展思考..."
-          rows={2}
-          value={draft.supplementary_notes}
-          onChange={(val) => onChange({ ...draft, supplementary_notes: val })}
         />
       </div>
     </>
   )
 }
+

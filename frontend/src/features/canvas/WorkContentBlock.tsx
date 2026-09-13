@@ -2,15 +2,20 @@ import { FormEvent, useEffect, useState, useMemo } from 'react'
 import { Button } from '@heroui/react'
 import type { WorkContent } from '../../api'
 import { MilkdownView } from '../../components/ui/MilkdownView'
-import { ResumeDescriptionTabs, type ResumeDescriptionItem } from './ResumeDescriptionTabs'
 import { WorkContentFormFields } from './WorkContentFormFields'
+import {
+  parseSupplementaryNotes,
+  serializeSupplementaryNotes,
+  type ResumeDescriptionVersion,
+  type ParsedSupplementaryNotes
+} from './supplementaryNotes'
 
 export type ContentDraft = {
   title: string
   detailed_record: string
-  technical_materials: string
-  result_data: string
-  supplementary_notes: string
+  technical_materials?: string
+  result_data?: string
+  supplementary_notes?: string
 }
 
 export type WorkContentBlockProps = {
@@ -23,6 +28,8 @@ export type WorkContentBlockProps = {
   onSave: (draft: ContentDraft) => Promise<void> | void
   onMove?: (direction: -1 | 1) => void
   onArchive: () => void
+  onOpenDrawer?: () => void
+  onOpenZenMode?: () => void
   isDragging?: boolean
   dragOverPosition?: 'top' | 'bottom' | null
   onDragStart?: (e: React.DragEvent) => void
@@ -33,57 +40,52 @@ export type WorkContentBlockProps = {
   onDragHandlePointerDown?: (e: React.PointerEvent) => void
 }
 
-export function parseSupplementaryNotes(raw: string | null | undefined): {
-  note: string
-  descriptions: ResumeDescriptionItem[]
-} {
-  if (!raw || !raw.trim()) {
-    return { note: '', descriptions: [] }
-  }
-  try {
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) {
-      return { note: '', descriptions: parsed }
-    }
-    if (parsed && typeof parsed === 'object') {
-      return {
-        note: typeof parsed.note === 'string' ? parsed.note : '',
-        descriptions: Array.isArray(parsed.descriptions) ? parsed.descriptions : []
-      }
-    }
-  } catch {
-    return { note: raw, descriptions: [] }
-  }
-  return { note: '', descriptions: [] }
+export {
+  parseSupplementaryNotes,
+  serializeSupplementaryNotes,
+  type ResumeDescriptionVersion,
+  type ParsedSupplementaryNotes
 }
 
-export function serializeSupplementaryNotes(
-  note: string,
-  descriptions: ResumeDescriptionItem[]
-): string {
-  const trimmedNote = note.trim()
-  if (!trimmedNote && descriptions.length === 0) {
-    return ''
+/**
+ * 将可能包含旧版分段字段（detailed_record, technical_materials, result_data）的工作项内容，
+ * 智能拼接为统一的自由 Markdown 正文。
+ */
+export function getCombinedDetailedRecord(item: {
+  detailed_record?: string | null
+  technical_materials?: string | null
+  result_data?: string | null
+}): string {
+  const record = (item.detailed_record ?? '').trim()
+  const materials = (item.technical_materials ?? '').trim()
+  const results = (item.result_data ?? '').trim()
+
+  const parts: string[] = []
+  if (record) {
+    parts.push(record)
   }
-  if (descriptions.length === 0) {
-    return trimmedNote
+  if (materials) {
+    parts.push(`### 技术方案与材料\n\n${materials}`)
   }
-  return JSON.stringify({
-    note: trimmedNote,
-    descriptions
-  })
+  if (results) {
+    parts.push(`### 量化结果数据\n\n${results}`)
+  }
+
+  return parts.join('\n\n')
 }
 
 export function WorkContentBlock({
   item,
   index,
-  totalCount,
+  totalCount: _totalCount,
   isEditing,
   onStartEdit,
   onCancelEdit,
   onSave,
-  onMove,
+  onMove: _onMove,
   onArchive,
+  onOpenDrawer,
+  onOpenZenMode,
   isDragging = false,
   dragOverPosition = null,
   onDragStart,
@@ -98,21 +100,21 @@ export function WorkContentBlock({
     [item.supplementary_notes]
   )
 
-  const [draft, setDraft] = useState<ContentDraft>({
+  const [draft, setDraft] = useState<ContentDraft>(() => ({
     title: item.title,
-    detailed_record: item.detailed_record ?? '',
-    technical_materials: item.technical_materials ?? '',
-    result_data: item.result_data ?? '',
+    detailed_record: getCombinedDetailedRecord(item),
+    technical_materials: '',
+    result_data: '',
     supplementary_notes: parsedData.note
-  })
+  }))
 
   useEffect(() => {
     const parsed = parseSupplementaryNotes(item.supplementary_notes)
     setDraft({
       title: item.title,
-      detailed_record: item.detailed_record ?? '',
-      technical_materials: item.technical_materials ?? '',
-      result_data: item.result_data ?? '',
+      detailed_record: getCombinedDetailedRecord(item),
+      technical_materials: '',
+      result_data: '',
       supplementary_notes: parsed.note
     })
   }, [item])
@@ -121,11 +123,14 @@ export function WorkContentBlock({
     e.preventDefault()
     if (!draft.title.trim()) return
     const serializedNotes = serializeSupplementaryNotes(
-      draft.supplementary_notes,
-      parsedData.descriptions
+      draft.supplementary_notes ?? parsedData.note,
+      parsedData.versions
     )
     onSave({
-      ...draft,
+      title: draft.title.trim(),
+      detailed_record: draft.detailed_record,
+      technical_materials: '',
+      result_data: '',
       supplementary_notes: serializedNotes
     })
   }
@@ -133,24 +138,15 @@ export function WorkContentBlock({
   const handleCancel = () => {
     setDraft({
       title: item.title,
-      detailed_record: item.detailed_record ?? '',
-      technical_materials: item.technical_materials ?? '',
-      result_data: item.result_data ?? '',
+      detailed_record: getCombinedDetailedRecord(item),
+      technical_materials: '',
+      result_data: '',
       supplementary_notes: parsedData.note
     })
     onCancelEdit()
   }
 
-  const handleDescriptionsChange = (newDescriptions: ResumeDescriptionItem[]) => {
-    const serializedNotes = serializeSupplementaryNotes(parsedData.note, newDescriptions)
-    onSave({
-      title: item.title,
-      detailed_record: item.detailed_record ?? '',
-      technical_materials: item.technical_materials ?? '',
-      result_data: item.result_data ?? '',
-      supplementary_notes: serializedNotes
-    })
-  }
+  const combinedContent = useMemo(() => getCombinedDetailedRecord(item), [item])
 
   return (
     <article
@@ -231,6 +227,14 @@ export function WorkContentBlock({
               <Button
                 size="sm"
                 variant="ghost"
+                className="zen-mode-btn"
+                onPress={onOpenZenMode}
+              >
+                ⛶ 展开专注
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
                 onPress={onArchive}
               >
                 {item.archived ? '恢复' : '归档'}
@@ -247,51 +251,25 @@ export function WorkContentBlock({
           </header>
 
           <div className="work-content-typography-body">
-            <div className="typography-section">
-              <h4 className="typography-label">背景与难点</h4>
-              <MilkdownView
-                content={item.detailed_record}
-                placeholder="暂无背景与难点记录"
-              />
-            </div>
-
-            <div className="typography-section">
-              <h4 className="typography-label">技术方案与材料</h4>
-              <MilkdownView
-                content={item.technical_materials}
-                placeholder="暂无技术方案记录"
-              />
-            </div>
-
-            <div className="typography-section">
-              <h4 className="typography-label">量化结果数据</h4>
-              <MilkdownView
-                content={item.result_data}
-                className="highlight-result"
-                placeholder="暂无量化结果数据"
-              />
-            </div>
-
-            {parsedData.note && (
-              <div className="typography-section">
-                <h4 className="typography-label">补充说明</h4>
-                <MilkdownView
-                  content={parsedData.note}
-                  className="muted"
-                />
-              </div>
-            )}
+            <MilkdownView
+              content={combinedContent}
+              placeholder="暂无工作内容记录，点击“编辑”或“展开专注”开始沉淀..."
+            />
           </div>
 
-          <footer className="work-content-card-footer">
-            <ResumeDescriptionTabs
-              workContentId={item.id}
-              descriptions={parsedData.descriptions}
-              onChange={handleDescriptionsChange}
-            />
+          <footer className="work-content-card-footer" onClick={(e) => e.stopPropagation()}>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="resume-desc-pill-btn"
+              onPress={onOpenDrawer}
+            >
+              📝 简历描述 ({parsedData.versions.length} 个版本) →
+            </Button>
           </footer>
         </div>
       )}
     </article>
   )
 }
+
