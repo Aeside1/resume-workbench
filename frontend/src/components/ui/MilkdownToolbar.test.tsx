@@ -37,6 +37,7 @@ describe('MilkdownToolbar Markdown 富文本工具栏', () => {
     // 验证行内标记按钮
     expect(screen.getByRole('button', { name: '粗体 (**文本**)' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '斜体 (*文本*)' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '删除线 (~~文本~~)' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '亮点/Trade-off高亮 (==文本==)' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '行内代码 (`代码`)' })).toBeInTheDocument()
 

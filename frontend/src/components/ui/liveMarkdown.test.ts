@@ -5,6 +5,7 @@ describe('工作记录 Markdown 往返', () => {
   it.each([
     '**技术方案** 与 ==核心优势==',
     '==高亮中的 **重点**== 与 **粗体中的 ==高亮==**',
+    '~~已废弃旧方案~~ 与 **粗体**',
     '`==原始代码==` 和 `**不加粗**`',
     '- 第一项\n- 第二项\n  - 子项',
     '第一行\n第二行\n\n新段落',
@@ -18,6 +19,7 @@ describe('工作记录 Markdown 往返', () => {
 
   it('代码中的语法保持原文，嵌套格式真正生成节点', () => {
     expect(markdownToHtml('`==原始代码==`')).toBe('<p><code>==原始代码==</code></p>')
+    expect(markdownToHtml('~~已删除文本~~')).toContain('<s>已删除文本</s>')
     const content = document.createElement('div')
     content.innerHTML = markdownToHtml('==高亮中的 **重点**==')
     expect(content.querySelector('strong mark, mark strong')?.textContent).toBe('重点')

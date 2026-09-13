@@ -115,7 +115,8 @@ export function FocusCanvasContainer({
         // 更新现有卡片
         const saved = await api.updateWorkContent(session.token, targetId, payload)
         setContents((items) => items.map((item) => (item.id === saved.id ? saved : item)))
-        setEditingContentId(null)
+        // 注意：不在此处重置 editingContentId，保持用户当前的沉浸编辑态；
+        // 用户点击【完成编辑】或失焦点击外部时由对应回调收起卡片。
       } else {
         // 新建卡片
         const created = await api.createWorkContent(session.token, group.id, payload)

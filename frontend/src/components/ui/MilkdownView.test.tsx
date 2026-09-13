@@ -147,4 +147,20 @@ describe('MilkdownEditor 写时渲染编辑器（渲染状态下直接编辑）'
     fireEvent.keyDown(editor2, { key: 'z', ctrlKey: true })
     expect(editor2).toHaveTextContent('初始内容')
   })
+
+  it('代码块首行按下回车时不会将代码块错误退化为普通段落', () => {
+    const onChange = vi.fn()
+    render(
+      <MilkdownEditor
+        value={'```\nconst x = 1\n```'}
+        onChange={onChange}
+      />
+    )
+
+    const editor = screen.getByRole('textbox')
+    expect(editor.querySelector('pre')).toBeInTheDocument()
+
+    fireEvent.keyDown(editor, { key: 'Enter' })
+    expect(editor.querySelector('pre')).toBeInTheDocument()
+  })
 })

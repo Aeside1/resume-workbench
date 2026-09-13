@@ -141,6 +141,32 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(screen.queryByLabelText('工作项标题')).not.toBeInTheDocument()
   })
 
+  it('输入内容触发自动保存后，卡片保持沉浸编辑状态而不被强制关闭', async () => {
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onExitFocus={vi.fn()}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    const editBtns = screen.getAllByRole('button', { name: '编辑' })
+    fireEvent.click(editBtns[0])
+
+    const titleInput = screen.getByLabelText('工作项标题')
+    fireEvent.change(titleInput, { target: { value: '重构渲染引擎（自动保存测试）' } })
+
+    // 等待 800ms 防抖保存触发并完成
+    await waitFor(() => {
+      expect(api.updateWorkContent).toHaveBeenCalled()
+    }, { timeout: 2000 })
+
+    // 关键断言：保存完成后，标题输入框仍然存在（保持编辑态），不被强制踢回阅读态
+    expect(screen.getByLabelText('工作项标题')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '完成编辑' })).toBeInTheDocument()
+  })
+
   it('点击单项工作卡片右上角“删除”按钮，确认后调用 API 并在画布和大纲中同步移除', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true)
     vi.spyOn(api, 'deleteWorkContent').mockResolvedValue(undefined as any)

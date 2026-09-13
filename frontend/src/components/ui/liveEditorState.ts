@@ -3,7 +3,7 @@ import { history, redo, undo } from '@milkdown/prose/history'
 import { InputRule, inputRules, textblockTypeInputRule, undoInputRule, wrappingInputRule } from '@milkdown/prose/inputrules'
 import { keymap } from '@milkdown/prose/keymap'
 import { liftListItem, sinkListItem, splitListItem } from '@milkdown/prose/schema-list'
-import { EditorState, type Command } from '@milkdown/prose/state'
+import { EditorState, Selection, type Command } from '@milkdown/prose/state'
 import type { MarkType, Node as ProseNode } from '@milkdown/prose/model'
 import { liveParser, liveSchema } from './liveMarkdown'
 
@@ -26,13 +26,36 @@ const insertBreak: Command = (state, dispatch) => {
   return true
 }
 
-const exitCodeBlockToParagraph: Command = (state, dispatch) => {
+// 当代码块内容为空时，按 Backspace 或 Enter 直接还原为普通段落
+const exitEmptyCodeBlock: Command = (state, dispatch) => {
   const { $from, empty } = state.selection
   if (empty && $from.parent.type === liveSchema.nodes.code_block) {
-    // 空代码块，或者在代码块首字符处按键，直接还原为普通段落
-    if ($from.parent.content.size === 0 || $from.parentOffset === 0) {
+    if ($from.parent.content.size === 0) {
       return setBlockType(liveSchema.nodes.paragraph)(state, dispatch)
     }
+  }
+  return false
+}
+
+// 在非空代码块末尾连续按回车（即末尾为空行时），退出代码块并在下方插入新段落
+const exitCodeBlockOnDoubleEnter: Command = (state, dispatch) => {
+  const { $from, empty } = state.selection
+  if (!empty || $from.parent.type !== liveSchema.nodes.code_block) return false
+  if ($from.parent.content.size === 0) {
+    return setBlockType(liveSchema.nodes.paragraph)(state, dispatch)
+  }
+
+  const text = $from.parent.textContent
+  if ($from.parentOffset === $from.parent.content.size && text.endsWith('\n')) {
+    if (dispatch) {
+      const codeBlockEnd = $from.after()
+      const tr = state.tr.delete($from.pos - 1, $from.pos)
+      const newPara = liveSchema.nodes.paragraph.createAndFill()!
+      tr.insert(codeBlockEnd - 1, newPara)
+      tr.setSelection(Selection.near(tr.doc.resolve(codeBlockEnd)))
+      dispatch(tr.scrollIntoView())
+    }
+    return true
   }
   return false
 }
@@ -46,6 +69,7 @@ export function createLiveEditorState(content: string | ProseNode) {
       inputRules({ rules: [
         markRule(/(^|[^\\])\*\*(\S(?:.*?\S)?)\*\*$/, marks.strong, 2),
         markRule(/(^|[^\\])==(\S(?:.*?\S)?)==$/, marks.highlight, 2),
+        markRule(/(^|[^\\])~~(\S(?:.*?\S)?)~~$/, marks.strikethrough, 2),
         markRule(/(^|[^\\])`([^`]+)`$/, marks.code, 1),
         wrappingInputRule(/^\s*[-+*]\s$/, nodes.bullet_list, { tight: true }),
         wrappingInputRule(/^(\d+)\.\s$/, nodes.ordered_list, match => ({ order: +match[1], tight: true }),
@@ -60,11 +84,14 @@ export function createLiveEditorState(content: string | ProseNode) {
         'Mod-b': toggleMark(marks.strong),
         'Mod-i': toggleMark(marks.em),
         'Mod-Shift-h': toggleMark(marks.highlight),
-        Backspace: chainCommands(undoInputRule, exitCodeBlockToParagraph),
+        'Mod-Shift-x': toggleMark(marks.strikethrough),
+        'Mod-Shift-s': toggleMark(marks.strikethrough),
+        Backspace: chainCommands(undoInputRule, exitEmptyCodeBlock),
         Enter: chainCommands(
           splitListItem(nodes.list_item),
-          exitCodeBlockToParagraph
+          exitCodeBlockOnDoubleEnter
         ),
+        'Mod-Enter': exitCode,
         'Shift-Enter': chainCommands(exitCode, insertBreak),
         Tab: sinkListItem(nodes.list_item),
         'Shift-Tab': liftListItem(nodes.list_item),
