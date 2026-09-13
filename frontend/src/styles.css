@@ -1647,7 +1647,7 @@ button.btn-danger-solid:active:not(:disabled),
   border-bottom: 1px solid #e2e8f0;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   background: #ffffff;
 }
 
@@ -1658,38 +1658,30 @@ button.btn-danger-solid:active:not(:disabled),
   gap: 12px;
 }
 
-.resume-drawer-badge {
+.resume-drawer-title-row {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 10px;
-  border-radius: 9999px;
-  background: #f0f9ff;
-  border: 1px solid #bae6fd;
-  color: #0284c7;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
 }
 
-.resume-drawer-badge-icon {
+.resume-drawer-title-icon {
   color: #0284c7;
   flex-shrink: 0;
+}
+
+.resume-drawer-heading {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  letter-spacing: -0.01em;
 }
 
 .resume-drawer-target-work {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   min-width: 0;
-}
-
-.drawer-target-kicker {
-  font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .drawer-target-title {
@@ -1705,13 +1697,6 @@ button.btn-danger-solid:active:not(:disabled),
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-word;
-}
-
-.drawer-target-desc {
-  margin: 0;
-  font-size: 12px;
-  color: #64748b;
-  line-height: 1.4;
 }
 
 .resume-drawer-close-btn {
@@ -1789,17 +1774,21 @@ button.btn-danger-solid:active:not(:disabled),
   flex-direction: column;
   gap: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: all 0.15s ease;
 }
 
-.resume-version-card:hover {
+.resume-version-card--readonly {
+  background: #ffffff;
+}
+
+.resume-version-card--readonly:hover {
   border-color: #cbd5e1;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
 }
 
-.resume-version-card:focus-within {
-  border-color: #38bdf8;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+.resume-version-card--editing {
+  border-color: #38bdf8 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15) !important;
 }
 
 .resume-version-card-header {
@@ -1817,18 +1806,61 @@ button.btn-danger-solid:active:not(:disabled),
   min-width: 0;
 }
 
-.version-index-tag {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
-  background: #e0f2fe;
-  color: #0284c7;
-  font-size: 11px;
-  font-weight: 700;
+.version-label-display {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 0;
+  max-width: calc(100% - 12px);
+}
+
+.version-label-display:hover {
+  background: #f1f5f9;
+}
+
+.version-label-display:hover .edit-pencil-icon {
+  opacity: 1;
+}
+
+.version-label-text {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 650;
+  color: #0f172a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.edit-pencil-icon {
+  color: #94a3b8;
+  opacity: 0;
+  transition: opacity 0.15s ease;
   flex-shrink: 0;
+}
+
+.version-content-preview-container {
+  min-height: 56px;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.version-content-preview-container:hover {
+  border-color: #cbd5e1;
+  background: #ffffff;
+}
+
+.version-content-preview-container .milkdown-view-container {
+  font-size: 13.5px;
+  line-height: 1.6;
 }
 
 .version-label-input {
@@ -1870,6 +1902,27 @@ button.btn-danger-solid:active:not(:disabled),
   font-weight: 500 !important;
   border-radius: 6px !important;
   gap: 4px !important;
+}
+
+.version-edit-btn {
+  color: #64748b !important;
+}
+
+.version-edit-btn:hover {
+  color: #0284c7 !important;
+  background: #f0f9ff !important;
+}
+
+.version-finish-btn {
+  color: #0284c7 !important;
+  background: #e0f2fe !important;
+  border: 1px solid #7dd3fc !important;
+  font-weight: 600 !important;
+}
+
+.version-finish-btn:hover {
+  background: #bae6fd !important;
+  border-color: #38bdf8 !important;
 }
 
 .version-copy-btn {

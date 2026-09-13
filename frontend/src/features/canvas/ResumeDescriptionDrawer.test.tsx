@@ -76,14 +76,16 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     expect(screen.getByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '关闭抽屉' })).toBeInTheDocument()
 
-    // 纵向版本卡片流
-    expect(screen.getByDisplayValue('技术深度版')).toBeInTheDocument()
+    // 纵向版本卡片流（默认阅读态展示）
+    expect(screen.getByRole('heading', { level: 4, name: '技术深度版' })).toBeInTheDocument()
     expect(screen.getByText(/主导可视化拖拽画布核心渲染引擎重构/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '编辑 技术深度版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '复制 技术深度版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除 技术深度版' })).toBeInTheDocument()
 
-    expect(screen.getByDisplayValue('业务成效版')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 4, name: '业务成效版' })).toBeInTheDocument()
     expect(screen.getByText(/通过自研虚拟滚动与局部重绘管线/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '编辑 业务成效版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '复制 业务成效版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除 业务成效版' })).toBeInTheDocument()
 
@@ -135,7 +137,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     })
   })
 
-  it('就地修改版本标题与文本内容触发 onUpdateVersions 回调', async () => {
+  it('默认展示态下点击编辑按钮或标题进入编辑模式，修改标题并点击完成退出编辑模式', async () => {
     const handleUpdateVersions = vi.fn()
     render(
       <ResumeDescriptionDrawer
@@ -146,7 +148,20 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
       />
     )
 
+    // 默认展示态下为 h4 标题
+    expect(screen.getByRole('heading', { level: 4, name: '技术深度版' })).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('技术深度版')).not.toBeInTheDocument()
+
+    // 点击编辑按钮进入编辑模式
+    const editBtn = screen.getByRole('button', { name: '编辑 技术深度版' })
+    fireEvent.click(editBtn)
+
+    // 编辑模式下 input 呈现
     const labelInput = screen.getByDisplayValue('技术深度版')
+    expect(labelInput).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '完成编辑 技术深度版' })).toBeInTheDocument()
+
+    // 修改标题并失焦保存
     fireEvent.change(labelInput, { target: { value: '技术深度版（强化）' } })
     fireEvent.blur(labelInput)
 
@@ -159,6 +174,14 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
         })
       ])
     )
+
+    // 点击完成编辑按钮，退出编辑模式
+    const finishBtn = screen.getByRole('button', { name: '完成编辑 技术深度版（强化）' })
+    fireEvent.click(finishBtn)
+
+    // 验证退回展示态
+    expect(screen.getByRole('heading', { level: 4, name: '技术深度版（强化）' })).toBeInTheDocument()
+    expect(screen.queryByDisplayValue('技术深度版（强化）')).not.toBeInTheDocument()
   })
 
   it('点击删除版本按钮，移除对应版本并立即触发 onUpdateVersions', () => {
@@ -181,7 +204,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
         expect.objectContaining({ id: 'desc_2' })
       ])
     )
-    expect(screen.queryByDisplayValue('业务成效版')).not.toBeInTheDocument()
+    expect(screen.queryByText('业务成效版')).not.toBeInTheDocument()
   })
 
   it('删除版本后可通过 Toast 撤销操作恢复该版本', async () => {
@@ -199,7 +222,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
 
     const deleteBtn = screen.getByRole('button', { name: '删除 业务成效版' })
     fireEvent.click(deleteBtn)
-    expect(screen.queryByDisplayValue('业务成效版')).not.toBeInTheDocument()
+    expect(screen.queryByText('业务成效版')).not.toBeInTheDocument()
 
     // 寻找 Toast 撤销按钮
     const undoBtn = await screen.findByRole('button', { name: '撤销' })
@@ -211,7 +234,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
         expect.objectContaining({ id: 'desc_2', label: '业务成效版' })
       ])
     )
-    expect(screen.getByDisplayValue('业务成效版')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 4, name: '业务成效版' })).toBeInTheDocument()
   })
 
   it('点击新建简历描述版本按钮，追加新版本并触发 onUpdateVersions', () => {

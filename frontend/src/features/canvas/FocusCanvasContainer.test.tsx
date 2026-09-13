@@ -373,7 +373,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     // 验证抽屉滑出并关联该工作项
     const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
     expect(within(drawer).getByText('重构可视化拖拽画布核心渲染引擎')).toBeInTheDocument()
-    expect(within(drawer).getByDisplayValue('技术深度版')).toBeInTheDocument()
+    expect(within(drawer).getByText('技术深度版')).toBeInTheDocument()
 
     // 验证当前卡片具有浅蓝边框激活态，另一张卡片没有
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
@@ -397,7 +397,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     fireEvent.click(drawerBtn101)
 
     const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
-    expect(within(drawer).getByDisplayValue('技术深度版')).toBeInTheDocument()
+    expect(within(drawer).getByText('技术深度版')).toBeInTheDocument()
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
 
     // 直接点击第二个工作项的胶囊按钮
@@ -408,8 +408,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     // 验证抽屉内容平滑换绑为第二个工作项的版本卡片
     await waitFor(() => {
       expect(within(drawer).getByText('设计组件库 Tree-shaking 自动化检测管线')).toBeInTheDocument()
-      expect(within(drawer).getByDisplayValue('工程效率版')).toBeInTheDocument()
-      expect(within(drawer).getByDisplayValue('架构通用版')).toBeInTheDocument()
+      expect(within(drawer).getByText('工程效率版')).toBeInTheDocument()
+      expect(within(drawer).getByText('架构通用版')).toBeInTheDocument()
     })
 
     // 激活状态转移：card101 失活，card102 激活
@@ -433,7 +433,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const drawerBtn102 = within(card102).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn102)
 
-    await screen.findByDisplayValue('工程效率版')
+    await screen.findByText('工程效率版')
 
     // 点击新建版本
     const addVersionBtn = screen.getByRole('button', { name: '新建简历描述版本' })

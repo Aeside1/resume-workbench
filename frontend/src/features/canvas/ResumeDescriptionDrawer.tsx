@@ -3,7 +3,7 @@ import { Button } from '@heroui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { WorkContent } from '../../api'
 import { toast } from '../../components/ui/Toast'
-import { MilkdownEditor, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
+import { MilkdownView, MilkdownEditor, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 import {
   parseSupplementaryNotes,
   type ResumeDescriptionVersion
@@ -28,6 +28,7 @@ export function ResumeDescriptionDrawer({
   )
 
   const [versions, setVersions] = useState<ResumeDescriptionVersion[]>(() => parsedData?.versions ?? [])
+  const [editingVersionId, setEditingVersionId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const versionsRef = useRef(versions)
@@ -118,19 +119,24 @@ export function ResumeDescriptionDrawer({
 
   const handleAddVersion = () => {
     if (!workContent) return
+    const newId = `desc_${Date.now()}`
     const newVersion: ResumeDescriptionVersion = {
-      id: `desc_${Date.now()}`,
+      id: newId,
       label: '自定义版本',
       content: ''
     }
     const updated = [...versions, newVersion]
     triggerUpdate(updated, true)
+    setEditingVersionId(newId)
     toast.success('已添加新的简历描述版本')
   }
 
   const handleDeleteVersion = (id: string) => {
     if (!workContent) return
     clearMilkdownEditorCache(`desc-wc-${workContent.id}-ver-${id}`)
+    if (editingVersionId === id) {
+      setEditingVersionId(null)
+    }
     const target = versions.find((v) => v.id === id)
     const updated = versions.filter((v) => v.id !== id)
     triggerUpdate(updated, true)
@@ -185,15 +191,15 @@ export function ResumeDescriptionDrawer({
         >
           <header className="resume-drawer-header">
             <div className="resume-drawer-header-top">
-              <div className="resume-drawer-badge" aria-label="简历描述提炼模式">
-                <svg className="resume-drawer-badge-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <div className="resume-drawer-title-row">
+                <svg className="resume-drawer-title-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                   <polyline points="14 2 14 8 20 8" />
                   <line x1="16" y1="13" x2="8" y2="13" />
                   <line x1="16" y1="17" x2="8" y2="17" />
                   <polyline points="10 9 9 9 8 9" />
                 </svg>
-                <span>简历描述提炼</span>
+                <h2 className="resume-drawer-heading">简历描述提炼</h2>
               </div>
               <Button
                 size="sm"
@@ -210,11 +216,9 @@ export function ResumeDescriptionDrawer({
             </div>
 
             <div className="resume-drawer-target-work">
-              <span className="drawer-target-kicker">当前关联工作内容</span>
               <h3 className="drawer-target-title" title={workContent.title}>
                 {workContent.title}
               </h3>
-              <p className="drawer-target-desc">针对该项工作提炼多维度的简历描述版本，支持 Markdown 排版与一键复制。</p>
             </div>
           </header>
 
@@ -229,30 +233,92 @@ export function ResumeDescriptionDrawer({
               <div className="resume-versions-list" role="feed" aria-label="简历描述版本列表">
                 {versions.map((version) => {
                   const isCopied = copiedId === version.id
+                  const isEditing = editingVersionId === version.id
                   return (
                     <article
                       key={version.id}
-                      className="resume-version-card"
+                      className={`resume-version-card ${isEditing ? 'resume-version-card--editing' : 'resume-version-card--readonly'}`}
                       aria-label={`版本卡片: ${version.label}`}
                     >
                       <header className="resume-version-card-header">
-                        <div className="version-label-box">
-                          <label id={`desc-version-${version.id}-label`} htmlFor={`desc-version-label-${version.id}`} className="sr-only">
-                            {version.label || '简历描述版本'}
-                          </label>
-                          <input
-                            id={`desc-version-label-${version.id}`}
-                            type="text"
-                            className="version-label-input"
-                            value={version.label}
-                            aria-label={`${version.label || '简历描述版本'} 名称`}
-                            placeholder="版本名称，如：技术深度版"
-                            onChange={(e) => handleUpdateLabel(version.id, e.target.value)}
-                            onBlur={handleBlurSave}
-                          />
-                        </div>
+                        {isEditing ? (
+                          <div className="version-label-box">
+                            <label id={`desc-version-${version.id}-label`} htmlFor={`desc-version-label-${version.id}`} className="sr-only">
+                              {version.label || '简历描述版本'}
+                            </label>
+                            <input
+                              id={`desc-version-label-${version.id}`}
+                              type="text"
+                              className="version-label-input"
+                              value={version.label}
+                              autoFocus
+                              aria-label={`${version.label || '简历描述版本'} 名称`}
+                              placeholder="版本名称，如：技术深度版"
+                              onChange={(e) => handleUpdateLabel(version.id, e.target.value)}
+                              onBlur={handleBlurSave}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  e.preventDefault()
+                                  handleBlurSave()
+                                }
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="version-label-display"
+                            onClick={() => setEditingVersionId(version.id)}
+                            title="点击编辑版本名称"
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault()
+                                setEditingVersionId(version.id)
+                              }
+                            }}
+                          >
+                            <h4 className="version-label-text">{version.label || '未命名版本'}</h4>
+                            <svg className="edit-pencil-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                            </svg>
+                          </div>
+                        )}
 
                         <div className="version-actions">
+                          {isEditing ? (
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              className="version-action-btn version-finish-btn"
+                              aria-label={`完成编辑 ${version.label}`}
+                              onPress={() => {
+                                handleBlurSave()
+                                setEditingVersionId(null)
+                              }}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                              <span>完成</span>
+                            </Button>
+                          ) : (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="version-action-btn version-edit-btn"
+                              aria-label={`编辑 ${version.label}`}
+                              onPress={() => setEditingVersionId(version.id)}
+                            >
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                              </svg>
+                              <span>编辑</span>
+                            </Button>
+                          )}
+
                           <Button
                             size="sm"
                             variant="ghost"
@@ -293,16 +359,37 @@ export function ResumeDescriptionDrawer({
                         </div>
                       </header>
 
-                      <div className="resume-version-card-content">
-                        <MilkdownEditor
-                          id={`desc-version-${version.id}`}
-                          cacheKey={`desc-wc-${workContent.id}-ver-${version.id}`}
-                          value={version.content}
-                          rows={4}
-                          placeholder="编写该版本的完整简历描述段落（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
-                          onChange={(val) => handleUpdateContent(version.id, val)}
-                        />
-                      </div>
+                      {isEditing ? (
+                        <div className="resume-version-card-content">
+                          <MilkdownEditor
+                            id={`desc-version-${version.id}`}
+                            cacheKey={`desc-wc-${workContent.id}-ver-${version.id}`}
+                            value={version.content}
+                            rows={4}
+                            placeholder="编写该版本的完整简历描述段落（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
+                            onChange={(val) => handleUpdateContent(version.id, val)}
+                          />
+                        </div>
+                      ) : (
+                        <div
+                          className="version-content-preview-container"
+                          onClick={() => setEditingVersionId(version.id)}
+                          title="点击编辑简历描述正文"
+                          role="button"
+                          tabIndex={0}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault()
+                              setEditingVersionId(version.id)
+                            }
+                          }}
+                        >
+                          <MilkdownView
+                            content={version.content}
+                            placeholder="暂无描述内容，点击开始编写（支持 Markdown）..."
+                          />
+                        </div>
+                      )}
                     </article>
                   )
                 })}
