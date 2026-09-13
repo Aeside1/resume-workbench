@@ -44,6 +44,7 @@ export function ResumeDescriptionDrawer({
         debounceTimerRef.current = null
         onUpdateVersions(previousWorkContentIdRef.current, versionsRef.current)
       }
+      setEditingVersionId(null)
     }
     previousWorkContentIdRef.current = workContent?.id ?? null
 
