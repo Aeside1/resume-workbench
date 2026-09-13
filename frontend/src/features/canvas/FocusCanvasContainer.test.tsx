@@ -365,8 +365,9 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
     expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
 
-    // 点击第一个工作项的“简历描述提炼 (1 个版本)”胶囊按钮
-    const drawerBtn101 = screen.getByRole('button', { name: /简历描述提炼 \(1 个版本\)/ })
+    // 点击第一个工作项的“简历描述提炼”胶囊按钮
+    const card101 = document.getElementById('work-content-101')!
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
 
     // 验证抽屉滑出并关联该工作项
@@ -391,7 +392,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
     // 打开第一个工作项的抽屉
-    const drawerBtn101 = screen.getByRole('button', { name: /简历描述提炼 \(1 个版本\)/ })
+    const card101 = document.getElementById('work-content-101')!
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
 
     const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
@@ -399,7 +401,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
 
     // 直接点击第二个工作项的胶囊按钮
-    const drawerBtn102 = screen.getByRole('button', { name: /简历描述提炼 \(2 个版本\)/ })
+    const card102 = document.getElementById('work-content-102')!
+    const drawerBtn102 = within(card102).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn102)
 
     // 验证抽屉内容平滑换绑为第二个工作项的版本卡片
@@ -414,7 +417,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(document.getElementById('work-content-102')).toHaveClass('work-content-card--active')
   })
 
-  it('在抽屉中新建版本并保存，调用 updateWorkContent 并更新卡片底部版本计数', async () => {
+  it('在抽屉中新建版本并保存，调用 updateWorkContent', async () => {
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -425,8 +428,9 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
-    // 打开第二个工作项的抽屉（初始 2 个版本）
-    const drawerBtn102 = screen.getByRole('button', { name: /简历描述提炼 \(2 个版本\)/ })
+    // 打开第二个工作项的抽屉
+    const card102 = document.getElementById('work-content-102')!
+    const drawerBtn102 = within(card102).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn102)
 
     await screen.findByDisplayValue('工程效率版')
@@ -435,19 +439,16 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const addVersionBtn = screen.getByRole('button', { name: '新建简历描述版本' })
     fireEvent.click(addVersionBtn)
 
-    // 验证 updateWorkContent 被调用且包含 3 个版本
+    // 验证 updateWorkContent 被调用且包含自定义版本
     await waitFor(() => {
       expect(api.updateWorkContent).toHaveBeenCalledWith(
         mockSession.token,
         102,
         expect.objectContaining({
-          supplementary_notes: expect.stringContaining('版本 3')
+          supplementary_notes: expect.stringContaining('自定义版本')
         })
       )
     })
-
-    // 验证卡片底部的胶囊按钮已更新为 3 个版本
-    expect(await screen.findByRole('button', { name: /简历描述提炼 \(3 个版本\)/ })).toBeInTheDocument()
   })
 
   it('在抽屉中点击复制按钮一键拷贝版本全文到剪贴板，并触发视觉反馈', async () => {
@@ -462,7 +463,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
     // 打开第一个工作项的抽屉
-    const drawerBtn101 = screen.getByRole('button', { name: /简历描述提炼 \(1 个版本\)/ })
+    const card101 = document.getElementById('work-content-101')!
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
 
     const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
@@ -487,7 +489,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
     // 打开抽屉
-    const drawerBtn101 = screen.getByRole('button', { name: /简历描述提炼 \(1 个版本\)/ })
+    const card101 = document.getElementById('work-content-101')!
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
     expect(await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')

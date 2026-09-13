@@ -406,8 +406,7 @@ export function WorkContentBlock({
               variant="secondary"
               className={`resume-desc-trigger-btn ${isActive ? 'resume-desc-trigger-btn--active' : ''}`}
               onPress={() => onOpenDrawer?.()}
-              onClick={(e) => e.stopPropagation()}
-              aria-label={`简历描述提炼 (${parsedData.versions.length} 个版本)`}
+              aria-label="简历描述提炼"
             >
               <svg className="resume-trigger-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -417,9 +416,7 @@ export function WorkContentBlock({
                 <polyline points="10 9 9 9 8 9" />
               </svg>
               <span className="resume-trigger-label">
-                {parsedData.versions.length > 0
-                  ? `简历描述提炼 (${parsedData.versions.length} 个版本)`
-                  : '简历描述提炼 (0 个版本)'}
+                简历描述提炼
               </span>
               <svg className="resume-trigger-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <polyline points="9 18 15 12 9 6" />

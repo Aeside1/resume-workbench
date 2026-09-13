@@ -3,6 +3,7 @@ import { Button } from '@heroui/react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { WorkContent } from '../../api'
 import { toast } from '../../components/ui/Toast'
+import { MilkdownEditor, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 import {
   parseSupplementaryNotes,
   type ResumeDescriptionVersion
@@ -119,7 +120,7 @@ export function ResumeDescriptionDrawer({
     if (!workContent) return
     const newVersion: ResumeDescriptionVersion = {
       id: `desc_${Date.now()}`,
-      label: `版本 ${versions.length + 1}`,
+      label: '自定义版本',
       content: ''
     }
     const updated = [...versions, newVersion]
@@ -129,6 +130,7 @@ export function ResumeDescriptionDrawer({
 
   const handleDeleteVersion = (id: string) => {
     if (!workContent) return
+    clearMilkdownEditorCache(`desc-wc-${workContent.id}-ver-${id}`)
     const target = versions.find((v) => v.id === id)
     const updated = versions.filter((v) => v.id !== id)
     triggerUpdate(updated, true)
@@ -182,25 +184,38 @@ export function ResumeDescriptionDrawer({
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
         >
           <header className="resume-drawer-header">
-            <div className="resume-drawer-title-box">
-              <h3 className="resume-drawer-title">简历描述提炼</h3>
-              <p className="resume-drawer-subtitle" title={workContent.title}>
-                <span className="drawer-item-dot" aria-hidden="true">●</span>
-                <span className="drawer-item-title-text">{workContent.title}</span>
-              </p>
+            <div className="resume-drawer-header-top">
+              <div className="resume-drawer-badge" aria-label="简历描述提炼模式">
+                <svg className="resume-drawer-badge-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+                <span>简历描述提炼</span>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="resume-drawer-close-btn"
+                aria-label="关闭抽屉"
+                onPress={onClose}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </Button>
             </div>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="resume-drawer-close-btn"
-              aria-label="关闭抽屉"
-              onPress={onClose}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </Button>
+
+            <div className="resume-drawer-target-work">
+              <span className="drawer-target-kicker">当前关联工作内容</span>
+              <h3 className="drawer-target-title" title={workContent.title}>
+                {workContent.title}
+              </h3>
+              <p className="drawer-target-desc">针对该项工作提炼多维度的简历描述版本，支持 Markdown 排版与一键复制。</p>
+            </div>
           </header>
 
           <div className="resume-drawer-body">
@@ -212,7 +227,7 @@ export function ResumeDescriptionDrawer({
               </div>
             ) : (
               <div className="resume-versions-list" role="feed" aria-label="简历描述版本列表">
-                {versions.map((version, index) => {
+                {versions.map((version) => {
                   const isCopied = copiedId === version.id
                   return (
                     <article
@@ -222,14 +237,11 @@ export function ResumeDescriptionDrawer({
                     >
                       <header className="resume-version-card-header">
                         <div className="version-label-box">
-                          <span className="version-index-tag" aria-hidden="true">
-                            {index + 1}
-                          </span>
                           <input
                             type="text"
                             className="version-label-input"
                             value={version.label}
-                            aria-label={`版本 ${index + 1} 名称`}
+                            aria-label={`${version.label || '简历描述版本'} 名称`}
                             placeholder="版本名称，如：技术深度版"
                             onChange={(e) => handleUpdateLabel(version.id, e.target.value)}
                             onBlur={handleBlurSave}
@@ -278,14 +290,13 @@ export function ResumeDescriptionDrawer({
                       </header>
 
                       <div className="resume-version-card-content">
-                        <textarea
-                          className="version-content-textarea"
-                          rows={4}
+                        <MilkdownEditor
+                          id={`desc-version-${version.id}`}
+                          cacheKey={`desc-wc-${workContent.id}-ver-${version.id}`}
                           value={version.content}
-                          aria-label={`${version.label} 内容`}
-                          placeholder="编写该版本的完整简历描述段落（建议包含行动动词、量化结果与核心技术细节）..."
-                          onChange={(e) => handleUpdateContent(version.id, e.target.value)}
-                          onBlur={handleBlurSave}
+                          rows={4}
+                          placeholder="编写该版本的完整简历描述段落（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
+                          onChange={(val) => handleUpdateContent(version.id, val)}
                         />
                       </div>
                     </article>

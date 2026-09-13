@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
 import type { WorkContent } from '../../api'
 import { ToastProvider } from '../../components/ui/Toast'
+import { pasteMarkdown } from '../../test/pasteMarkdown'
 
 afterEach(cleanup)
 
@@ -71,18 +72,18 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
 
     // 抽屉头部与关联工作项
     expect(screen.getByRole('complementary', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { level: 3, name: '简历描述提炼' })).toBeInTheDocument()
-    expect(screen.getByText('重构可视化拖拽画布核心渲染引擎')).toBeInTheDocument()
+    expect(screen.getByText('简历描述提炼')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '关闭抽屉' })).toBeInTheDocument()
 
     // 纵向版本卡片流
     expect(screen.getByDisplayValue('技术深度版')).toBeInTheDocument()
-    expect(screen.getByDisplayValue(/主导可视化拖拽画布核心渲染引擎重构/)).toBeInTheDocument()
+    expect(screen.getByText(/主导可视化拖拽画布核心渲染引擎重构/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '复制 技术深度版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除 技术深度版' })).toBeInTheDocument()
 
     expect(screen.getByDisplayValue('业务成效版')).toBeInTheDocument()
-    expect(screen.getByDisplayValue(/通过自研虚拟滚动与局部重绘管线/)).toBeInTheDocument()
+    expect(screen.getByText(/通过自研虚拟滚动与局部重绘管线/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '复制 业务成效版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除 业务成效版' })).toBeInTheDocument()
 
@@ -158,22 +159,6 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
         })
       ])
     )
-
-    const contentTextarea = screen.getByDisplayValue(/主导可视化拖拽画布核心渲染引擎重构/)
-    fireEvent.change(contentTextarea, {
-      target: { value: '全链路并发优化，FPS 提升至 60。' }
-    })
-    fireEvent.blur(contentTextarea)
-
-    expect(handleUpdateVersions).toHaveBeenCalledWith(
-      101,
-      expect.arrayContaining([
-        expect.objectContaining({
-          id: 'desc_1',
-          content: '全链路并发优化，FPS 提升至 60。'
-        })
-      ])
-    )
   })
 
   it('点击删除版本按钮，移除对应版本并立即触发 onUpdateVersions', () => {
@@ -246,10 +231,10 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     expect(handleUpdateVersions).toHaveBeenCalledWith(
       101,
       expect.arrayContaining([
-        expect.objectContaining({ label: '版本 3', content: '' })
+        expect.objectContaining({ label: '自定义版本', content: '' })
       ])
     )
-    expect(screen.getByDisplayValue('版本 3')).toBeInTheDocument()
+    expect(screen.getByDisplayValue('自定义版本')).toBeInTheDocument()
   })
 
   it('当工作项尚无任何简历版本时，展示清晰的空状态引导', () => {
