@@ -361,7 +361,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
-    expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
 
     // 点击第一个工作项的“简历描述提炼”胶囊按钮
     const card101 = document.getElementById('work-content-101')!
@@ -369,7 +369,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     fireEvent.click(drawerBtn101)
 
     // 验证抽屉滑出并关联该工作项
-    const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
+    const drawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
     expect(within(drawer).getByText('重构可视化拖拽画布核心渲染引擎')).toBeInTheDocument()
     expect(within(drawer).getByText('技术深度版')).toBeInTheDocument()
 
@@ -378,7 +378,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(document.getElementById('work-content-102')).not.toHaveClass('work-content-card--active')
   })
 
-  it('在抽屉打开时点击另一工作项胶囊按钮，抽屉平滑换绑新内容且激活态转移至新卡片', async () => {
+  it('抽屉打开时画布处于模态惰性；关闭抽屉后再点另一工作项即可换绑并转移激活态', async () => {
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -394,21 +394,28 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
 
-    const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
+    const drawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
     expect(within(drawer).getByText('技术深度版')).toBeInTheDocument()
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
 
-    // 直接点击第二个工作项的胶囊按钮
+    // 抽屉是模态覆盖层：React Aria 给背景加 inert（不可交互 + 移出无障碍树），
+    // 因此打开状态下无法操作画布按钮（换绑需先关闭抽屉）
+    expect(screen.queryByRole('button', { name: '简历描述提炼' })).not.toBeInTheDocument()
+
+    // 关闭抽屉后，点击第二个工作项的胶囊按钮 → 抽屉换绑到该工作项
+    fireEvent.keyDown(drawer, { key: 'Escape' })
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+    })
+
     const card102 = document.getElementById('work-content-102')!
     const drawerBtn102 = within(card102).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn102)
 
-    // 验证抽屉内容平滑换绑为第二个工作项的版本卡片
-    await waitFor(() => {
-      expect(within(drawer).getByText('设计组件库 Tree-shaking 自动化检测管线')).toBeInTheDocument()
-      expect(within(drawer).getByText('工程效率版')).toBeInTheDocument()
-      expect(within(drawer).getByText('架构通用版')).toBeInTheDocument()
-    })
+    const reboundDrawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
+    expect(within(reboundDrawer).getByText('设计组件库 Tree-shaking 自动化检测管线')).toBeInTheDocument()
+    expect(within(reboundDrawer).getByText('工程效率版')).toBeInTheDocument()
+    expect(within(reboundDrawer).getByText('架构通用版')).toBeInTheDocument()
 
     // 激活状态转移：card101 失活，card102 激活
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
@@ -465,7 +472,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
 
-    const drawer = await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })
+    const drawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
     const copyBtn = within(drawer).getByRole('button', { name: '复制 技术深度版' })
     fireEvent.click(copyBtn)
 
@@ -490,7 +497,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const card101 = document.getElementById('work-content-101')!
     const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
     fireEvent.click(drawerBtn101)
-    expect(await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
 
     // 点击右上角关闭按钮
@@ -498,7 +505,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     fireEvent.click(closeBtn)
 
     await waitFor(() => {
-      expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
     })
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
   })
@@ -586,35 +593,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: /全屏专注工作台/ })).not.toBeInTheDocument()
-    })
-  })
-
-  it('抽屉打开时点击展开专注，抽屉自动互斥收起', async () => {
-    render(
-      <FocusCanvasContainer
-        session={mockSession}
-        group={mockGroup}
-        onExitFocus={vi.fn()}
-      />
-    )
-
-    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
-
-    // 先打开抽屉
-    const card101 = document.getElementById('work-content-101')!
-    const drawerBtn = within(card101).getByRole('button', { name: '简历描述提炼' })
-    fireEvent.click(drawerBtn)
-    expect(await screen.findByRole('complementary', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
-
-    // 点击展开专注
-    const zenBtn = within(card101).getByRole('button', { name: '展开专注模式' })
-    fireEvent.click(zenBtn)
-
-    // 验证全屏打开且抽屉已互斥关闭
-    expect(await screen.findByRole('dialog', { name: /全屏专注工作台/ })).toBeInTheDocument()
-    // 抽屉的卸载由 framer-motion 退场动画决定，需轮询等待而非立即断言（避免动画时序抖动）
-    await waitFor(() => {
-      expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
     })
   })
 })

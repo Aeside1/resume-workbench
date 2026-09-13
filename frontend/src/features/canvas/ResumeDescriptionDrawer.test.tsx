@@ -56,7 +56,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
       />
     )
 
-    expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
     expect(screen.queryByText('简历描述提炼')).not.toBeInTheDocument()
   })
 
@@ -71,7 +71,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     )
 
     // 抽屉头部与关联工作项
-    expect(screen.getByRole('complementary', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
     expect(screen.getByText('简历描述提炼')).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '关闭抽屉' })).toBeInTheDocument()
@@ -109,8 +109,8 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     fireEvent.click(closeBtn)
     expect(handleClose).toHaveBeenCalledTimes(1)
 
-    // 按下 Escape 键
-    fireEvent.keyDown(window, { key: 'Escape' })
+    // 按下 Escape 键（HeroUI Drawer 由 React Aria 覆盖层处理，事件需落在抽屉内）
+    fireEvent.keyDown(screen.getByRole('dialog', { name: '简历描述提炼抽屉' }), { key: 'Escape' })
     expect(handleClose).toHaveBeenCalledTimes(2)
   })
 
