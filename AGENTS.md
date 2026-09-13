@@ -30,4 +30,6 @@
 1. **Commit Message 统一使用中文**：
    本仓库的所有 Git 提交信息（commit message）必须统一使用中文编写，采用清晰的 `类型(模块): 简述` 格式，正文列明关键变更点，严禁使用纯英文 commit。
 
+## Review
 
+1. 在每次完成 issue 后交付结果前，请先调用 skill`code-review` 进行验收审查后再向用户汇报回复。

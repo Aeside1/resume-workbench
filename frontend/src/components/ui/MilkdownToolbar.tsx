@@ -106,6 +106,14 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
     }
   }
 
+  const toggleCodeBlock = () => {
+    if (isBlockActive(state, nodes.code_block) || isNodeInParents(state, nodes.code_block)) {
+      execute(setBlockType(nodes.paragraph))
+    } else {
+      execute(setBlockType(nodes.code_block))
+    }
+  }
+
   return (
     <div
       className={`milkdown-toolbar ${className}`}
@@ -200,7 +208,10 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
           isActive={isMarkActive(state, marks.highlight)}
           onClick={() => execute(toggleMark(marks.highlight))}
         >
-          <span className="toolbar-highlight-icon">==H==</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="m9 11-6 6v3h3l6-6" />
+            <path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4" />
+          </svg>
         </ToolbarButton>
         <ToolbarButton
           title="行内代码 (`代码`)"
@@ -251,17 +262,22 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
             <line x1="10" y1="6" x2="21" y2="6" />
             <line x1="10" y1="12" x2="21" y2="12" />
             <line x1="10" y1="18" x2="21" y2="18" />
-            <path d="M4 6h1v4" />
+            <line x1="4" y1="6" x2="5" y2="6" />
+            <line x1="5" y1="6" x2="5" y2="10" />
             <path d="M4 10h2" />
             <path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1" />
           </svg>
         </ToolbarButton>
         <ToolbarButton
           title="代码块 (```代码```)"
-          isActive={isBlockActive(state, nodes.code_block)}
-          onClick={() => execute(setBlockType(nodes.code_block))}
+          isActive={isBlockActive(state, nodes.code_block) || isNodeInParents(state, nodes.code_block)}
+          onClick={toggleCodeBlock}
         >
-          <span className="toolbar-text-icon" style={{ fontSize: '11px', fontFamily: 'monospace' }}>{'</>'}</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <rect width="18" height="18" x="3" y="3" rx="2" />
+            <path d="m9 10-2 2 2 2" />
+            <path d="m15 10 2 2-2 2" />
+          </svg>
         </ToolbarButton>
       </div>
     </div>

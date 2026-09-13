@@ -1,8 +1,13 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen } from '@testing-library/react'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { MilkdownEditor } from './MilkdownView'
 import { MilkdownToolbar } from './MilkdownToolbar'
+
+beforeAll(() => {
+  Range.prototype.getBoundingClientRect = () => new DOMRect()
+  Range.prototype.getClientRects = () => Object.assign([], { item: () => null })
+})
 
 describe('MilkdownToolbar Markdown 富文本工具栏', () => {
   afterEach(cleanup)
@@ -71,5 +76,40 @@ describe('MilkdownToolbar Markdown 富文本工具栏', () => {
 
     // 点击按钮
     fireEvent.click(boldBtn)
+  })
+
+  it('高亮按钮使用规范的矢量 SVG 图标，杜绝生硬突兀的文本', () => {
+    render(<MilkdownEditor value="测试文本" onChange={vi.fn()} />)
+    const highlightBtn = screen.getByRole('button', { name: '亮点/Trade-off高亮 (==文本==)' })
+    expect(highlightBtn.querySelector('svg')).toBeInTheDocument()
+    expect(highlightBtn).not.toHaveTextContent('==H==')
+  })
+
+  it('代码块按钮支持智能 Toggle，并可通过正文段落按钮一键还原', () => {
+    render(<MilkdownEditor value="一段测试普通文本" onChange={vi.fn()} />)
+    const editor = screen.getByRole('textbox')
+    const codeBlockBtn = screen.getByRole('button', { name: '代码块 (```代码```)' })
+    const paragraphBtn = screen.getByRole('button', { name: '正文段落' })
+
+    // 代码块按钮本身使用标准 SVG
+    expect(codeBlockBtn.querySelector('svg')).toBeInTheDocument()
+
+    // 聚焦编辑器并将光标放入段落中
+    fireEvent.focus(editor)
+    // 点击代码块按钮，切换为 pre / code_block
+    fireEvent.click(codeBlockBtn)
+    expect(editor.querySelector('pre')).toBeInTheDocument()
+
+    // 再次点击代码块按钮，一键 Toggle 还原回普通段落
+    fireEvent.click(codeBlockBtn)
+    expect(editor.querySelector('pre')).not.toBeInTheDocument()
+    expect(editor.querySelector('p')).toBeInTheDocument()
+
+    // 重新转为代码块，验证点击 P 按钮也能还原为普通段落
+    fireEvent.click(codeBlockBtn)
+    expect(editor.querySelector('pre')).toBeInTheDocument()
+    fireEvent.click(paragraphBtn)
+    expect(editor.querySelector('pre')).not.toBeInTheDocument()
+    expect(editor.querySelector('p')).toBeInTheDocument()
   })
 })

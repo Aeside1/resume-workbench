@@ -30,6 +30,7 @@ export function WorkContentFormFields({
         <label id={`${prefixId}-record-label`} htmlFor={`${prefixId}-record`}>草稿正文</label>
         <MilkdownEditor
           id={`${prefixId}-record`}
+          cacheKey={`${prefixId}-record`}
           placeholder="自由记录项目背景、技术方案材料、量化数据、==trade off== 与思考复盘..."
           rows={8}
           value={draft.detailed_record}

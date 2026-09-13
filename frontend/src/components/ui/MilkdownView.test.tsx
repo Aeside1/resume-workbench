@@ -121,4 +121,30 @@ describe('MilkdownEditor 写时渲染编辑器（渲染状态下直接编辑）'
     const editorNode = container.querySelector('[contenteditable="true"]')
     expect(editorNode).toBeInTheDocument()
   })
+
+  it('指定 cacheKey 时，跨组件卸载再重新挂载能够延续 Undo 历史栈', () => {
+    const onChange = vi.fn()
+    const { unmount } = render(
+      <MilkdownEditor cacheKey="test-persistent-key" value="初始内容" onChange={onChange} />
+    )
+    const editor1 = screen.getByRole('textbox')
+    pasteMarkdown(editor1, '修改后的文本')
+    fireEvent.blur(editor1)
+    expect(editor1).toHaveTextContent('修改后的文本')
+
+    // 模拟退出编辑态：组件被 unmount
+    unmount()
+
+    // 模拟再次点击卡片进入编辑态：使用相同的 cacheKey 重新挂载
+    const onChange2 = vi.fn()
+    render(
+      <MilkdownEditor cacheKey="test-persistent-key" value="修改后的文本" onChange={onChange2} />
+    )
+    const editor2 = screen.getByRole('textbox')
+    expect(editor2).toHaveTextContent('修改后的文本')
+
+    // 按下 Ctrl+Z，能够成功撤销到初始内容！
+    fireEvent.keyDown(editor2, { key: 'z', ctrlKey: true })
+    expect(editor2).toHaveTextContent('初始内容')
+  })
 })

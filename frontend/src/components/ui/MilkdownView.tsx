@@ -33,9 +33,20 @@ export interface MilkdownEditorProps {
   rows?: number
   className?: string
   id?: string
+  cacheKey?: string
   showToolbar?: boolean
 }
 
+/** 页面生命周期内的 EditorState 缓存，保持 Undo/Redo 历史栈跨编辑进出不被销毁 */
+const globalEditorStateCache = new Map<string, EditorState>()
+
+export function clearMilkdownEditorCache(key?: string) {
+  if (key) {
+    globalEditorStateCache.delete(key)
+  } else {
+    globalEditorStateCache.clear()
+  }
+}
 
 /** React 只拥有宿主节点；编辑 DOM、选区、输入法与撤销栈由 ProseMirror 管理。 */
 export function MilkdownEditor({
@@ -45,8 +56,10 @@ export function MilkdownEditor({
   rows = 3,
   className = '',
   id,
+  cacheKey,
   showToolbar = true,
 }: MilkdownEditorProps) {
+  const effectiveCacheKey = cacheKey
   const hostRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const changeRef = useRef(onChange)
@@ -72,13 +85,41 @@ export function MilkdownEditor({
       completionTimer = setTimeout(() => publish(view), 0)
       return false
     }
-    const initialState = createLiveEditorState(initialValueRef.current)
+
+    // 尝试从页面级缓存恢复之前的 EditorState，以保持完整的 Undo/Redo 历史栈
+    let initialState: EditorState
+    const cachedState = effectiveCacheKey ? globalEditorStateCache.get(effectiveCacheKey) : null
+    if (cachedState) {
+      const cachedMarkdown = serializeMarkdown(cachedState.doc)
+      if (cachedMarkdown === initialValueRef.current) {
+        initialState = cachedState
+      } else {
+        // 如果外部传入的值发生变化，通过 transaction 将新内容写入已有 state，保留其历史栈
+        const newDoc = liveParser.parse(initialValueRef.current)
+        if (!newDoc.eq(cachedState.doc)) {
+          const tr = cachedState.tr.replaceWith(0, cachedState.doc.content.size, newDoc.content)
+          initialState = cachedState.apply(tr)
+        } else {
+          initialState = cachedState
+        }
+      }
+    } else {
+      initialState = createLiveEditorState(initialValueRef.current)
+    }
+
+    if (effectiveCacheKey) {
+      globalEditorStateCache.set(effectiveCacheKey, initialState)
+    }
+
     const view = new EditorView(hostRef.current!, {
       state: initialState,
       dispatchTransaction(transaction) {
         const nextState = view.state.apply(transaction)
         view.updateState(nextState)
         setEditorState(nextState)
+        if (effectiveCacheKey) {
+          globalEditorStateCache.set(effectiveCacheKey, nextState)
+        }
         if (transaction.docChanged) publish(view)
       },
       handleDOMEvents: {
@@ -104,7 +145,7 @@ export function MilkdownEditor({
       viewRef.current = null
       view.destroy()
     }
-  }, [])
+  }, [effectiveCacheKey])
 
   useLayoutEffect(() => {
     const view = viewRef.current
@@ -135,8 +176,11 @@ export function MilkdownEditor({
       const nextState = createLiveEditorState(doc)
       view.updateState(nextState)
       setEditorState(nextState)
+      if (effectiveCacheKey) {
+        globalEditorStateCache.set(effectiveCacheKey, nextState)
+      }
     }
-  }, [value])
+  }, [value, effectiveCacheKey])
 
   return (
     <div className={`milkdown-editor-wrapper ${className}`}>

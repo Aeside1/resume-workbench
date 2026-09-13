@@ -383,7 +383,6 @@ export function WorkContentBlock({
                   }
                 }}
                 onClick={(e) => e.stopPropagation()}
-                aria-label="删除工作项"
               >
                 删除
               </Button>

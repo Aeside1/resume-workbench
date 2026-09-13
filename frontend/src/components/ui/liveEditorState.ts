@@ -1,4 +1,4 @@
-import { baseKeymap, chainCommands, exitCode, toggleMark } from '@milkdown/prose/commands'
+import { baseKeymap, chainCommands, exitCode, setBlockType, toggleMark } from '@milkdown/prose/commands'
 import { history, redo, undo } from '@milkdown/prose/history'
 import { InputRule, inputRules, textblockTypeInputRule, undoInputRule, wrappingInputRule } from '@milkdown/prose/inputrules'
 import { keymap } from '@milkdown/prose/keymap'
@@ -49,8 +49,23 @@ export function createLiveEditorState(content: string | ProseNode) {
         'Mod-b': toggleMark(marks.strong),
         'Mod-i': toggleMark(marks.em),
         'Mod-Shift-h': toggleMark(marks.highlight),
-        Backspace: undoInputRule,
-        Enter: splitListItem(nodes.list_item),
+        Backspace: chainCommands(undoInputRule, (state, dispatch) => {
+          const { $from, empty } = state.selection
+          if (empty && $from.parent.type === nodes.code_block && $from.parent.content.size === 0) {
+            return setBlockType(nodes.paragraph)(state, dispatch)
+          }
+          return false
+        }),
+        Enter: chainCommands(
+          splitListItem(nodes.list_item),
+          (state, dispatch) => {
+            const { $from, empty } = state.selection
+            if (empty && $from.parent.type === nodes.code_block && $from.parent.content.size === 0) {
+              return setBlockType(nodes.paragraph)(state, dispatch)
+            }
+            return false
+          }
+        ),
         'Shift-Enter': chainCommands(exitCode, insertBreak),
         Tab: sinkListItem(nodes.list_item),
         'Shift-Tab': liftListItem(nodes.list_item),
