@@ -67,6 +67,20 @@ function normalizeVersionItem(
 }
 
 /**
+ * 将版本列表规范化为 ResumeDescriptionVersion 数组
+ */
+function normalizeVersionList(rawList: unknown[]): ResumeDescriptionVersion[] {
+  const versions: ResumeDescriptionVersion[] = []
+  for (let i = 0; i < rawList.length; i++) {
+    const normalized = normalizeVersionItem(rawList[i], i)
+    if (normalized) {
+      versions.push(normalized)
+    }
+  }
+  return versions
+}
+
+/**
  * 统一将版本列表映射为向后兼容的 descriptions 数组
  */
 function toLegacyDescriptions(versions: ResumeDescriptionVersion[]): ResumeDescriptionItem[] {
@@ -107,13 +121,7 @@ export function parseSupplementaryNotes(raw: string | null | undefined): ParsedS
   try {
     const parsed = JSON.parse(raw)
     if (Array.isArray(parsed)) {
-      const versions: ResumeDescriptionVersion[] = []
-      for (let i = 0; i < parsed.length; i++) {
-        const normalized = normalizeVersionItem(parsed[i], i)
-        if (normalized) {
-          versions.push(normalized)
-        }
-      }
+      const versions = normalizeVersionList(parsed)
       return {
         note: '',
         versions,
@@ -129,13 +137,7 @@ export function parseSupplementaryNotes(raw: string | null | undefined): ParsedS
           ? parsed.descriptions
           : []
 
-      const versions: ResumeDescriptionVersion[] = []
-      for (let i = 0; i < rawVersions.length; i++) {
-        const normalized = normalizeVersionItem(rawVersions[i], i)
-        if (normalized) {
-          versions.push(normalized)
-        }
-      }
+      const versions = normalizeVersionList(rawVersions)
 
       return {
         note,
@@ -164,16 +166,11 @@ export function serializeSupplementaryNotes(
     return ''
   }
 
-  const normalizedVersions: ResumeDescriptionVersion[] = []
-  for (let i = 0; i < versions.length; i++) {
-    const normalized = normalizeVersionItem(versions[i], i)
-    if (normalized) {
-      normalizedVersions.push(normalized)
-    }
-  }
+  const normalizedVersions = normalizeVersionList(versions)
 
   return JSON.stringify({
     note: trimmedNote,
     versions: normalizedVersions
   })
 }
+

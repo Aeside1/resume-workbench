@@ -21,7 +21,7 @@ export type ContentDraft = {
 export type WorkContentBlockProps = {
   item: WorkContent
   index: number
-  totalCount: number
+  totalCount?: number
   isEditing: boolean
   onStartEdit: () => void
   onCancelEdit: () => void
@@ -48,17 +48,21 @@ export {
 }
 
 /**
- * 将可能包含旧版分段字段（detailed_record, technical_materials, result_data）的工作项内容，
+ * 将可能包含旧版分段字段（detailed_record, technical_materials, result_data, note）的工作项内容，
  * 智能拼接为统一的自由 Markdown 正文。
  */
-export function getCombinedDetailedRecord(item: {
-  detailed_record?: string | null
-  technical_materials?: string | null
-  result_data?: string | null
-}): string {
+export function getCombinedDetailedRecord(
+  item: {
+    detailed_record?: string | null
+    technical_materials?: string | null
+    result_data?: string | null
+  },
+  note?: string | null
+): string {
   const record = (item.detailed_record ?? '').trim()
   const materials = (item.technical_materials ?? '').trim()
   const results = (item.result_data ?? '').trim()
+  const legacyNote = (note ?? '').trim()
 
   const parts: string[] = []
   if (record) {
@@ -70,19 +74,36 @@ export function getCombinedDetailedRecord(item: {
   if (results) {
     parts.push(`### 量化结果数据\n\n${results}`)
   }
+  if (legacyNote) {
+    parts.push(`### 补充说明\n\n${legacyNote}`)
+  }
 
   return parts.join('\n\n')
+}
+
+/**
+ * 构造初始与重置工作项草稿对象
+ */
+export function buildInitialDraft(
+  item: WorkContent,
+  note?: string | null
+): ContentDraft {
+  return {
+    title: item.title,
+    detailed_record: getCombinedDetailedRecord(item, note),
+    technical_materials: '',
+    result_data: '',
+    supplementary_notes: ''
+  }
 }
 
 export function WorkContentBlock({
   item,
   index,
-  totalCount: _totalCount,
   isEditing,
   onStartEdit,
   onCancelEdit,
   onSave,
-  onMove: _onMove,
   onArchive,
   onOpenDrawer,
   onOpenZenMode,
@@ -100,30 +121,20 @@ export function WorkContentBlock({
     [item.supplementary_notes]
   )
 
-  const [draft, setDraft] = useState<ContentDraft>(() => ({
-    title: item.title,
-    detailed_record: getCombinedDetailedRecord(item),
-    technical_materials: '',
-    result_data: '',
-    supplementary_notes: parsedData.note
-  }))
+  const [draft, setDraft] = useState<ContentDraft>(() =>
+    buildInitialDraft(item, parsedData.note)
+  )
 
   useEffect(() => {
     const parsed = parseSupplementaryNotes(item.supplementary_notes)
-    setDraft({
-      title: item.title,
-      detailed_record: getCombinedDetailedRecord(item),
-      technical_materials: '',
-      result_data: '',
-      supplementary_notes: parsed.note
-    })
+    setDraft(buildInitialDraft(item, parsed.note))
   }, [item])
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
     if (!draft.title.trim()) return
     const serializedNotes = serializeSupplementaryNotes(
-      draft.supplementary_notes ?? parsedData.note,
+      draft.supplementary_notes ?? '',
       parsedData.versions
     )
     onSave({
@@ -136,17 +147,14 @@ export function WorkContentBlock({
   }
 
   const handleCancel = () => {
-    setDraft({
-      title: item.title,
-      detailed_record: getCombinedDetailedRecord(item),
-      technical_materials: '',
-      result_data: '',
-      supplementary_notes: parsedData.note
-    })
+    setDraft(buildInitialDraft(item, parsedData.note))
     onCancelEdit()
   }
 
-  const combinedContent = useMemo(() => getCombinedDetailedRecord(item), [item])
+  const combinedContent = useMemo(
+    () => getCombinedDetailedRecord(item, parsedData.note),
+    [item, parsedData.note]
+  )
 
   return (
     <article
@@ -217,6 +225,11 @@ export function WorkContentBlock({
                   type="button"
                   className="work-content-title-btn"
                   onClick={onStartEdit}
+                  onDoubleClick={(e) => {
+                    e.stopPropagation()
+                    onOpenZenMode?.()
+                  }}
+                  title="双击展开专注模式，单击编辑"
                 >
                   {item.title}
                 </button>
@@ -228,7 +241,8 @@ export function WorkContentBlock({
                 size="sm"
                 variant="ghost"
                 className="zen-mode-btn"
-                onPress={onOpenZenMode}
+                onPress={() => onOpenZenMode?.()}
+                onClick={(e) => e.stopPropagation()}
               >
                 ⛶ 展开专注
               </Button>
@@ -236,6 +250,7 @@ export function WorkContentBlock({
                 size="sm"
                 variant="ghost"
                 onPress={onArchive}
+                onClick={(e) => e.stopPropagation()}
               >
                 {item.archived ? '恢复' : '归档'}
               </Button>
@@ -244,6 +259,7 @@ export function WorkContentBlock({
                 variant="secondary"
                 className="edit-content-btn"
                 onPress={onStartEdit}
+                onClick={(e) => e.stopPropagation()}
               >
                 编辑
               </Button>
@@ -262,7 +278,8 @@ export function WorkContentBlock({
               size="sm"
               variant="ghost"
               className="resume-desc-pill-btn"
-              onPress={onOpenDrawer}
+              onPress={() => onOpenDrawer?.()}
+              onClick={(e) => e.stopPropagation()}
             >
               📝 简历描述 ({parsedData.versions.length} 个版本) →
             </Button>
@@ -272,4 +289,5 @@ export function WorkContentBlock({
     </article>
   )
 }
+
 
