@@ -612,6 +612,9 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 验证全屏打开且抽屉已互斥关闭
     expect(await screen.findByRole('dialog', { name: /全屏专注工作台/ })).toBeInTheDocument()
-    expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+    // 抽屉的卸载由 framer-motion 退场动画决定，需轮询等待而非立即断言（避免动画时序抖动）
+    await waitFor(() => {
+      expect(screen.queryByRole('complementary', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+    })
   })
 })
