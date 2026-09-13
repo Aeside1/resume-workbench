@@ -257,7 +257,7 @@ export function WorkContentBlock({
       {isEditing ? (
         <form className="work-content-edit-form" onSubmit={handleSubmit}>
           <div className="edit-form-header">
-            <span className="edit-form-kicker">编辑工作项 #{index + 1}</span>
+            <span className="edit-form-kicker">编辑工作内容</span>
             <div className="auto-save-container">
               {saveStatus === 'saving' && (
                 <span className="auto-save-badge saving" role="status">
@@ -325,7 +325,6 @@ export function WorkContentBlock({
                   <circle cx="15" cy="19" r="1.2" fill="currentColor" />
                 </svg>
               </span>
-              <span className="work-content-index-pill">工作项 {index + 1}</span>
               {item.archived && <span className="archived-badge">已归档</span>}
               <h3 className="work-content-title">
                 <button
