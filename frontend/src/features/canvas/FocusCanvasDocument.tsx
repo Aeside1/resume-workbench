@@ -17,7 +17,8 @@ export type FocusCanvasDocumentProps = {
   onMoveContent?: (index: number, direction: -1 | 1) => void
   onReorderContent?: (sourceIndex: number, targetIndex: number) => void
   onReorderContents?: (newContents: WorkContent[]) => void
-  onArchiveContent: (item: WorkContent) => void
+  onDeleteContent: (item: WorkContent) => void
+  onArchiveContent?: (item: WorkContent) => void
   onStartCreateNew: () => void
   onCancelCreateNew: () => void
   onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
@@ -42,11 +43,13 @@ export function FocusCanvasDocument({
   onMoveContent,
   onReorderContent,
   onReorderContents,
+  onDeleteContent,
   onArchiveContent,
   onStartCreateNew,
   onCancelCreateNew,
   onUpdateGroup
 }: FocusCanvasDocumentProps) {
+
   const [newDraft, setNewDraft] = useState<ContentDraft>(emptyNewDraft)
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
   const [dragOverInfo, setDragOverInfo] = useState<{ index: number; position: 'top' | 'bottom' } | null>(null)
@@ -137,8 +140,10 @@ export function FocusCanvasDocument({
                 onCancelEdit={onCancelEdit}
                 onSaveContent={onSaveContent}
                 onMoveContent={onMoveContent}
+                onDeleteContent={onDeleteContent}
                 onArchiveContent={onArchiveContent}
                 onDragStart={handleDragStart}
+
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -204,6 +209,7 @@ function FocusWorkContentItem({
   onCancelEdit,
   onSaveContent,
   onMoveContent,
+  onDeleteContent,
   onArchiveContent,
   onDragStart,
   onDragOver,
@@ -221,7 +227,8 @@ function FocusWorkContentItem({
   onCancelEdit: () => void
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
   onMoveContent?: (index: number, direction: -1 | 1) => void
-  onArchiveContent: (item: WorkContent) => void
+  onDeleteContent: (item: WorkContent) => void
+  onArchiveContent?: (item: WorkContent) => void
   onDragStart: (e: React.DragEvent, index: number) => void
   onDragOver: (e: React.DragEvent, index: number) => void
   onDragLeave: (e: React.DragEvent, index: number) => void
@@ -251,7 +258,8 @@ function FocusWorkContentItem({
         onCancelEdit={onCancelEdit}
         onSave={(draft) => onSaveContent(draft, item.id)}
         onMove={(direction) => onMoveContent?.(index, direction)}
-        onArchive={() => onArchiveContent(item)}
+        onDelete={() => onDeleteContent(item)}
+        onArchive={() => onArchiveContent?.(item)}
         onDragStart={(e) => onDragStart(e, index)}
         onDragOver={(e) => onDragOver(e, index)}
         onDragLeave={(e) => onDragLeave(e, index)}
@@ -266,3 +274,4 @@ function FocusWorkContentItem({
     </Reorder.Item>
   )
 }
+

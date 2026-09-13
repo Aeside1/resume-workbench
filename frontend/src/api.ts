@@ -33,4 +33,6 @@ export const api = {
   reorderWorkContents: (token: string, groupId: number, ids: number[]) => request<WorkContent[]>(`/api/experience-groups/${groupId}/work-contents/reorder`, { method: 'POST', body: JSON.stringify({ work_content_ids: ids }) }, token),
   archiveWorkContent: (token: string, id: number) => request<WorkContent>(`/api/work-contents/${id}/archive`, { method: 'POST' }, token),
   restoreWorkContent: (token: string, id: number) => request<WorkContent>(`/api/work-contents/${id}/restore`, { method: 'POST' }, token),
+  deleteWorkContent: (token: string, id: number) => request<void>(`/api/work-contents/${id}`, { method: 'DELETE' }, token),
 }
+

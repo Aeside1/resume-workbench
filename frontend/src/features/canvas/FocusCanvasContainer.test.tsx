@@ -124,10 +124,10 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const titleInput = screen.getByLabelText('工作项标题')
     expect(titleInput).toHaveValue('重构可视化拖拽画布核心渲染引擎')
 
-    // 修改标题并保存
+    // 修改标题并完成编辑
     fireEvent.change(titleInput, { target: { value: '重构渲染引擎（已优化）' } })
-    const saveBtn = screen.getByRole('button', { name: '保存' })
-    fireEvent.click(saveBtn)
+    const finishBtn = screen.getByRole('button', { name: '完成编辑' })
+    fireEvent.click(finishBtn)
 
     // 验证保存 API 被调用，保存状态变化
     await waitFor(() => {
@@ -140,6 +140,32 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(await screen.findByRole('heading', { level: 3, name: '重构渲染引擎（已优化）' })).toBeInTheDocument()
     expect(screen.queryByLabelText('工作项标题')).not.toBeInTheDocument()
   })
+
+  it('点击单项工作卡片右上角“删除”按钮，确认后调用 API 并在画布和大纲中同步移除', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+    vi.spyOn(api, 'deleteWorkContent').mockResolvedValue(undefined as any)
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onExitFocus={vi.fn()}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+
+    const deleteBtns = screen.getAllByRole('button', { name: '删除' })
+    fireEvent.click(deleteBtns[0])
+
+    await waitFor(() => {
+      expect(api.deleteWorkContent).toHaveBeenCalledWith(mockSession.token, 101)
+    })
+
+    // 验证被删除项在主画布中消失
+    expect(screen.queryByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })).not.toBeInTheDocument()
+  })
+
 
   it('点击画布底部常驻虚线大按钮追加新的具体工作内容', async () => {
     const handleSaveStatusChange = vi.fn()

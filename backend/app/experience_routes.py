@@ -86,3 +86,9 @@ def archive_work_content(content_id: int, user: User = Depends(current_user), db
 @router.post("/api/work-contents/{content_id}/restore", response_model=WorkContentView)
 def restore_work_content(content_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     return service(user, db).set_content_archived(content_id, False)
+
+
+@router.delete("/api/work-contents/{content_id}", status_code=204)
+def delete_work_content(content_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    service(user, db).delete_content(content_id)
+

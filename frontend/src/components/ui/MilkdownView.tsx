@@ -1,10 +1,13 @@
-import { useLayoutEffect, useMemo, useRef } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { EditorView } from '@milkdown/prose/view'
+import type { EditorState } from '@milkdown/prose/state'
 import { liveParser, markdownToHtml, serializeMarkdown } from './liveMarkdown'
 import { createLiveEditorState } from './liveEditorState'
+import { MilkdownToolbar } from './MilkdownToolbar'
 import '@milkdown/prose/view/style/prosemirror.css'
 
 export { markdownToHtml } from './liveMarkdown'
+export { MilkdownToolbar } from './MilkdownToolbar'
 
 export interface MilkdownViewProps {
   content?: string | null
@@ -30,7 +33,9 @@ export interface MilkdownEditorProps {
   rows?: number
   className?: string
   id?: string
+  showToolbar?: boolean
 }
+
 
 /** React 只拥有宿主节点；编辑 DOM、选区、输入法与撤销栈由 ProseMirror 管理。 */
 export function MilkdownEditor({
@@ -40,12 +45,14 @@ export function MilkdownEditor({
   rows = 3,
   className = '',
   id,
+  showToolbar = true,
 }: MilkdownEditorProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const viewRef = useRef<EditorView | null>(null)
   const changeRef = useRef(onChange)
   const initialValueRef = useRef(value)
   const publishedRef = useRef(value)
+  const [editorState, setEditorState] = useState<EditorState | null>(null)
 
   useLayoutEffect(() => { changeRef.current = onChange }, [onChange])
 
@@ -65,10 +72,13 @@ export function MilkdownEditor({
       completionTimer = setTimeout(() => publish(view), 0)
       return false
     }
+    const initialState = createLiveEditorState(initialValueRef.current)
     const view = new EditorView(hostRef.current!, {
-      state: createLiveEditorState(initialValueRef.current),
+      state: initialState,
       dispatchTransaction(transaction) {
-        view.updateState(view.state.apply(transaction))
+        const nextState = view.state.apply(transaction)
+        view.updateState(nextState)
+        setEditorState(nextState)
         if (transaction.docChanged) publish(view)
       },
       handleDOMEvents: {
@@ -87,6 +97,8 @@ export function MilkdownEditor({
       },
     })
     viewRef.current = view
+    setEditorState(initialState)
+
     return () => {
       clearTimeout(completionTimer)
       viewRef.current = null
@@ -119,8 +131,20 @@ export function MilkdownEditor({
     if (!view || value === publishedRef.current || view.hasFocus() || view.composing) return
     const doc = liveParser.parse(value)
     publishedRef.current = value
-    if (!doc.eq(view.state.doc)) view.updateState(createLiveEditorState(doc))
+    if (!doc.eq(view.state.doc)) {
+      const nextState = createLiveEditorState(doc)
+      view.updateState(nextState)
+      setEditorState(nextState)
+    }
   }, [value])
 
-  return <div ref={hostRef} className={'milkdown-live-editor ' + className} />
+  return (
+    <div className={`milkdown-editor-wrapper ${className}`}>
+      {showToolbar && (
+        <MilkdownToolbar view={viewRef.current} state={editorState} />
+      )}
+      <div ref={hostRef} className="milkdown-live-editor" />
+    </div>
+  )
 }
+

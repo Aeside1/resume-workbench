@@ -85,3 +85,8 @@ class ExperienceGroupService:
         content = self.content(content_id)
         content.archived = archived
         return self.repository.save(content)
+
+    def delete_content(self, content_id: int) -> None:
+        content = self.content(content_id)
+        self.repository.delete(content)
+

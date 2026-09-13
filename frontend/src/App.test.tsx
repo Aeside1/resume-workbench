@@ -5,7 +5,7 @@ import { App } from './App'
 import { api } from './api'
 import { pasteMarkdown } from './test/pasteMarkdown'
 
-vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn() } }))
+vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn(), deleteWorkContent: vi.fn() } }))
 const mocked = vi.mocked(api)
 
 beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]) })
@@ -56,36 +56,39 @@ describe('认证后的工作台', () => {
   })
 
   it('可以创建经历分组并维护具体工作内容', async () => {
-    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'content@example.com' } })
-    const group = { id: 10, user_id: 1, name: '平台项目', type: 'project' as const, organization: '示例团队', start_date: null, end_date: null, description: '项目背景', archived: false, created_at: '', updated_at: '' }
-    const content = { id: 20, experience_group_id: 10, title: '统一状态模型', detailed_record: '梳理状态流转', technical_materials: 'Rust', result_data: '耗时下降', supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
-    mocked.createExperienceGroup.mockResolvedValue(group)
-    mocked.experienceGroups.mockResolvedValue([])
-    mocked.createWorkContent.mockResolvedValue(content)
-    mocked.workContents.mockResolvedValue([])
+    const createdGroup = { id: 10, user_id: 1, name: '电商中台重构', type: 'project' as const, organization: '美团', start_date: '2024-01-01', end_date: '2024-06-01', description: '核心链路重构', archived: false, created_at: '', updated_at: '' }
+    const createdContent = { id: 20, experience_group_id: 10, title: '梳理状态流转', detailed_record: '重构下单与支付链路', technical_materials: 'React、TypeScript', result_data: '异常率降低 40%', supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
+    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'creator@example.com' } })
+    mocked.createExperienceGroup.mockResolvedValue(createdGroup); mocked.createWorkContent.mockResolvedValue(createdContent)
     render(<App />)
-    fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'content@example.com' } })
-    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
-    fireEvent.click(screen.getByRole('button', { name: '登录' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument())
-    fireEvent.click(screen.getAllByRole('button', { name: /新建经历分组/ })[0])
-    fireEvent.change(screen.getByLabelText('经历名称'), { target: { value: '平台项目' } })
-    fireEvent.click(screen.getByRole('button', { name: '创建经历分组' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: '平台项目' })).toBeInTheDocument())
-    fireEvent.click(screen.getByRole('button', { name: '添加具体工作内容' }))
-    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '统一状态模型' } })
-    pasteMarkdown(screen.getByRole('textbox', { name: '草稿正文' }), '梳理状态流转\n\n### 技术方案与材料\n\nRust\n\n### 量化结果数据\n\n耗时下降')
+    fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'creator@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
+    await waitFor(() => expect(screen.getByText('经历分组')).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: /新建经历分组/ }))
+    const modal = await screen.findByRole('dialog', { name: '新建经历分组' })
+    fireEvent.change(within(modal).getByLabelText('经历名称'), { target: { value: '电商中台重构' } })
+    fireEvent.click(within(modal).getByRole('button', { name: '创建经历分组' }))
+
+    await waitFor(() => expect(screen.getByRole('heading', { level: 2, name: '电商中台重构' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: /添加具体工作内容/ }))
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '梳理状态流转' } })
+    pasteMarkdown(screen.getByLabelText('草稿正文'), '重构下单与支付链路')
     fireEvent.click(screen.getByRole('button', { name: '添加工作内容' }))
-    await waitFor(() => expect(screen.getByRole('heading', { level: 3, name: '统一状态模型' })).toBeInTheDocument())
-    expect(screen.getByText('梳理状态流转')).toBeInTheDocument()
+
+    await waitFor(() => expect(mocked.createWorkContent).toHaveBeenCalled())
+    expect(screen.getByRole('heading', { level: 3, name: '梳理状态流转' })).toBeInTheDocument()
+
   })
 
-  it('可以编辑和归档具体工作内容，并渲染拖动手柄而非上下移按钮', async () => {
+  it('可以编辑和删除具体工作内容，并渲染拖动手柄而非上下移按钮', async () => {
     const group = { id: 10, user_id: 1, name: '平台项目', type: 'project' as const, organization: null, start_date: null, end_date: null, description: null, archived: false, created_at: '', updated_at: '' }
     const first = { id: 20, experience_group_id: 10, title: '第一项', detailed_record: '第一项记录', technical_materials: 'Rust', result_data: null, supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
     const second = { id: 21, experience_group_id: 10, title: '第二项', detailed_record: '第二项记录', technical_materials: null, result_data: null, supplementary_notes: null, position: 1, archived: false, created_at: '', updated_at: '' }
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'content-actions@example.com' } })
-    mocked.experienceGroups.mockResolvedValue([group]); mocked.workContents.mockResolvedValue([first, second]); mocked.updateWorkContent.mockResolvedValue({ ...first, title: '第一项（已编辑）' }); mocked.archiveWorkContent.mockResolvedValue({ ...first, archived: true })
+    mocked.experienceGroups.mockResolvedValue([group]); mocked.workContents.mockResolvedValue([first, second]); mocked.updateWorkContent.mockResolvedValue({ ...first, title: '第一项（已编辑）' }); mocked.deleteWorkContent.mockResolvedValue(undefined as any)
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+
     render(<App />)
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'content-actions@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByText('平台项目')).toBeInTheDocument())
@@ -97,9 +100,10 @@ describe('认证后的工作台', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: '编辑' })[0])
     fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '第一项（已编辑）' } })
-    fireEvent.click(screen.getByRole('button', { name: '保存' }))
+    fireEvent.click(screen.getByRole('button', { name: '完成编辑' }))
     await waitFor(() => expect(mocked.updateWorkContent).toHaveBeenCalled())
-    fireEvent.click(screen.getAllByRole('button', { name: '归档' })[0]); await waitFor(() => expect(mocked.archiveWorkContent).toHaveBeenCalledWith('token', 20))
+
+    fireEvent.click(screen.getAllByRole('button', { name: '删除' })[0]); await waitFor(() => expect(mocked.deleteWorkContent).toHaveBeenCalledWith('token', 20))
   })
 
   it('未归档的工作项正常展示在画布中，已归档项不参与渲染', async () => {

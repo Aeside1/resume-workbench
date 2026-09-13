@@ -147,6 +147,19 @@ export function FocusCanvasContainer({
     }
   }
 
+  const handleDeleteContent = async (item: WorkContent) => {
+    try {
+      await api.deleteWorkContent(session.token, item.id)
+      setContents((items) => items.filter((it) => it.id !== item.id))
+      if (editingContentId === item.id) {
+        setEditingContentId(null)
+      }
+      toast.success(`已删除工作内容：“${item.title}”`)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const handleArchiveContent = async (item: WorkContent) => {
     try {
       const updated = item.archived
@@ -166,6 +179,7 @@ export function FocusCanvasContainer({
       setError((e as Error).message)
     }
   }
+
 
   const handleReorderContents = async (newContents: WorkContent[]) => {
     setContents(newContents)
@@ -231,8 +245,10 @@ export function FocusCanvasContainer({
             onMoveContent={handleMoveContent}
             onReorderContent={handleReorderContent}
             onReorderContents={handleReorderContents}
+            onDeleteContent={handleDeleteContent}
             onArchiveContent={handleArchiveContent}
             onStartCreateNew={() => {
+
               setEditingContentId(null)
               setIsCreatingNew(true)
             }}

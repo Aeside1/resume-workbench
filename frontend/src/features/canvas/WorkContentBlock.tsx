@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState, useMemo } from 'react'
+import { FormEvent, useEffect, useState, useMemo, useRef } from 'react'
 import { Button } from '@heroui/react'
 import type { WorkContent } from '../../api'
 import { MilkdownView } from '../../components/ui/MilkdownView'
@@ -27,7 +27,8 @@ export type WorkContentBlockProps = {
   onCancelEdit: () => void
   onSave: (draft: ContentDraft) => Promise<void> | void
   onMove?: (direction: -1 | 1) => void
-  onArchive: () => void
+  onDelete?: () => void
+  onArchive?: () => void
   onOpenDrawer?: () => void
   onOpenZenMode?: () => void
   isDragging?: boolean
@@ -104,6 +105,7 @@ export function WorkContentBlock({
   onStartEdit,
   onCancelEdit,
   onSave,
+  onDelete,
   onArchive,
   onOpenDrawer,
   onOpenZenMode,
@@ -124,32 +126,109 @@ export function WorkContentBlock({
   const [draft, setDraft] = useState<ContentDraft>(() =>
     buildInitialDraft(item, parsedData.note)
   )
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const cardRef = useRef<HTMLElement>(null)
+  const draftRef = useRef(draft)
+  draftRef.current = draft
+
+  const getSignature = (d: ContentDraft) => `${d.title.trim()}|||${d.detailed_record}`
+  const lastSavedSignatureRef = useRef<string>(getSignature(buildInitialDraft(item, parsedData.note)))
 
   useEffect(() => {
     const parsed = parseSupplementaryNotes(item.supplementary_notes)
-    setDraft(buildInitialDraft(item, parsed.note))
+    const initial = buildInitialDraft(item, parsed.note)
+    setDraft(initial)
+    lastSavedSignatureRef.current = getSignature(initial)
+    setSaveStatus('idle')
   }, [item])
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    if (!draft.title.trim()) return
+  const isSavingRef = useRef(false)
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const performSave = async (currentDraft: ContentDraft) => {
+    if (!currentDraft.title.trim()) return
+    const signature = getSignature(currentDraft)
+    if (signature === lastSavedSignatureRef.current || isSavingRef.current) return
+
+    isSavingRef.current = true
+    lastSavedSignatureRef.current = signature
+    setSaveStatus('saving')
     const serializedNotes = serializeSupplementaryNotes(
-      draft.supplementary_notes ?? '',
+      currentDraft.supplementary_notes ?? '',
       parsedData.versions
     )
-    onSave({
-      title: draft.title.trim(),
-      detailed_record: draft.detailed_record,
-      technical_materials: '',
-      result_data: '',
-      supplementary_notes: serializedNotes
-    })
+    try {
+      await onSave({
+        title: currentDraft.title.trim(),
+        detailed_record: currentDraft.detailed_record,
+        technical_materials: '',
+        result_data: '',
+        supplementary_notes: serializedNotes
+      })
+      setSaveStatus('saved')
+    } catch {
+      // 失败后允许重试
+      lastSavedSignatureRef.current = ''
+      setSaveStatus('idle')
+    } finally {
+      isSavingRef.current = false
+    }
   }
 
+  // 输入停顿 800ms 自动保存
+  useEffect(() => {
+    if (!isEditing) return
+    if (!draft.title.trim()) return
+    const signature = getSignature(draft)
+    if (signature === lastSavedSignatureRef.current) return
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    debounceTimerRef.current = setTimeout(() => {
+      performSave(draft)
+    }, 800)
+    return () => {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    }
+  }, [draft, isEditing])
+
+  // 点击卡片外部时自动保存未保存变更，并平滑收起编辑态
+  useEffect(() => {
+    if (!isEditing) return
+
+    const handlePointerDownOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node | null
+      if (!cardRef.current || !target) return
+      // 如果点击在卡片外部
+      if (!cardRef.current.contains(target)) {
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+        performSave(draftRef.current)
+        onCancelEdit()
+      }
+    }
+
+    document.addEventListener('mousedown', handlePointerDownOutside)
+    return () => {
+      document.removeEventListener('mousedown', handlePointerDownOutside)
+    }
+  }, [isEditing, onCancelEdit])
+
   const handleCancel = () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     setDraft(buildInitialDraft(item, parsedData.note))
     onCancelEdit()
   }
+
+  const handleFinishEdit = async () => {
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+    await performSave(draft)
+    onCancelEdit()
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    await handleFinishEdit()
+  }
+
 
   const combinedContent = useMemo(
     () => getCombinedDetailedRecord(item, parsedData.note),
@@ -158,18 +237,39 @@ export function WorkContentBlock({
 
   return (
     <article
+      ref={cardRef}
       id={`work-content-${item.id}`}
-      className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : ''} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
+      className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : 'interactive-card'} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
       aria-label={`工作项 ${index + 1}: ${item.title}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
+      onClick={() => {
+        if (!isEditing && !isDragging) {
+          onStartEdit()
+        }
+      }}
     >
       {isEditing ? (
         <form className="work-content-edit-form" onSubmit={handleSubmit}>
           <div className="edit-form-header">
             <span className="edit-form-kicker">编辑工作项 #{index + 1}</span>
+            <div className="auto-save-container">
+              {saveStatus === 'saving' && (
+                <span className="auto-save-badge saving" role="status">
+                  保存中...
+                </span>
+              )}
+              {saveStatus === 'saved' && (
+                <span className="auto-save-badge saved" role="status">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  已自动保存
+                </span>
+              )}
+            </div>
           </div>
 
           <WorkContentFormFields
@@ -180,11 +280,13 @@ export function WorkContentBlock({
 
           <div className="edit-form-actions">
             <Button
-              type="submit"
+              type="button"
               variant="primary"
+              onPress={handleFinishEdit}
             >
-              保存
+              完成编辑
             </Button>
+
             <Button
               type="button"
               variant="ghost"
@@ -195,6 +297,7 @@ export function WorkContentBlock({
           </div>
         </form>
       ) : (
+
         <div className="work-content-read-view">
           <header className="work-content-card-header">
             <div className="work-content-title-meta">
@@ -203,6 +306,7 @@ export function WorkContentBlock({
                 draggable={!isEditing}
                 onDragStart={onDragStart}
                 onPointerDown={onDragHandlePointerDown}
+                onClick={(e) => e.stopPropagation()}
                 style={{ touchAction: 'none' }}
                 title="按住拖拽调整排序"
                 aria-label="拖拽调整排序"
@@ -224,12 +328,15 @@ export function WorkContentBlock({
                 <button
                   type="button"
                   className="work-content-title-btn"
-                  onClick={onStartEdit}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onStartEdit()
+                  }}
                   onDoubleClick={(e) => {
                     e.stopPropagation()
                     onOpenZenMode?.()
                   }}
-                  title="双击展开专注模式，单击编辑"
+                  title="单击就地编辑，双击展开专注模式"
                 >
                   {item.title}
                 </button>
@@ -243,16 +350,15 @@ export function WorkContentBlock({
                 className="zen-mode-btn"
                 onPress={() => onOpenZenMode?.()}
                 onClick={(e) => e.stopPropagation()}
+                aria-label="展开专注模式"
               >
-                ⛶ 展开专注
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onPress={onArchive}
-                onClick={(e) => e.stopPropagation()}
-              >
-                {item.archived ? '恢复' : '归档'}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: 4 }}>
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </svg>
+                展开专注
               </Button>
               <Button
                 size="sm"
@@ -263,13 +369,32 @@ export function WorkContentBlock({
               >
                 编辑
               </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="btn-delete-ghost"
+                onPress={() => {
+                  if (window.confirm(`确定要删除工作项“${item.title}”吗？此操作不可恢复。`)) {
+                    if (onDelete) {
+                      onDelete()
+                    } else if (onArchive) {
+                      onArchive()
+                    }
+                  }
+                }}
+                onClick={(e) => e.stopPropagation()}
+                aria-label="删除工作项"
+              >
+                删除
+              </Button>
             </div>
+
           </header>
 
           <div className="work-content-typography-body">
             <MilkdownView
               content={combinedContent}
-              placeholder="暂无工作内容记录，点击“编辑”或“展开专注”开始沉淀..."
+              placeholder="暂无工作内容记录，点击卡片或“展开专注”开始沉淀..."
             />
           </div>
 
@@ -300,6 +425,7 @@ export function WorkContentBlock({
     </article>
   )
 }
+
 
 
 

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WorkContentBlock, getCombinedDetailedRecord } from './WorkContentBlock'
 import type { WorkContent } from '../../api'
@@ -94,10 +94,13 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
   })
 
 
-  it('卡片头部保留 6 点抓手手柄，新增 ⛶ 展开专注 按钮并响应点击回调；双击标题亦进入专注模式', () => {
+  it('卡片头部保留 6 点抓手手柄，包含 展开专注 按钮并响应点击回调；双击标题亦进入专注模式；支持删除工作项', () => {
     const handleOpenZenMode = vi.fn()
     const handleStartEdit = vi.fn()
-    const handleArchive = vi.fn()
+    const handleDelete = vi.fn()
+
+    // 模拟 window.confirm 返回 true
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
 
     render(
       <WorkContentBlock
@@ -108,7 +111,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
         onStartEdit={handleStartEdit}
         onCancelEdit={vi.fn()}
         onSave={vi.fn()}
-        onArchive={handleArchive}
+        onDelete={handleDelete}
         onOpenZenMode={handleOpenZenMode}
       />
     )
@@ -117,7 +120,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     expect(screen.getByLabelText('拖拽调整排序')).toBeInTheDocument()
 
     // 验证专注模式按钮存在并响应点击
-    const zenBtn = screen.getByRole('button', { name: '⛶ 展开专注' })
+    const zenBtn = screen.getByRole('button', { name: /展开专注/ })
     expect(zenBtn).toBeInTheDocument()
     fireEvent.click(zenBtn)
     expect(handleOpenZenMode).toHaveBeenCalledTimes(1)
@@ -131,34 +134,35 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     fireEvent.click(titleBtn)
     expect(handleStartEdit).toHaveBeenCalledTimes(1)
 
-    // 验证归档按钮
-    const archiveBtn = screen.getByRole('button', { name: '归档' })
-    fireEvent.click(archiveBtn)
-    expect(handleArchive).toHaveBeenCalledTimes(1)
+    // 验证删除按钮（位于编辑之后），点击弹窗确认后调用 onDelete
+    const deleteBtn = screen.getByRole('button', { name: '删除' })
+    expect(deleteBtn).toBeInTheDocument()
+    fireEvent.click(deleteBtn)
+    expect(window.confirm).toHaveBeenCalled()
+    expect(handleDelete).toHaveBeenCalledTimes(1)
   })
 
+  it('点击卡片空白正文区域直接进入聚焦编辑模式', () => {
+    const handleStartEdit = vi.fn()
 
-  it('已归档项显示已归档徽章与恢复按钮', () => {
-    const archivedItem = { ...mockWorkItem, archived: true }
     render(
       <WorkContentBlock
-        item={archivedItem}
+        item={mockWorkItem}
         index={0}
         totalCount={1}
         isEditing={false}
-        onStartEdit={vi.fn()}
+        onStartEdit={handleStartEdit}
         onCancelEdit={vi.fn()}
         onSave={vi.fn()}
-        onMove={vi.fn()}
-        onArchive={vi.fn()}
       />
     )
 
-    expect(screen.getByText('已归档')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '恢复' })).toBeInTheDocument()
+    const card = screen.getByRole('article', { name: /重构可视化拖拽画布核心渲染引擎/ })
+    fireEvent.click(card)
+    expect(handleStartEdit).toHaveBeenCalledTimes(1)
   })
 
-  it('在 isEditing === true 时就地渲染为单一自由 Markdown 草稿正文输入，提供保存与取消操作', () => {
+  it('在 isEditing === true 时就地渲染为单一自由 Markdown 草稿正文输入与工具栏，提供完成编辑操作', async () => {
     const handleSave = vi.fn()
     const handleCancel = vi.fn()
 
@@ -172,7 +176,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
         onCancelEdit={handleCancel}
         onSave={handleSave}
         onMove={vi.fn()}
-        onArchive={vi.fn()}
       />
     )
 
@@ -184,6 +187,9 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     expect(screen.queryByLabelText('技术方案与材料')).not.toBeInTheDocument()
     expect(screen.queryByLabelText('量化结果数据')).not.toBeInTheDocument()
 
+    // 验证 Markdown 工具栏已渲染
+    expect(screen.getByRole('toolbar', { name: 'Markdown 格式工具栏' })).toBeInTheDocument()
+
     // 验证单一草稿正文实时编辑器存在并预填了拼接后的旧数据
     const recordInput = screen.getByLabelText('草稿正文')
     expect(recordInput).toHaveTextContent('旧渲染器全量 re-render 导致大页面卡顿')
@@ -192,8 +198,8 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     fireEvent.change(titleInput, { target: { value: '优化画布渲染管线' } })
     pasteMarkdown(recordInput, '## 全新架构设计\n- 支持海量节点虚拟滚动\n- ==trade off== 权衡并发渲染性能')
 
-    const saveBtn = screen.getByRole('button', { name: '保存' })
-    fireEvent.click(saveBtn)
+    const finishBtn = screen.getByRole('button', { name: '完成编辑' })
+    fireEvent.click(finishBtn)
 
     expect(handleSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -201,11 +207,16 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
         detailed_record: expect.stringContaining('## 全新架构设计')
       })
     )
+    await waitFor(() => {
+      expect(handleCancel).toHaveBeenCalledTimes(1)
+    })
 
     const cancelBtn = screen.getByRole('button', { name: '取消' })
     fireEvent.click(cancelBtn)
-    expect(handleCancel).toHaveBeenCalledTimes(1)
+    expect(handleCancel).toHaveBeenCalledTimes(2)
   })
+
+
 
   it('富文本排版支持各类 # 标题、多层列表嵌套、==trade off== 高亮与代码块', () => {
     const richMarkdownItem: WorkContent = {

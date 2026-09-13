@@ -128,8 +128,9 @@ def test_experience_data_is_isolated_by_user():
     assert client.post(f"/api/work-contents/{content['id']}/archive", headers=bob_auth).status_code == 404
     assert client.post(f"/api/work-contents/{content['id']}/restore", headers=bob_auth).status_code == 404
     assert client.post(f"/api/experience-groups/{group['id']}/archive", headers=bob_auth).status_code == 404
-    assert client.post(f"/api/experience-groups/{group['id']}/restore", headers=bob_auth).status_code == 404
+    assert client.delete(f"/api/work-contents/{content['id']}", headers=bob_auth).status_code == 404
     assert client.delete(f"/api/experience-groups/{group['id']}", headers=bob_auth).status_code == 404
+
 
 
 
@@ -173,5 +174,38 @@ def test_delete_experience_group_cascades_work_contents():
     assert client.get(f"/api/experience-groups/{group['id']}/work-contents", headers=auth).status_code == 404
     # 对已被级联删除的单条工作内容操作应返回 404
     assert client.patch(f"/api/work-contents/{content['id']}", headers=auth, json={"title": "新标题"}).status_code == 404
+
+
+def test_delete_work_content_removes_item():
+    account = register("experience-delete-wc@example.com")
+    auth = headers(account["token"])
+    group = client.post(
+        "/api/experience-groups",
+        headers=auth,
+        json={"name": "工作项删除测试", "type": "project"},
+    ).json()
+    first = client.post(
+        f"/api/experience-groups/{group['id']}/work-contents",
+        headers=auth,
+        json={"title": "待保留第一项"},
+    ).json()
+    second = client.post(
+        f"/api/experience-groups/{group['id']}/work-contents",
+        headers=auth,
+        json={"title": "待删除第二项"},
+    ).json()
+
+    # 删除第二项
+    resp = client.delete(f"/api/work-contents/{second['id']}", headers=auth)
+    assert resp.status_code == 204
+
+    # 再次查询工作内容列表，只剩第一项
+    contents = client.get(f"/api/experience-groups/{group['id']}/work-contents", headers=auth).json()
+    assert len(contents) == 1
+    assert contents[0]["id"] == first["id"]
+
+    # 再次请求已删除项应返回 404
+    assert client.patch(f"/api/work-contents/{second['id']}", headers=auth, json={"title": "无法修改"}).status_code == 404
+
 
 
