@@ -56,6 +56,7 @@ export function ConfirmDeleteWorkContentModal({
             </Button>
             <Button
               size="sm"
+              variant="danger"
               className="modal-btn-delete-confirm"
               onPress={onConfirm}
             >

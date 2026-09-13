@@ -238,10 +238,11 @@ export function WorkContentBlock({
   )
 
   return (
-    <article
-      ref={cardRef}
-      id={`work-content-${item.id}`}
-      className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : 'interactive-card'} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
+    <>
+      <article
+        ref={cardRef}
+        id={`work-content-${item.id}`}
+        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : 'interactive-card'} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
       aria-label={`工作项 ${index + 1}: ${item.title}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
@@ -378,7 +379,7 @@ export function WorkContentBlock({
                 onPress={() => setIsDeleteModalOpen(true)}
                 onClick={(e) => e.stopPropagation()}
               >
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ marginRight: 4 }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                   <path d="M3 6h18" />
                   <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
                   <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -422,22 +423,23 @@ export function WorkContentBlock({
           </footer>
         </div>
       )}
-
-      <ConfirmDeleteWorkContentModal
-        isOpen={isDeleteModalOpen}
-        itemTitle={item.title}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={() => {
-          setIsDeleteModalOpen(false)
-          clearMilkdownEditorCache(`wc-${item.id}-record`)
-          if (onDelete) {
-            onDelete()
-          } else if (onArchive) {
-            onArchive()
-          }
-        }}
-      />
     </article>
+
+    <ConfirmDeleteWorkContentModal
+      isOpen={isDeleteModalOpen}
+      itemTitle={item.title}
+      onClose={() => setIsDeleteModalOpen(false)}
+      onConfirm={() => {
+        setIsDeleteModalOpen(false)
+        clearMilkdownEditorCache(`wc-${item.id}-record`)
+        if (onDelete) {
+          onDelete()
+        } else if (onArchive) {
+          onArchive()
+        }
+      }}
+    />
+  </>
   )
 }
 
