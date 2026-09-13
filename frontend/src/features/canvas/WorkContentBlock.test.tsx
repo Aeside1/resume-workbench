@@ -134,11 +134,15 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     fireEvent.click(titleBtn)
     expect(handleStartEdit).toHaveBeenCalledTimes(1)
 
-    // 验证删除按钮（位于编辑之后），点击弹窗确认后调用 onDelete
+    // 验证删除按钮（包含矢量垃圾桶图标且位于编辑之后），点击弹出 UI 确认弹窗
     const deleteBtn = screen.getByRole('button', { name: '删除' })
     expect(deleteBtn).toBeInTheDocument()
+    expect(deleteBtn.querySelector('svg')).toBeInTheDocument()
+
     fireEvent.click(deleteBtn)
-    expect(window.confirm).toHaveBeenCalled()
+    const modalConfirmBtn = screen.getByRole('button', { name: '确认删除' })
+    expect(modalConfirmBtn).toBeInTheDocument()
+    fireEvent.click(modalConfirmBtn)
     expect(handleDelete).toHaveBeenCalledTimes(1)
   })
 

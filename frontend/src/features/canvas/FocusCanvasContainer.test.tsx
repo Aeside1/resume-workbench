@@ -158,6 +158,9 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const deleteBtns = screen.getAllByRole('button', { name: '删除' })
     fireEvent.click(deleteBtns[0])
 
+    const modalConfirmBtn = await screen.findByRole('button', { name: '确认删除' })
+    fireEvent.click(modalConfirmBtn)
+
     await waitFor(() => {
       expect(api.deleteWorkContent).toHaveBeenCalledWith(mockSession.token, 101)
     })

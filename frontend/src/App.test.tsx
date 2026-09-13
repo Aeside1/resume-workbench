@@ -103,7 +103,10 @@ describe('认证后的工作台', () => {
     fireEvent.click(screen.getByRole('button', { name: '完成编辑' }))
     await waitFor(() => expect(mocked.updateWorkContent).toHaveBeenCalled())
 
-    fireEvent.click(screen.getAllByRole('button', { name: '删除' })[0]); await waitFor(() => expect(mocked.deleteWorkContent).toHaveBeenCalledWith('token', 20))
+    fireEvent.click(screen.getAllByRole('button', { name: '删除' })[0])
+    const modalConfirmBtn = await screen.findByRole('button', { name: '确认删除' })
+    fireEvent.click(modalConfirmBtn)
+    await waitFor(() => expect(mocked.deleteWorkContent).toHaveBeenCalledWith('token', 20))
   })
 
   it('未归档的工作项正常展示在画布中，已归档项不参与渲染', async () => {

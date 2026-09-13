@@ -1847,10 +1847,17 @@ button.btn-danger-solid:active:not(:disabled),
 /* 幽灵删除按钮 */
 button.btn-delete-ghost,
 .btn-delete-ghost {
-  color: #ef4444 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  color: #64748b !important;
   background: transparent !important;
   border: 1px solid transparent !important;
   font-weight: 500 !important;
+  font-size: 13px !important;
+  height: 28px !important;
+  padding: 0 8px !important;
+  border-radius: 6px !important;
   transition: all 0.15s ease !important;
 }
 
@@ -1859,6 +1866,15 @@ button.btn-delete-ghost:hover,
   background: #fef2f2 !important;
   color: #dc2626 !important;
   border-color: #fecaca !important;
+}
+
+.btn-delete-ghost svg {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+.btn-delete-ghost:hover svg {
+  transform: scale(1.05);
 }
 
 
