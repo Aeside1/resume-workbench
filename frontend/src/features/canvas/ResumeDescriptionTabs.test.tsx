@@ -35,7 +35,7 @@ describe('ResumeDescriptionTabs 多版本简历描述与完整 CRUD', () => {
 
     // 展示空态
     expect(screen.getByText(/暂无针对不同岗位的简历描述写法/)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '+ 立即新增版本写法' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '立即新增版本写法' })).toBeInTheDocument()
   })
 
   it('正确渲染所有传入版本 Tab 并默认激活第一个版本', () => {
@@ -59,7 +59,7 @@ describe('ResumeDescriptionTabs 多版本简历描述与完整 CRUD', () => {
     expect(screen.queryByText(/主导底层渲染引擎重构/)).not.toBeInTheDocument()
   })
 
-  it('支持点击“+ 新增写法”按钮展开添加表单并保存新版本 (Create)', () => {
+  it('支持点击“新增写法”按钮展开添加表单并保存新版本 (Create)', () => {
     const handleChange = vi.fn()
     render(
       <ResumeDescriptionTabs
@@ -69,7 +69,7 @@ describe('ResumeDescriptionTabs 多版本简历描述与完整 CRUD', () => {
       />
     )
 
-    const addBtn = screen.getByRole('button', { name: '+ 新增写法' })
+    const addBtn = screen.getByRole('button', { name: '新增写法' })
     fireEvent.click(addBtn)
 
     expect(screen.getByLabelText('版本标签')).toBeInTheDocument()
@@ -139,7 +139,7 @@ describe('ResumeDescriptionTabs 多版本简历描述与完整 CRUD', () => {
   it('点击取消收起表单且不改变已有版本', () => {
     render(<ResumeDescriptionTabs workContentId={101} descriptions={mockDescriptions} />)
 
-    fireEvent.click(screen.getByRole('button', { name: '+ 新增写法' }))
+    fireEvent.click(screen.getByRole('button', { name: '新增写法' }))
     expect(screen.getByLabelText('版本标签')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '取消' }))

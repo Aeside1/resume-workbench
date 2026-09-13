@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button } from '@heroui/react'
+import { Button, Chip, Tabs } from '@heroui/react'
 import { Archive, FilePlus2, Plus } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { api, type ExperienceGroup, type WorkContent } from '../../api'
@@ -178,28 +178,26 @@ export function ExperienceHubPanel({
         </div>
 
         <div className="hub-actions-bar">
-          <div className="hub-tabs-row" role="tablist" aria-label="经历分组视图">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'active'}
-              className={`hub-tab-btn ${activeTab === 'active' ? 'hub-tab-btn--active' : ''}`}
-              onClick={() => setActiveTab('active')}
-            >
-              在用经历
-              <span className="tab-count-badge">{activeGroups.length}</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={activeTab === 'archived'}
-              className={`hub-tab-btn ${activeTab === 'archived' ? 'hub-tab-btn--active' : ''}`}
-              onClick={() => setActiveTab('archived')}
-            >
-              归档箱
-              <span className="tab-count-badge">{archivedGroups.length}</span>
-            </button>
-          </div>
+          <Tabs
+            className="hub-tabs"
+            selectedKey={activeTab}
+            onSelectionChange={(key) => setActiveTab(key as 'active' | 'archived')}
+          >
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="经历分组视图">
+                <Tabs.Tab id="active">
+                  在用经历
+                  <Chip size="sm">{activeGroups.length}</Chip>
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+                <Tabs.Tab id="archived">
+                  归档箱
+                  <Chip size="sm">{archivedGroups.length}</Chip>
+                  <Tabs.Indicator />
+                </Tabs.Tab>
+              </Tabs.List>
+            </Tabs.ListContainer>
+          </Tabs>
 
           <Button
             variant="primary"

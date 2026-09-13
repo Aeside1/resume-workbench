@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react'
-import { Button, Input } from '@heroui/react'
+import { useState, useEffect, type Key } from 'react'
+import { Button, Chip, Input, Label, Tabs } from '@heroui/react'
+import { Plus } from 'lucide-react'
 import { MilkdownView, MilkdownEditor } from '../../components/ui/MilkdownView'
 
 export type ResumeDescriptionItem = {
@@ -64,6 +65,12 @@ export function ResumeDescriptionTabs({
     setDraftBulletsText('')
   }
 
+  const handleSelectTab = (key: Key | null) => {
+    if (key == null) return
+    setActiveId(String(key))
+    handleCancelForm()
+  }
+
   const handleSave = () => {
     if (!draftTag.trim()) return
 
@@ -114,142 +121,128 @@ export function ResumeDescriptionTabs({
 
   const isFormOpen = isAdding || editingId !== null
 
-  return (
-    <div className="resume-desc-container">
-      <div className="resume-desc-header">
-        <div className="resume-desc-tabs-bar" role="tablist" aria-label="简历描述版本">
-          {descriptions.map((item) => {
-            const isSelected = item.id === (activeItem?.id ?? '')
-            return (
-              <button
-                key={item.id}
-                type="button"
-                role="tab"
-                aria-selected={isSelected}
-                className={`resume-desc-tab-btn ${isSelected ? 'active' : ''}`}
-                onClick={() => {
-                  setActiveId(item.id)
-                  handleCancelForm()
-                }}
-              >
-                {item.tag}
-              </button>
-            )
-          })}
-          {!isFormOpen && (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="add-desc-tab-btn"
-              onPress={handleStartAdd}
-            >
-              + 新增写法
-            </Button>
-          )}
-        </div>
+  const formPanel = (
+    <div className="resume-desc-add-panel">
+      <p className="resume-desc-form-header">
+        {isAdding ? '新增简历描述写法' : `编辑写法：${draftTag}`}
+      </p>
+
+      <div className="resume-desc-field">
+        <Label htmlFor={`tag-input-${workContentId}`}>版本标签</Label>
+        <Input
+          id={`tag-input-${workContentId}`}
+          placeholder="例如：技术深度版、业务结果版、管理协同版"
+          value={draftTag}
+          onChange={(e) => setDraftTag(e.target.value)}
+        />
       </div>
 
-      {isFormOpen ? (
-        <div className="resume-desc-add-panel">
-          <div className="resume-desc-form-header">
-            <span className="desc-form-title">{isAdding ? '新增简历描述写法' : `编辑写法：${draftTag}`}</span>
-          </div>
+      <div className="resume-desc-field">
+        <Label id={`bullets-input-${workContentId}-label`} htmlFor={`bullets-input-${workContentId}`}>
+          简历描述要点 (每行一条)
+        </Label>
+        <MilkdownEditor
+          id={`bullets-input-${workContentId}`}
+          cacheKey={`bullets-input-${workContentId}-${editingId || 'new'}`}
+          placeholder="输入该版本的 bullet points，每行一条..."
+          rows={3}
+          value={draftBulletsText}
+          onChange={setDraftBulletsText}
+        />
+      </div>
 
-          <div className="resume-desc-field">
-            <label htmlFor={`tag-input-${workContentId}`}>版本标签</label>
-            <Input
-              id={`tag-input-${workContentId}`}
-              placeholder="例如：技术深度版、业务结果版、管理协同版"
-              value={draftTag}
-              onChange={(e) => setDraftTag(e.target.value)}
-            />
-          </div>
+      <div className="resume-desc-add-actions">
+        <Button size="sm" variant="primary" onPress={handleSave}>
+          {isAdding ? '保存新写法' : '保存修改'}
+        </Button>
+        <Button size="sm" variant="ghost" onPress={handleCancelForm}>
+          取消
+        </Button>
+      </div>
+    </div>
+  )
 
-          <div className="resume-desc-field">
-            <label id={`bullets-input-${workContentId}-label`} htmlFor={`bullets-input-${workContentId}`}>
-              简历描述要点 (每行一条)
-            </label>
-            <MilkdownEditor
-              id={`bullets-input-${workContentId}`}
-              cacheKey={`bullets-input-${workContentId}-${editingId || 'new'}`}
-              placeholder="输入该版本的 bullet points，每行一条..."
-              rows={3}
-              value={draftBulletsText}
-              onChange={setDraftBulletsText}
-            />
-          </div>
+  const emptyStatePanel = (
+    <div className="resume-desc-empty-state">
+      <p className="resume-empty-text">暂无针对不同岗位的简历描述写法</p>
+      <Button size="sm" variant="secondary" onPress={handleStartAdd}>
+        <Plus size={14} aria-hidden="true" />
+        立即新增版本写法
+      </Button>
+    </div>
+  )
 
-          <div className="resume-desc-add-actions">
-            <Button
-              size="sm"
-              variant="primary"
-              onPress={handleSave}
-            >
-              {isAdding ? '保存新写法' : '保存修改'}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onPress={handleCancelForm}
-            >
-              取消
-            </Button>
-          </div>
-        </div>
-      ) : descriptions.length === 0 ? (
-        <div className="resume-desc-empty-state">
-          <p className="resume-empty-text">暂无针对不同岗位的简历描述写法</p>
-          <Button
-            size="sm"
-            variant="secondary"
-            className="empty-add-btn"
-            onPress={handleStartAdd}
-          >
-            + 立即新增版本写法
-          </Button>
-        </div>
-      ) : (
-        <div className="resume-desc-content-panel" role="tabpanel">
-          {activeItem ? (
-            <>
-              <div className="active-desc-header-actions">
-                <span className="active-desc-tag-pill">{activeItem.tag}</span>
-                <div className="desc-crud-btn-group">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="desc-action-edit-btn"
-                    onPress={() => handleStartEdit(activeItem)}
-                  >
-                    编辑写法
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="desc-action-delete-btn text-danger"
-                    onPress={() => handleDelete(activeItem.id)}
-                  >
-                    删除
-                  </Button>
-                </div>
-              </div>
-
-              <ul className="resume-bullets-list">
-                {activeItem.bullets.map((bullet, idx) => (
-                  <li key={idx} className="resume-bullet-item">
-                    <span className="bullet-dot" aria-hidden="true">•</span>
-                    <div className="bullet-markdown-content">
-                      <MilkdownView content={bullet} />
-                    </div>
-                  </li>
+  return (
+    <div className="resume-desc-container">
+      <Tabs
+        className="resume-desc-tabs"
+        selectedKey={activeItem?.id ?? null}
+        onSelectionChange={handleSelectTab}
+      >
+        <div className="resume-desc-header">
+          {descriptions.length > 0 && (
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="简历描述版本">
+                {descriptions.map((item) => (
+                  <Tabs.Tab key={item.id} id={item.id}>
+                    {item.tag}
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
                 ))}
-              </ul>
-            </>
-          ) : (
-            <p className="resume-empty-bullets">暂无此版本简历描述</p>
+              </Tabs.List>
+            </Tabs.ListContainer>
+          )}
+
+          {!isFormOpen && (
+            <Button size="sm" variant="outline" onPress={handleStartAdd}>
+              <Plus size={14} aria-hidden="true" />
+              新增写法
+            </Button>
           )}
         </div>
-      )}
+
+        {activeItem ? (
+          <Tabs.Panel id={activeItem.id}>
+            {isFormOpen ? (
+              formPanel
+            ) : (
+              <>
+                <div className="active-desc-header-actions">
+                  <Chip size="sm">{activeItem.tag}</Chip>
+                  <div className="desc-crud-btn-group">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => handleStartEdit(activeItem)}
+                    >
+                      编辑写法
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger-soft"
+                      onPress={() => handleDelete(activeItem.id)}
+                    >
+                      删除
+                    </Button>
+                  </div>
+                </div>
+
+                <ul className="resume-bullets-list">
+                  {activeItem.bullets.map((bullet, idx) => (
+                    <li key={idx} className="resume-bullet-item">
+                      <MilkdownView content={bullet} />
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </Tabs.Panel>
+        ) : isFormOpen ? (
+          formPanel
+        ) : (
+          emptyStatePanel
+        )}
+      </Tabs>
     </div>
   )
 }

@@ -370,8 +370,8 @@ export function WorkContentBlock({
           <footer className="work-content-card-footer" onClick={(e) => e.stopPropagation()}>
             <Button
               size="sm"
-              variant="secondary"
-              className={`resume-desc-trigger-btn ${isActive ? 'resume-desc-trigger-btn--active' : ''}`}
+              variant="outline"
+              className={`resume-desc-trigger-btn${isActive ? ' resume-desc-trigger-btn--active' : ''}`}
               onPress={() => onOpenDrawer?.()}
               aria-label="简历描述提炼"
             >

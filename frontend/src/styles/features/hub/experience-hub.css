@@ -66,60 +66,13 @@
   flex-shrink: 0;
 }
 
-.hub-tabs-row {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--surface-secondary);
-  padding: 4px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-}
+/* 顶部 Tab 条已改用 HeroUI Tabs（ListContainer + Tab + Chip），
+   原 .hub-tabs-row / .hub-tab-btn* / .tab-count-badge 自研样式已删除。 */
 
-.hub-tab-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 14px;
-  border-radius: 7px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.hub-tab-btn:hover {
-  color: var(--foreground);
-  background: var(--surface-tertiary);
-}
-
-.hub-tab-btn--active {
-  color: var(--foreground);
-  background: var(--surface);
-  font-weight: 600;
-  box-shadow: var(--surface-shadow);
-}
-
-.tab-count-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 20px;
-  height: 20px;
-  padding: 0 6px;
-  border-radius: 9999px;
-  font-size: 11px;
-  font-weight: 600;
-  background: var(--default);
-  color: var(--muted);
-}
-
-.hub-tab-btn--active .tab-count-badge {
-  background: var(--accent-soft);
-  color: var(--accent);
+/* HeroUI 的 .tabs__tab 默认按等宽分段布局（内部 w-full），带计数徽章的标签
+   会被挤到换行。这里仅做布局修正，保持标签单行；外观仍由框架负责。 */
+.hub-tabs .tabs__tab {
+  white-space: nowrap;
 }
 
 /* ==========================================================================

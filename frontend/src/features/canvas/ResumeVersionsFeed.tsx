@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useMemo } from 'react'
-import { Button, IconPlus } from '@heroui/react'
+import { Button, Card, Input } from '@heroui/react'
+import { Check, Copy, FileText, Pencil, Plus, Trash2 } from 'lucide-react'
 import type { WorkContent } from '../../api'
 import { toast } from '../../components/ui/Toast'
 import { copyToClipboard } from '../../utils/clipboard'
@@ -156,12 +157,7 @@ export function ResumeVersionsFeed({
         {versions.length === 0 ? (
           <div className="resume-drawer-empty">
             <div className="empty-icon-box" aria-hidden="true">
-              <svg className="empty-icon-svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-              </svg>
+              <FileText size={28} strokeWidth={1.5} />
             </div>
             <p className="empty-heading">暂无简历描述版本</p>
             <p className="empty-subtext">针对不同求职岗位沉淀提炼专属的子弹点或整段高质量描述。</p>
@@ -172,32 +168,31 @@ export function ResumeVersionsFeed({
               const isCopied = copiedId === version.id
               const isEditing = editingVersionId === version.id
               return (
-                <article
+                <Card
                   key={version.id}
+                  role="article"
                   className={`resume-version-card ${isEditing ? 'resume-version-card--editing' : 'resume-version-card--readonly'}`}
                   aria-label={`版本卡片: ${version.label}`}
                 >
-                  <header className="resume-version-card-header">
+                  <Card.Header className="resume-version-card-header">
                     {isEditing ? (
-                      <div className="version-label-box">
-                        <input
-                          id={`desc-version-label-${version.id}`}
-                          type="text"
-                          className="version-label-input"
-                          value={version.label}
-                          autoFocus
-                          aria-label={`${version.label || '简历描述版本'} 名称`}
-                          placeholder="版本名称，如：技术深度版"
-                          onChange={(e) => handleUpdateLabel(version.id, e.target.value)}
-                          onBlur={handleBlurSave}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault()
-                              handleBlurSave()
-                            }
-                          }}
-                        />
-                      </div>
+                      <Input
+                        id={`desc-version-label-${version.id}`}
+                        type="text"
+                        className="version-label-input"
+                        value={version.label}
+                        autoFocus
+                        aria-label={`${version.label || '简历描述版本'} 名称`}
+                        placeholder="版本名称，如：技术深度版"
+                        onChange={(e) => handleUpdateLabel(version.id, e.target.value)}
+                        onBlur={handleBlurSave}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            handleBlurSave()
+                          }
+                        }}
+                      />
                     ) : (
                       <div
                         className="version-label-display"
@@ -212,11 +207,10 @@ export function ResumeVersionsFeed({
                           }
                         }}
                       >
-                        <h4 className="version-label-text">{version.label || '未命名版本'}</h4>
-                        <svg className="edit-pencil-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                        </svg>
+                        <Card.Title className="version-label-text">
+                          {version.label || '未命名版本'}
+                        </Card.Title>
+                        <Pencil className="edit-pencil-icon" size={12} aria-hidden="true" />
                       </div>
                     )}
 
@@ -225,30 +219,25 @@ export function ResumeVersionsFeed({
                         <Button
                           size="sm"
                           variant="secondary"
-                          className="version-action-btn version-finish-btn"
+                          className="version-action-btn"
                           aria-label={`完成编辑 ${version.label}`}
                           onPress={() => {
                             handleBlurSave()
                             setEditingVersionId(null)
                           }}
                         >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <polyline points="20 6 9 17 4 12" />
-                          </svg>
+                          <Check size={12} aria-hidden="true" />
                           <span>完成</span>
                         </Button>
                       ) : (
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="version-action-btn version-edit-btn"
+                          className="version-action-btn"
                           aria-label={`编辑 ${version.label}`}
                           onPress={() => setEditingVersionId(version.id)}
                         >
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                          </svg>
+                          <Pencil size={12} aria-hidden="true" />
                           <span>编辑</span>
                         </Button>
                       )}
@@ -256,23 +245,18 @@ export function ResumeVersionsFeed({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className={`version-action-btn version-copy-btn ${isCopied ? 'version-copy-btn--copied' : ''}`}
+                        className="version-action-btn"
                         aria-label={`复制 ${version.label}`}
                         onPress={() => handleCopy(version)}
                       >
                         {isCopied ? (
                           <>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <polyline points="20 6 9 17 4 12" />
-                            </svg>
+                            <Check size={13} aria-hidden="true" />
                             <span>已复制</span>
                           </>
                         ) : (
                           <>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </svg>
+                            <Copy size={13} aria-hidden="true" />
                             <span>复制</span>
                           </>
                         )}
@@ -281,20 +265,17 @@ export function ResumeVersionsFeed({
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="version-action-btn version-delete-btn"
+                        className="version-action-btn"
                         aria-label={`删除 ${version.label}`}
                         onPress={() => handleDeleteVersion(version.id)}
                       >
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                          <polyline points="3 6 5 6 21 6" />
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                        </svg>
+                        <Trash2 size={13} aria-hidden="true" />
                       </Button>
                     </div>
-                  </header>
+                  </Card.Header>
 
                   {isEditing ? (
-                    <div className="resume-version-card-content">
+                    <Card.Content className="resume-version-card-content">
                       <MilkdownEditor
                         id={`desc-version-${version.id}`}
                         cacheKey={`desc-wc-${workContent.id}-ver-${version.id}`}
@@ -303,9 +284,9 @@ export function ResumeVersionsFeed({
                         placeholder="编写该版本的完整简历描述段落（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
                         onChange={(val) => handleUpdateContent(version.id, val)}
                       />
-                    </div>
+                    </Card.Content>
                   ) : (
-                    <div
+                    <Card.Content
                       className="version-content-preview-container"
                       onClick={() => setEditingVersionId(version.id)}
                       title="点击编辑简历描述正文"
@@ -322,24 +303,24 @@ export function ResumeVersionsFeed({
                         content={version.content}
                         placeholder="暂无描述内容，点击开始编写（支持 Markdown）..."
                       />
-                    </div>
+                    </Card.Content>
                   )}
-                </article>
+                </Card>
               )
             })}
           </div>
         )}
       </div>
 
-      <footer className="resume-drawer-footer">
+      <footer className="resume-versions-footer">
         <Button
           type="button"
           variant="secondary"
-          className="add-version-btn"
+          fullWidth
           onPress={handleAddVersion}
           aria-label="新建简历描述版本"
         >
-          <IconPlus className="add-version-icon" aria-hidden="true" />
+          <Plus className="add-version-icon" size={16} aria-hidden="true" />
           <span>新建简历描述版本</span>
         </Button>
       </footer>

@@ -77,13 +77,13 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     expect(screen.getByRole('button', { name: '关闭抽屉' })).toBeInTheDocument()
 
     // 纵向版本卡片流（默认阅读态展示）
-    expect(screen.getByRole('heading', { level: 4, name: '技术深度版' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '技术深度版' })).toBeInTheDocument()
     expect(screen.getByText(/主导可视化拖拽画布核心渲染引擎重构/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '编辑 技术深度版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '复制 技术深度版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '删除 技术深度版' })).toBeInTheDocument()
 
-    expect(screen.getByRole('heading', { level: 4, name: '业务成效版' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '业务成效版' })).toBeInTheDocument()
     expect(screen.getByText(/通过自研虚拟滚动与局部重绘管线/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '编辑 业务成效版' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: '复制 业务成效版' })).toBeInTheDocument()
@@ -149,7 +149,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     )
 
     // 默认展示态下为 h4 标题
-    expect(screen.getByRole('heading', { level: 4, name: '技术深度版' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '技术深度版' })).toBeInTheDocument()
     expect(screen.queryByDisplayValue('技术深度版')).not.toBeInTheDocument()
 
     // 点击编辑按钮进入编辑模式
@@ -180,7 +180,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
     fireEvent.click(finishBtn)
 
     // 验证退回展示态
-    expect(screen.getByRole('heading', { level: 4, name: '技术深度版（强化）' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '技术深度版（强化）' })).toBeInTheDocument()
     expect(screen.queryByDisplayValue('技术深度版（强化）')).not.toBeInTheDocument()
   })
 
@@ -234,7 +234,7 @@ describe('ResumeDescriptionDrawer 纵向版本卡片提炼抽屉', () => {
         expect.objectContaining({ id: 'desc_2', label: '业务成效版' })
       ])
     )
-    expect(screen.getByRole('heading', { level: 4, name: '业务成效版' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: '业务成效版' })).toBeInTheDocument()
   })
 
   it('点击新建简历描述版本按钮，追加新版本并触发 onUpdateVersions', () => {
