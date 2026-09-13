@@ -152,10 +152,9 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const titleInput = screen.getByLabelText('工作项标题')
     expect(titleInput).toHaveValue('重构可视化拖拽画布核心渲染引擎')
 
-    // 修改标题并完成编辑
+    // 修改标题并通过点击外部（失焦）自动保存并折叠
     fireEvent.change(titleInput, { target: { value: '重构渲染引擎（已优化）' } })
-    const finishBtn = screen.getByRole('button', { name: '完成编辑' })
-    fireEvent.click(finishBtn)
+    fireEvent.mouseDown(document.body)
 
     // 验证保存 API 被调用，保存状态变化
     await waitFor(() => {
@@ -192,7 +191,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 关键断言：保存完成后，标题输入框仍然存在（保持编辑态），不被强制踢回阅读态
     expect(screen.getByLabelText('工作项标题')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '完成编辑' })).toBeInTheDocument()
+    expect(screen.getByLabelText('草稿正文')).toBeInTheDocument()
   })
 
   it('点击单项工作卡片右上角“删除”按钮，确认后调用 API 并在画布和大纲中同步移除', async () => {
@@ -302,9 +301,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     fireEvent.click(editBtn)
     expect(handleDirtyChange).toHaveBeenCalledWith(true)
 
-    // 点击取消，恢复 clean 态
-    const cancelBtn = screen.getByRole('button', { name: '取消' })
-    fireEvent.click(cancelBtn)
+    // 点击外部退出编辑，恢复 clean 态
+    fireEvent.mouseDown(document.body)
     expect(handleDirtyChange).toHaveBeenCalledWith(false)
   })
 

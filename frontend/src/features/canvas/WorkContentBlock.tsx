@@ -195,7 +195,7 @@ export function WorkContentBlock({
     }
   }, [draft, isEditing])
 
-  // 点击卡片外部时自动保存未保存变更，并平滑收起编辑态
+  // 点击卡片外部或按 Esc 键时自动保存未保存变更，并平滑收起编辑态
   useEffect(() => {
     if (!isEditing) return
 
@@ -204,6 +204,20 @@ export function WorkContentBlock({
       if (!cardRef.current || !target) return
       // 如果点击在卡片外部
       if (!cardRef.current.contains(target)) {
+        const isModal = !!(
+          target instanceof Element &&
+          (target.closest('[role="dialog"]') || target.closest('.modal-backdrop-custom'))
+        )
+        if (isModal) return
+
+        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
+        performSave(draftRef.current)
+        onCancelEdit()
+      }
+    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
         if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
         performSave(draftRef.current)
         onCancelEdit()
@@ -211,28 +225,19 @@ export function WorkContentBlock({
     }
 
     document.addEventListener('mousedown', handlePointerDownOutside)
+    document.addEventListener('keydown', handleKeyDown)
     return () => {
       document.removeEventListener('mousedown', handlePointerDownOutside)
+      document.removeEventListener('keydown', handleKeyDown)
     }
   }, [isEditing, onCancelEdit])
 
-  const handleCancel = () => {
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    setDraft(buildInitialDraft(item, parsedData.note))
-    onCancelEdit()
-  }
-
-  const handleFinishEdit = async () => {
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
     if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
     await performSave(draft)
     onCancelEdit()
   }
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    await handleFinishEdit()
-  }
-
 
   const combinedContent = useMemo(
     () => getCombinedDetailedRecord(item, parsedData.note),
@@ -282,24 +287,6 @@ export function WorkContentBlock({
             draft={draft}
             onChange={setDraft}
           />
-
-          <div className="edit-form-actions">
-            <Button
-              type="button"
-              variant="primary"
-              onPress={handleFinishEdit}
-            >
-              完成编辑
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              onPress={handleCancel}
-            >
-              取消
-            </Button>
-          </div>
         </form>
       ) : (
 

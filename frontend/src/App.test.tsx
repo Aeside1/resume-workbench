@@ -100,7 +100,7 @@ describe('认证后的工作台', () => {
 
     fireEvent.click(screen.getAllByRole('button', { name: '编辑' })[0])
     fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '第一项（已编辑）' } })
-    fireEvent.click(screen.getByRole('button', { name: '完成编辑' }))
+    fireEvent.mouseDown(document.body)
     await waitFor(() => expect(mocked.updateWorkContent).toHaveBeenCalled())
 
     fireEvent.click(screen.getAllByRole('button', { name: '删除' })[0])

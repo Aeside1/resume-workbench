@@ -202,8 +202,12 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     fireEvent.change(titleInput, { target: { value: '优化画布渲染管线' } })
     pasteMarkdown(recordInput, '## 全新架构设计\n- 支持海量节点虚拟滚动\n- ==trade off== 权衡并发渲染性能')
 
-    const finishBtn = screen.getByRole('button', { name: '完成编辑' })
-    fireEvent.click(finishBtn)
+    // 验证死板的完成编辑与取消按钮已被移除（由自动保存与失焦/Esc退出接管）
+    expect(screen.queryByRole('button', { name: '完成编辑' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '取消' })).not.toBeInTheDocument()
+
+    // 点击卡片外部，触发自动保存未保存变更并收起编辑态
+    fireEvent.mouseDown(document.body)
 
     expect(handleSave).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -214,10 +218,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     await waitFor(() => {
       expect(handleCancel).toHaveBeenCalledTimes(1)
     })
-
-    const cancelBtn = screen.getByRole('button', { name: '取消' })
-    fireEvent.click(cancelBtn)
-    expect(handleCancel).toHaveBeenCalledTimes(2)
   })
 
 
