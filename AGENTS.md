@@ -22,8 +22,8 @@
    HeroUI `Button` 基于 React Aria，内部使用 `usePress` 机制。点击交互必须使用 `onPress` 属性（或同时兼容 `onClick`），严禁仅写 `onClick` 导致真实浏览器中点击无效。
 2. **卡片内嵌套操作严格隔离**：
    当卡片整体可点击跳转时，卡片底部的操作按钮区域（如归档、删除）必须与卡片主体点击区域物理解耦（不在包含按钮的 Footer 上绑定父级点击），并在按钮回调中阻断事件冒泡，防止操作时误触发卡片跳转。
-3. **基础组件显式维护全局 CSS 样式**：
-   在 Tailwind 4 与当前打包环境下，HeroUI 默认变体（如 `.button--primary`、`.button--ghost`、`[data-slot="select-trigger"]`）不能仅依赖局部容器 class（如 `.stack-form`）。必须在 `styles.css` 中声明完备的全局基础组件样式（按钮所有 variant、输入框、下拉选择器及其 Popover 高 z-index），杜绝组件在 Modal 等新容器内退化为无样式的裸元素。
+3. **全局基础组件样式以 HeroUI 为准，严禁对抗式覆盖**：
+   已接入 `@tailwindcss/vite`，`@heroui/styles` 中的 `@apply` 会被正常编译，HeroUI 组件（Button/Card/Chip/Modal/Select 等）的默认变体样式可直接生效。因此**严禁**再用 `button[data-slot="button"] { … !important }` 这类全局 `!important` 规则去重写框架外观（此类文件已删除，如 `styles/components/buttons.css`）。若个别组件确有需要，应通过语义变量或组件自身的 `variant`/`size` 属性表达，而非覆盖框架。
 4. **统一图标与框架组件规范（避免手搓图标并全面适配深浅色模式）**：
    开发界面与交互组件时，尽量避免自行手写内联 SVG 矢量代码或使用纯文本字符（如“x”、“+”等）充当图标，优先统一使用框架（`@heroui/react`）内置提供的组件或官方标准图标（如 `CloseIcon`、`IconPlus` 等）。所有组件与图标必须整体适配 HeroUI 的浅色（Light）与深色（Dark）模式切换，图标颜色统一采用 `currentColor` 随文本语义流转，背景、文本与边框优先使用语义化主题变量（如 `var(--surface)`、`var(--foreground)`、`var(--border)`、`var(--muted)` 等）或配置 `.dark` 变体，严禁写死绝对明暗色值导致暗色模式下失真或元素不可见。
 5. **严禁在界面与文案中使用 Emoji 字符**：
