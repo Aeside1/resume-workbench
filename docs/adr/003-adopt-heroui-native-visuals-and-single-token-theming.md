@@ -74,3 +74,7 @@ ADR 001 第 2.3 节早已明确设计系统决策：**"严格遵循 HeroUI 设�
 
 1. **AC3 的口径例外**：迁移规格 AC3 写的是「`frontend/src/styles/` 下不再存在硬编码 hex 色值（品牌私有 `--tag-*` 变量除外）」。收口审计确认 `src/styles.css` 的 Token 区块另有一处字面色值 `--accent: #0284c7`（D4 决策：沿用简历工作台原有品牌蓝）。该处属 **§2.3「颜色只在语义 Token 定义一次」的定义层**：在 `frontend/src/styles*` 样式表范围内，`styles.css` 的 Token 区块是唯一允许出现字面色值的位置（`index.html` 的首帧防闪烁脚本另有一处 `<meta name="theme-color">` 静态兜底色，属 HTML 引导脚本、不在样式层，亦不在 AC3 范围内）。特此登记为 AC3 字面之外的既有例外（而非新增违规）。
 2. **简历描述抽屉最终形态**：实现期曾按 ADR 003 §2.2 保留「非模态伴随侧栏」（理由是模态覆盖层会破坏「抽屉打开时点击另一卡片换绑内容」这一更早交付的交互）。2026-09-14 用户决策「坚定全面 HeroUI 化」，改为 **HeroUI 原生模态 `Drawer`**（背板、焦点陷阱、Esc、背景 `inert` 全部交回框架），并接受放弃换绑交互——切换工作项需先关闭抽屉再点另一张卡片。决策与影响见 `.scratch/hero-ui-migration/issues/11-*.md` 的决策日志与剩余风险。
+
+## 7. 落地状态（2026-09-14，issue 16 最终验收与合入）
+
+本 ADR 的决策已全部实现并**合入 `main`**：`experiment/heroui-migration` 以 fast-forward 合入（`8c5c120 → e85bf5f`，30 个提交）。最终验收（关卡数字、逐页两色结论、spec 6 条 AC 逐条对照含例外）见 [`.scratch/hero-ui-migration/issues/16-*.md`](../../.scratch/hero-ui-migration/issues/16-final-acceptance-and-merge.md) 的 `## Answer`；两个已知例外按 §6 登记延续（AC3 的 `--accent`、AC6 的 `!important` 现状为 36 处均在 `typography.css`）。

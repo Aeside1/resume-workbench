@@ -91,6 +91,7 @@ HeroUI 迁移（ADR 003）之后，这个自研壳暴露出两个问题：
   - 落地期在排查保存态 Chip 可见性时另修掉一个既有缺陷：`FocusCanvasContainer` 每次保存成功都挂一个 `setTimeout(2500)` 把保存态归零，连续保存时会用陈旧定时器提前清掉新一轮的 `保存中`——已改为单一 `setSaveStatus` 助手重置同一个定时器（§2.2 的「顶栏 Chip 全程可见」随之成立）。
   - 落地清单 C 的「portal 插槽替代接线」经评估**不采用**（理由见 issue 12 Answer §1）；D4 经用户口径决定**不接**浏览器历史与 `document.title`。
   - **画布卡片内联保存徽章（issue 13，2026-09-14）**：§2.2 的「只有一套」是就 **Zen 展开期间的外壳层**说的——那一屏确实只有顶栏一条。画布的就地编辑表单另有一条**卡片级**徽章（作用域是这张卡片本身），与**场景级**的顶栏 Chip 共存，且两者共用同一套 2.5s 归零口径（`frontend/src/features/useTransientSaveStatus.ts`），不会出现两处反馈时间线打架。issue 13 在「修 / 删 / 降级」中选择了「修」，理由见该票 `## Answer` §1。
+  - **合入状态（2026-09-14，issue 16）**：本 ADR 的落地已随迁移线 **fast-forward 合入 `main`**（`8c5c120 → e85bf5f`）；同期清理掉两套并行栈（`resume-workbench-zenproto-b` / `resume-workbench-zen-region`）与对应工作区，两个 `prototype/*` 分支按 §5 保留。最终验收见 [issue 16](../../.scratch/hero-ui-migration/issues/16-final-acceptance-and-merge.md) 的 `## Answer`。
 - 验收关卡：`npm run test` 162 passed、`typecheck` 0 错误、`build` 成功；必保行为在真实浏览器逐条复测（Esc 退出、退出后回到原卡片位置含已滚动场景、800ms 防抖、退出前 flush、伴随栏开合、大标题就地编辑），截图见 `.worktrees/v13-*.png`（深浅各 12 张）。
 - **不要把原型提交 cherry-pick 到迁移线**——原型按 throwaway 标准写（保留未读取的 `group` prop、为兼容旧测试留的字符串面包屑兜底等），实现期按清单重写。
 - 遗留（与外壳形态无关，需单独处理）：真实浏览器里**双击卡片标题不会进入专注模式**。基线栈（5174）与方案 3 栈（5176）用同一脚本复现一致：第一次单击先触发 `onPress` 把卡片切成就地编辑态并重渲染，浏览器不再合成 `dblclick`，标题 `Button` 上的 `onDoubleClick` 永远收不到；jsdom 的 `fireEvent.doubleClick` 直接派发事件，所以测试一直是绿的。建议单独开 issue。**（本条款已由下一条处置，2026-09-14。）**
