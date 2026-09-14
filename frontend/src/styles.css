@@ -9,37 +9,39 @@
 @import "./styles/base/reset.css";
 @import "./styles/base/typography.css";
 
-/* 2. Components Layer (应用侧表单/弹窗布局类；基础组件外观一律以 HeroUI 为准，
+/* 2. Components Layer (应用侧表单/弹窗/提示条布局类；基础组件外观一律以 HeroUI 为准，
    严禁在此层重写框架样式，见 AGENTS.md 第 3 条) */
 @import "./styles/components/forms.css";
 @import "./styles/components/modal.css";
+@import "./styles/components/feedback.css";
 
-/* 3. Legacy Layer (早期遗留页面与历史过渡样式) */
-@import "./styles/legacy.css";
-
-/* 4. Layout Layer (AppShell 顶层架构与导航拓扑) */
+/* 3. Layout Layer (AppShell 顶层架构与导航拓扑) */
 @import "./styles/layout/app-shell.css";
 @import "./styles/layout/sidebar.css";
 @import "./styles/layout/topbar.css";
+@import "./styles/layout/workbench-view.css";
 
-/* 5. Features Layer (业务场景模块) */
-/* 5.1 Scene 1: Experience Hub */
+/* 4. Features Layer (业务场景模块) */
+/* 4.1 认证页 */
+@import "./styles/features/auth/auth-page.css";
+
+/* 4.2 Scene 1: Experience Hub */
 @import "./styles/features/hub/experience-hub.css";
 @import "./styles/features/hub/experience-card.css";
 
-/* 5.2 Scene 2: Focus Canvas & Sub-features */
+/* 4.3 Scene 2: Focus Canvas & Sub-features */
 @import "./styles/features/canvas/focus-canvas.css";
 @import "./styles/features/canvas/outline-navigator.css";
 @import "./styles/features/canvas/work-content.css";
 @import "./styles/features/canvas/resume-drawer.css";
 @import "./styles/features/canvas/zen-region.css";
 
-/* 5.3 Rich-text Editor: Milkdown */
+/* 4.4 Rich-text Editor: Milkdown */
 @import "./styles/features/editor/milkdown-editor.css";
 @import "./styles/features/editor/milkdown-toolbar.css";
 
 /* ==========================================================================
-   6. Theme Tokens (品牌色与品牌私有色 —— 全站唯一允许出现硬编码色值的地方)
+   5. Theme Tokens (品牌色与品牌私有色 —— 全站唯一允许出现硬编码色值的地方)
    除本区块外，任何模块内都禁止新增硬编码色值（issue 11 审计口径）。
    ========================================================================== */
 

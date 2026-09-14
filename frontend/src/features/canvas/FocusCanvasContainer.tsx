@@ -17,7 +17,6 @@ import type { ContentDraft } from './WorkContentBlock'
 type Props = {
   session: Session
   group: ExperienceGroup
-  onExitFocus?: () => void
   onSaveStatusChange?: (status: SaveStatus) => void
   onDirtyChange?: (isDirty: boolean) => void
   onUpdateGroup?: (group: ExperienceGroup) => void
@@ -35,7 +34,6 @@ export type ZenTopbarState = { isOpen: boolean; title: string }
 export function FocusCanvasContainer({
   session,
   group,
-  onExitFocus,
   onSaveStatusChange,
   onDirtyChange,
   onUpdateGroup,

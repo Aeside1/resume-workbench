@@ -108,7 +108,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -134,7 +133,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
         onSaveStatusChange={handleSaveStatusChange}
       />
     )
@@ -173,7 +171,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -202,7 +199,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -230,7 +226,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
         onSaveStatusChange={handleSaveStatusChange}
       />
     )
@@ -265,7 +260,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -288,7 +282,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
         onDirtyChange={handleDirtyChange}
       />
     )
@@ -320,7 +313,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
         onSaveStatusChange={handleSaveStatus}
         onUpdateGroup={handleUpdateGroup}
       />
@@ -354,7 +346,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -383,7 +374,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -427,7 +417,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -461,7 +450,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -487,7 +475,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 
@@ -521,7 +508,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
         onZenChange={handleZenChange}
       />
     )
@@ -651,7 +637,6 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
-        onExitFocus={vi.fn()}
       />
     )
 

@@ -1,0 +1,108 @@
+/* ==========================================================================
+   Workbench View（工作台视图骨架）
+
+   `WorkbenchShell` 的内容区：页面标题区 + 概览入口栅格。
+   只放布局（grid / flex / 间距 / 定位），色值读 HeroUI 语义变量；
+   卡片与按钮外观由 HeroUI 承载。
+   （原 `styles/legacy.css` 的 legacy 层已按 ITCSS 归位，见 issue 15。）
+   ========================================================================== */
+
+.workbench-view-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.eyebrow {
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
+.page-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.workbench-title {
+  margin: 0;
+  font-size: 30px;
+  letter-spacing: 0;
+  /* 登录邮箱等超长无空格文本不得撑破栅格 */
+  overflow-wrap: anywhere;
+}
+
+.page-context {
+  margin: 0 0 2px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: right;
+}
+
+/* 工作台概览入口 */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.dashboard-entry {
+  display: grid;
+  justify-items: start;
+  gap: 6px;
+  min-height: 170px;
+  padding: 20px;
+  text-align: left;
+}
+
+.dashboard-entry strong {
+  font-size: 20px;
+}
+
+.entry-copy {
+  color: var(--muted);
+}
+
+.entry-kicker,
+.entry-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.entry-action {
+  margin-top: auto;
+}
+
+@media (max-width: 720px) {
+  .page-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .page-context {
+    text-align: left;
+  }
+
+  .workbench-title {
+    font-size: 26px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}

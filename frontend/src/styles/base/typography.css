@@ -2,15 +2,8 @@
    Markdown Typography & Obsidian Highlight (==text==)
    ========================================================================== */
 
-/* Obsidian 风格的高亮效果：暖浅黄背景 + 深褐强调字，带柔和微圆角与 padding */
-.md-highlight,
-mark.md-highlight {
-  background-color: var(--warning-soft) !important;
-  color: var(--warning-soft-foreground) !important;
-  padding: 1px 4px !important;
-  border-radius: 3px !important;
-  font-weight: 500 !important;
-}
+/* ==text== 高亮（`.md-highlight`）与 Markdown 正文里裸 `mark` 的样式定义，
+   原先在两处重复声明（且 .md-highlight 的取值与优先级不同），现按下方的唯一定义点收拢（issue 15）。*/
 
 /* 统一 Markdown 排版样式 */
 .markdown-body-render {
@@ -114,12 +107,27 @@ mark.md-highlight {
   margin-bottom: 3px;
 }
 
-.markdown-body-render mark,
+/* Obsidian 风格的高亮效果：暖浅黄背景 + 深褐强调字，带柔和微圆角与 padding。
+   这两条是 `.md-highlight`（含 `==text==`）与 Markdown 正文里裸 `mark` 的**唯一定义点**：
+   原先两处声明重叠且取值不同，实际生效的是靠后那份（padding 1px 5px / radius 4px），
+   合并后取值不变；优先级也保持原样：`.md-highlight` 带 `!important`，裸 `mark` 不带。
+   唯一的差异分支是「不在 `markdown-body-render` 容器内的 `mark.md-highlight`」
+   （原先由选择器特异度取胜的 1px 4px/3px），该分支应用内不可达（issue 15 已核对）。*/
 .md-highlight {
   background-color: var(--warning-soft) !important;
   color: var(--warning-soft-foreground) !important;
   padding: 1px 5px !important;
   border-radius: 4px !important;
+  font-weight: 500 !important;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.markdown-body-render mark {
+  background-color: var(--warning-soft);
+  color: var(--warning-soft-foreground);
+  padding: 1px 5px;
+  border-radius: 4px;
   font-weight: 500;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;

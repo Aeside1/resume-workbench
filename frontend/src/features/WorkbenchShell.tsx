@@ -172,7 +172,6 @@ export function WorkbenchShell({ session, onLogout }: Props) {
               <FocusCanvasContainer
                 session={session}
                 group={activeExperience}
-                onExitFocus={handleExitFocus}
                 onSaveStatusChange={setSaveStatus}
                 onDirtyChange={updateCanvasDirty}
                 onUpdateGroup={setActiveExperience}

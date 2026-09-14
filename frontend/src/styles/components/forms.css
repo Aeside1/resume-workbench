@@ -26,6 +26,13 @@
   gap: 10px;
 }
 
+/* 窄视口下日期栅格改单列（原先挂在 legacy.css 的同一条媒体查询里，issue 15 随 .date-row 归位） */
+@media (max-width: 520px) {
+  .date-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 经历类型下拉层需在模态框之上堆叠（仅层级，外观交回 HeroUI Popover） */
 .experience-type-popover {
   z-index: 9999;

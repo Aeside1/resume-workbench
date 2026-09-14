@@ -1,0 +1,16 @@
+/* ==========================================================================
+   反馈提示条（应用级行内提示）
+
+   `role="alert"` 的文本块（请求失败、表单校验错误等），被认证页、Hub 与画布共用。
+   只读语义变量，不使用框架内部选择器、不覆盖 HeroUI 外观。
+   （原 `styles/legacy.css` 的 legacy 层已按 ITCSS 归位，见 issue 15。）
+   ========================================================================== */
+
+.error {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  color: var(--danger-soft-foreground);
+  background: var(--danger-soft);
+}
