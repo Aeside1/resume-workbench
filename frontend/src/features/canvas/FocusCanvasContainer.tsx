@@ -11,13 +11,14 @@ import {
   serializeSupplementaryNotes,
   type ResumeDescriptionVersion
 } from './supplementaryNotes'
+import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
 import type { ContentDraft } from './WorkContentBlock'
 
 type Props = {
   session: Session
   group: ExperienceGroup
   onExitFocus?: () => void
-  onSaveStatusChange?: (status: 'idle' | 'saving' | 'saved') => void
+  onSaveStatusChange?: (status: SaveStatus) => void
   onDirtyChange?: (isDirty: boolean) => void
   onUpdateGroup?: (group: ExperienceGroup) => void
   /** 向 AppShell 上报 Zen 展开状态与当前工作项实时标题（顶栏面包屑末级） */
@@ -60,36 +61,16 @@ export function FocusCanvasContainer({
   const containerRef = useRef<HTMLDivElement>(null)
   // Zen 展开时画布被区域内替（卸载 → 重挂），退出后需把视窗恢复到原卡片位置
   const zenReturnScrollRef = useRef(0)
-  /**
-   * 保存态 Chip 归零定时器。
-   * 旧写法每次保存完就挂一个 setTimeout(2500) 直接调 onSaveStatusChange('idle')，
-   * 在连续保存时会用上一次的陈旧定时器把新一轮的「保存中/已保存」提前清掉——
-   * 区域形态下顶栏 Chip 是唯一的保存反馈，这里改为每次状态变更都重置同一个定时器。
-   */
-  const saveStatusIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const setSaveStatus = useCallback(
-    (status: 'idle' | 'saving' | 'saved') => {
-      if (saveStatusIdleTimerRef.current) {
-        clearTimeout(saveStatusIdleTimerRef.current)
-        saveStatusIdleTimerRef.current = null
-      }
-      onSaveStatusChange?.(status)
-      if (status === 'saved') {
-        saveStatusIdleTimerRef.current = setTimeout(() => {
-          saveStatusIdleTimerRef.current = null
-          onSaveStatusChange?.('idle')
-        }, 2500)
-      }
-    },
+  /**
+   * 顶栏保存态 Chip。归零口径（含单一归零定时器、卸载清理）全部落在
+   * `useTransientSaveStatus`，与画布卡片内联徽章共用同一套（issue 13）。
+   */
+  const publishSaveStatus = useCallback(
+    (status: SaveStatus) => onSaveStatusChange?.(status),
     [onSaveStatusChange]
   )
-
-  useEffect(() => {
-    return () => {
-      if (saveStatusIdleTimerRef.current) clearTimeout(saveStatusIdleTimerRef.current)
-    }
-  }, [])
+  const applySaveStatus = useTransientSaveStatus(publishSaveStatus)
 
   // 脏判据（issue 12 D1）：只反映「可能有未保存修改」的就地编辑/新建态。
   // Zen 展开本身不算脏——退出 Zen 走的是先 flush 再关的路径；
@@ -156,7 +137,7 @@ export function FocusCanvasContainer({
   const handleSaveContent = async (draft: ContentDraft, targetId: number | null) => {
     if (!draft.title.trim()) return
 
-    setSaveStatus('saving')
+    applySaveStatus('saving')
     const payload = {
       ...draft,
       title: draft.title.trim(),
@@ -181,23 +162,23 @@ export function FocusCanvasContainer({
         setActiveNavId(`work-content-${created.id}`)
       }
 
-      setSaveStatus('saved')
+      applySaveStatus('saved')
     } catch (e) {
       setError((e as Error).message)
-      setSaveStatus('idle')
+      applySaveStatus('idle')
     }
   }
 
   const handleUpdateOverview = async (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => {
-    setSaveStatus('saving')
+    applySaveStatus('saving')
     try {
       const updated = await api.updateExperienceGroup(session.token, currentGroup.id, payload)
       setCurrentGroup(updated)
       onUpdateGroup?.(updated)
-      setSaveStatus('saved')
+      applySaveStatus('saved')
     } catch (e) {
       setError((e as Error).message)
-      setSaveStatus('idle')
+      applySaveStatus('idle')
       throw e
     }
   }

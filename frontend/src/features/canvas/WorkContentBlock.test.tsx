@@ -296,6 +296,101 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     const drawerBtn = screen.getByRole('button', { name: /简历描述提炼/ })
     expect(drawerBtn).toHaveClass('resume-desc-trigger-btn--active')
   })
+
+  it('保存成功、父级以新对象回写 item 后，卡片内联徽章仍停在「已自动保存」而不被重置（issue 13 回归）', async () => {
+    let resolveSave: () => void = () => {}
+    const handleSave = vi.fn(
+      () => new Promise<void>((resolve) => { resolveSave = resolve })
+    )
+
+    const baseProps = {
+      item: mockWorkItem,
+      index: 0,
+      isEditing: true,
+      onStartEdit: vi.fn(),
+      onCancelEdit: vi.fn(),
+      onSave: handleSave
+    }
+
+    const { rerender } = render(<WorkContentBlock {...baseProps} />)
+
+    // 输入停顿 800ms 后触发自动保存
+    fireEvent.change(screen.getByLabelText('工作项标题'), {
+      target: { value: '优化画布渲染管线' }
+    })
+
+    // 请求在途期间：「保存中...」可见
+    await waitFor(() => expect(screen.getByText('保存中...')).toBeInTheDocument(), {
+      timeout: 3000
+    })
+
+    // 在途期间继续敲字（此内容并不在本次请求里）
+    fireEvent.change(screen.getByLabelText('工作项标题'), {
+      target: { value: '优化画布渲染管线（在途追加）' }
+    })
+
+    resolveSave()
+    await waitFor(() => expect(screen.getByText('已自动保存')).toBeInTheDocument())
+
+    // 父级保存成功的回写：同一 id 的新 item 对象，内容为「本次请求发出去的那份」，
+    // 而不是用户随后敲进去的那份——草稿必须以本地为准，不被回写覆盖。
+    rerender(<WorkContentBlock {...baseProps} item={{ ...mockWorkItem, title: '优化画布渲染管线' }} />)
+
+    expect(screen.getByText('已自动保存')).toBeInTheDocument()
+    expect(screen.getByLabelText('工作项标题')).toHaveValue('优化画布渲染管线（在途追加）')
+  })
+
+  it('外部路径改内容后进入编辑态，草稿呈现外部最新值而非挂载时的旧值（issue 13 防回归）', () => {
+    const baseProps = {
+      item: mockWorkItem,
+      index: 0,
+      onStartEdit: vi.fn(),
+      onCancelEdit: vi.fn(),
+      onSave: vi.fn()
+    }
+
+    const { rerender } = render(<WorkContentBlock {...baseProps} isEditing={false} />)
+
+    // 外部路径（如抽屉版本更新）带回新的 item 对象
+    const externalItem: WorkContent = {
+      ...mockWorkItem,
+      title: '外部路径改名',
+      detailed_record: '外部路径改正文'
+    }
+    rerender(<WorkContentBlock {...baseProps} item={externalItem} isEditing={false} />)
+
+    // 进入编辑态：草稿来自外部最新内容，而不是挂载时的旧内容
+    rerender(<WorkContentBlock {...baseProps} item={externalItem} isEditing={true} />)
+
+    expect(screen.getByLabelText('工作项标题')).toHaveValue('外部路径改名')
+    expect(screen.getByLabelText('草稿正文')).toHaveTextContent('外部路径改正文')
+  })
+
+  it('编辑态下换绑到另一张卡片（item.id 变化）时仍会重建草稿，不吃上一张卡片的草稿（issue 13 防回归）', () => {
+    const baseProps = {
+      item: mockWorkItem,
+      index: 0,
+      isEditing: true,
+      onStartEdit: vi.fn(),
+      onCancelEdit: vi.fn(),
+      onSave: vi.fn()
+    }
+
+    const { rerender } = render(<WorkContentBlock {...baseProps} />)
+    expect(screen.getByLabelText('工作项标题')).toHaveValue('重构可视化拖拽画布核心渲染引擎')
+
+    // 同一编辑态下换成另一张卡片（不依赖父级是否给了 key）
+    const otherCard: WorkContent = {
+      ...mockWorkItem,
+      id: 43,
+      title: '另一张卡片的标题',
+      detailed_record: '另一张卡片的正文'
+    }
+    rerender(<WorkContentBlock {...baseProps} item={otherCard} />)
+
+    expect(screen.getByLabelText('工作项标题')).toHaveValue('另一张卡片的标题')
+    expect(screen.getByLabelText('草稿正文')).toHaveTextContent('另一张卡片的正文')
+  })
 })
 
 

@@ -2,6 +2,7 @@ import { ReactNode } from 'react'
 import { Avatar, Breadcrumbs, Button, Card, Chip, IconChevronLeft, SuccessIcon } from '@heroui/react'
 import type { Session } from '../session'
 import { ThemeToggle } from '../components/ui/ThemeToggle'
+import type { SaveStatus } from './useTransientSaveStatus'
 
 export type AppShellMode = 'hub' | 'focus' | 'focus-canvas' | 'focus-zen'
 
@@ -28,7 +29,7 @@ type Props = {
   onExitFocus?: () => void
   /** 顶栏返回按钮的可访问名，随语义变化：画布模式「返回经历内容」，Zen 展开「返回画布」 */
   backLabel?: string
-  saveStatus?: 'idle' | 'saving' | 'saved'
+  saveStatus?: SaveStatus
   navigationButtons?: ReactNode
 }
 

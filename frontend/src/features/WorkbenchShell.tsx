@@ -7,6 +7,7 @@ import type { Session } from '../session'
 import { AppShell, isFocusMode, type AppShellMode, type FocusBreadcrumbLevel } from './AppShell'
 import { ExperienceHubPanel } from './hub/ExperienceHubPanel'
 import { FocusCanvasContainer, type ZenTopbarState } from './canvas/FocusCanvasContainer'
+import type { SaveStatus } from './useTransientSaveStatus'
 import { ToastProvider } from '../components/ui/Toast'
 
 type Props = { session: Session; onLogout: () => void }
@@ -16,7 +17,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const [view, setView] = useState<View>('experiences')
   const [mode, setMode] = useState<AppShellMode>('hub')
   const [activeExperience, setActiveExperience] = useState<ExperienceGroup | null>(null)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isCanvasDirty, setIsCanvasDirty] = useState(false)
   // Zen 展开后顶栏归 AppShell 所有（ADR 004 §2.2/§2.4）：
   // 工作项实时标题、伴随栏开合、关闭命令（计数下行）均由外壳持有。
