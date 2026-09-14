@@ -327,11 +327,10 @@ export function WorkContentBlock({
                     size="lg"
                     variant="ghost"
                     onPress={onStartEdit}
-                    onDoubleClick={() => onOpenZenMode?.()}
                   >
                     {item.title}
                   </Button>
-                  <Tooltip.Content>单击就地编辑，双击展开专注模式</Tooltip.Content>
+                  <Tooltip.Content>单击就地编辑</Tooltip.Content>
                 </Tooltip>
               </h3>
             </div>

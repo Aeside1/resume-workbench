@@ -94,7 +94,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
   })
 
 
-  it('卡片头部保留 6 点抓手手柄，包含 展开专注 按钮并响应点击回调；双击标题亦进入专注模式；支持删除工作项', () => {
+  it('卡片头部保留 6 点抓手手柄，包含 展开专注 按钮并响应点击回调；标题双击不再进入专注模式（已退役）；支持删除工作项', () => {
     const handleOpenZenMode = vi.fn()
     const handleStartEdit = vi.fn()
     const handleDelete = vi.fn()
@@ -125,10 +125,16 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     fireEvent.click(zenBtn)
     expect(handleOpenZenMode).toHaveBeenCalledTimes(1)
 
-    // 验证双击标题亦触发专注模式
+    // 标题双击不再进入专注模式（该交互已按用户口径退役，2026-09-14，issue 14）：
+    // 真实浏览器里第一次单击就会先把卡片切成就地编辑态、浏览器不再合成 dblclick，
+    // 所以这个入口从来就不可用；专注入口只保留上面的「展开专注」按钮。
+    // jsdom 只能验证「不再绑定 onDoubleClick / 不再触发 onOpenZenMode」；
+    // 「真实双击不开专注、单击语义不受影响」只能由真实浏览器验收，
+    // 探针：frontend/scripts/v14-doubleclick-retired.mjs（throwaway，未进版本库）。
+    // Tooltip 文案在 jsdom 与无头浏览器里都不渲染，只能由源码 + 构建产物核对，故此处不断言。
     const titleBtn = screen.getByRole('button', { name: '重构可视化拖拽画布核心渲染引擎' })
     fireEvent.doubleClick(titleBtn)
-    expect(handleOpenZenMode).toHaveBeenCalledTimes(2)
+    expect(handleOpenZenMode).toHaveBeenCalledTimes(1)
 
     // 验证单击标题触发编辑
     fireEvent.click(titleBtn)

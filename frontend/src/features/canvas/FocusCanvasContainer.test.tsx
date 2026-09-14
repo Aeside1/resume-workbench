@@ -632,7 +632,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(handleDirtyChange).not.toHaveBeenCalledWith(true)
   })
 
-  it('双击长画布卡片标题一键进入专注模式，并在按 Escape 键退出返回', async () => {
+  it('标题双击不再进入专注模式（交互已退役）；「展开专注」按钮进入后按 Escape 退出返回（issue 14）', async () => {
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -642,10 +642,18 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
+    // 退役口径（用户 2026-09-14）：双击标题不再展开专注。
+    // 旧断言用 fireEvent.doubleClick 直接派发事件，在 jsdom 里一直是绿的，
+    // 而真实浏览器里第一次单击就先把卡片切成编辑态、不再合成 dblclick（见 issue 12 Comments §3）。
+    // 因此本用例只能证伪「双击仍会开专注」；「真实双击 → 仍为就地编辑态且不开专注」
+    // 这条路径只能由真实浏览器验收，探针：frontend/scripts/v14-doubleclick-retired.mjs（throwaway，未进版本库）。
     const titleBtn = screen.getByRole('button', { name: '重构可视化拖拽画布核心渲染引擎' })
     fireEvent.doubleClick(titleBtn)
+    expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
 
-    // 验证双击展开专注写作区
+    // 专注入口只保留卡片上的「展开专注」按钮（键盘可达）
+    const card101 = document.getElementById('work-content-101')!
+    fireEvent.click(within(card101).getByRole('button', { name: '展开专注模式' }))
     const zenRegion = await screen.findByRole('region', { name: /专注写作区: 重构可视化拖拽画布核心渲染引擎/ })
     expect(zenRegion).toBeInTheDocument()
 
