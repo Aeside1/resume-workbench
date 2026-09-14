@@ -170,7 +170,9 @@ export function ExperienceHubPanel({
         <div className="hub-title-section">
           <div className="hub-title-row">
             <h2 className="hub-heading">经历分组</h2>
-            <span className="hub-badge-count">{displayGroups.length} 个经历分组</span>
+            <Chip size="sm">
+              <Chip.Label>{displayGroups.length} 个经历分组</Chip.Label>
+            </Chip>
           </div>
           <p className="hub-subtitle">
             整理过往实习经历与项目经历，沉淀可复用的具体工作内容与简历素材。
@@ -212,7 +214,7 @@ export function ExperienceHubPanel({
       {error && <p className="error" role="alert">{error}</p>}
       {toast.ToastPortal}
 
-      <div className="hub-content-area">
+      <div>
         {!loading && displayGroups.length === 0 && (
           activeTab === 'active' ? (
             <EmptyStateCard

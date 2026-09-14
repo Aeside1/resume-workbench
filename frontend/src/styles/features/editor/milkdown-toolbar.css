@@ -22,10 +22,10 @@
   gap: 2px;
 }
 
+/* HeroUI Separator 提供 1px 竖线与分隔色，这里只定高度与间距 */
 .milkdown-toolbar-divider {
-  width: 1px;
   height: 16px;
-  background-color: var(--border);
+  align-self: center;
   margin: 0 4px;
 }
 

@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { WorkContentBlock, getCombinedDetailedRecord } from './WorkContentBlock'
 import type { WorkContent } from '../../api'
@@ -146,7 +146,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     expect(handleDelete).toHaveBeenCalledTimes(1)
   })
 
-  it('点击卡片空白正文区域直接进入聚焦编辑模式', () => {
+  it('点击卡片正文区域直接进入聚焦编辑模式；点击底部操作区不会误触发编辑', () => {
     const handleStartEdit = vi.fn()
 
     render(
@@ -158,11 +158,22 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
         onStartEdit={handleStartEdit}
         onCancelEdit={vi.fn()}
         onSave={vi.fn()}
+        onOpenDrawer={vi.fn()}
       />
     )
 
     const card = screen.getByRole('article', { name: /重构可视化拖拽画布核心渲染引擎/ })
-    fireEvent.click(card)
+
+    // 正文区域（卡片内唯一的点击热区）点击进入编辑
+    fireEvent.click(within(card).getByText(/平均渲染耗时降低 75%/))
+    expect(handleStartEdit).toHaveBeenCalledTimes(1)
+
+    // 底部「简历描述提炼」按钮已与正文热区物理解耦：点击它不会经冒泡误触发编辑
+    fireEvent.click(within(card).getByRole('button', { name: '简历描述提炼' }))
+    expect(handleStartEdit).toHaveBeenCalledTimes(1)
+
+    // 标题元素本身（h3，非其中的按钮）不承载点击进入编辑
+    fireEvent.click(within(card).getByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' }))
     expect(handleStartEdit).toHaveBeenCalledTimes(1)
   })
 

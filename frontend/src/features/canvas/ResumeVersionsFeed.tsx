@@ -263,6 +263,7 @@ export function ResumeVersionsFeed({
                       </Button>
 
                       <Button
+                        isIconOnly
                         size="sm"
                         variant="ghost"
                         className="version-action-btn"

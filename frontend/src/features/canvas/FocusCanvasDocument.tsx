@@ -204,7 +204,7 @@ export function FocusCanvasDocument({
               onPress={onStartCreateNew}
             >
               <Plus size={18} aria-hidden="true" />
-              <span className="btn-text">添加具体工作内容</span>
+              <span>添加具体工作内容</span>
             </Button>
           )}
         </div>

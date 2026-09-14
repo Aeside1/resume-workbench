@@ -3,6 +3,7 @@ import {
   Button,
   Card,
   Chip,
+  Separator,
   Input,
   Label,
   ListBox,
@@ -196,17 +197,21 @@ export function ExperienceOverviewSection({ group, onUpdate }: ExperienceOvervie
                   <Chip.Label>{isInternship ? '实习经历' : '项目经历'}</Chip.Label>
                 </Chip>
                 <h2 className="overview-title">{group.name}</h2>
-                <p className="overview-org-date">
+                <div className="overview-org-date">
                   <span>{group.organization || '未填写归属'}</span>
                   {hasDates && (
                     <>
-                      <span className="dot-divider" aria-hidden="true">·</span>
+                      <Separator
+                        orientation="vertical"
+                        variant="secondary"
+                        className="overview-meta-divider"
+                      />
                       <span>
                         {group.start_date || '至今'} — {group.end_date || '至今'}
                       </span>
                     </>
                   )}
-                </p>
+                </div>
               </div>
 
               {onUpdate && (

@@ -98,8 +98,10 @@
   gap: 8px;
 }
 
-.dot-divider {
-  color: var(--border-secondary);
+/* HeroUI Separator 提供竖线与分隔色，这里只定高度 */
+.overview-meta-divider {
+  height: 12px;
+  align-self: center;
 }
 
 .overview-description-box {

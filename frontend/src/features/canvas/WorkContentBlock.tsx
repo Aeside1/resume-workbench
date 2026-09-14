@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState, useMemo, useRef } from 'react'
-import { Button } from '@heroui/react'
+import { Button, Chip, Tooltip } from '@heroui/react'
 import { Check, ChevronRight, FileText, GripVertical, Maximize2, Trash2 } from 'lucide-react'
 import type { WorkContent } from '../../api'
 import { MilkdownView, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
@@ -250,17 +250,12 @@ export function WorkContentBlock({
       <article
         ref={cardRef}
         id={`work-content-${item.id}`}
-        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : 'interactive-card'} ${isActive ? 'work-content-card--active' : ''} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
+        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : ''} ${isActive ? 'work-content-card--active' : ''} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
       aria-label={`工作项 ${index + 1}: ${item.title}`}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       onDragEnd={onDragEnd}
-      onClick={() => {
-        if (!isEditing && !isDragging) {
-          onStartEdit()
-        }
-      }}
     >
       {isEditing ? (
         <form className="work-content-edit-form" onSubmit={handleSubmit}>
@@ -268,15 +263,15 @@ export function WorkContentBlock({
             <span className="edit-form-kicker">编辑工作内容</span>
             <div className="auto-save-container">
               {saveStatus === 'saving' && (
-                <span className="auto-save-badge saving" role="status">
-                  保存中...
-                </span>
+                <Chip size="sm" role="status">
+                  <Chip.Label>保存中...</Chip.Label>
+                </Chip>
               )}
               {saveStatus === 'saved' && (
-                <span className="auto-save-badge saved" role="status">
+                <Chip size="sm" color="success" variant="soft" role="status">
                   <Check size={12} aria-hidden="true" />
-                  已自动保存
-                </span>
+                  <Chip.Label>已自动保存</Chip.Label>
+                </Chip>
               )}
             </div>
           </div>
@@ -289,7 +284,7 @@ export function WorkContentBlock({
         </form>
       ) : (
 
-        <div className="work-content-read-view">
+        <>
           <header className="work-content-card-header">
             <div className="work-content-title-meta">
               <span
@@ -297,7 +292,6 @@ export function WorkContentBlock({
                 draggable={!isEditing}
                 onDragStart={onDragStart}
                 onPointerDown={onDragHandlePointerDown}
-                onClick={(e) => e.stopPropagation()}
                 style={{ touchAction: 'none' }}
                 title="按住拖拽调整排序"
                 aria-label="拖拽调整排序"
@@ -306,33 +300,31 @@ export function WorkContentBlock({
               >
                 <GripVertical size={14} aria-hidden="true" />
               </span>
-              {item.archived && <span className="archived-badge">已归档</span>}
+              {item.archived && (
+                <Chip size="sm" color="warning" variant="soft">
+                  <Chip.Label>已归档</Chip.Label>
+                </Chip>
+              )}
               <h3 className="work-content-title">
-                <button
-                  type="button"
-                  className="work-content-title-btn"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onStartEdit()
-                  }}
-                  onDoubleClick={(e) => {
-                    e.stopPropagation()
-                    onOpenZenMode?.()
-                  }}
-                  title="单击就地编辑，双击展开专注模式"
-                >
-                  {item.title}
-                </button>
+                <Tooltip>
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    onPress={onStartEdit}
+                    onDoubleClick={() => onOpenZenMode?.()}
+                  >
+                    {item.title}
+                  </Button>
+                  <Tooltip.Content>单击就地编辑，双击展开专注模式</Tooltip.Content>
+                </Tooltip>
               </h3>
             </div>
 
-            <div className="work-content-actions" onClick={(e) => e.stopPropagation()}>
+            <div className="work-content-actions">
               <Button
                 size="sm"
                 variant="ghost"
-                className="zen-mode-btn"
                 onPress={() => onOpenZenMode?.()}
-                onClick={(e) => e.stopPropagation()}
                 aria-label="展开专注模式"
               >
                 <Maximize2 size={13} aria-hidden="true" />
@@ -341,9 +333,7 @@ export function WorkContentBlock({
               <Button
                 size="sm"
                 variant="secondary"
-                className="edit-content-btn"
                 onPress={onStartEdit}
-                onClick={(e) => e.stopPropagation()}
               >
                 编辑
               </Button>
@@ -351,7 +341,6 @@ export function WorkContentBlock({
                 size="sm"
                 variant="danger-soft"
                 onPress={() => setIsDeleteModalOpen(true)}
-                onClick={(e) => e.stopPropagation()}
               >
                 <Trash2 size={13} aria-hidden="true" />
                 删除
@@ -360,14 +349,22 @@ export function WorkContentBlock({
 
           </header>
 
-          <div className="work-content-typography-body">
+          {/* 正文区域是卡片内唯一的"点击进入编辑"热区，头部操作区与底部按钮区各自独立 */}
+          <div
+            className="work-content-typography-body work-content-card-body"
+            onClick={() => {
+              if (!isDragging) {
+                onStartEdit()
+              }
+            }}
+          >
             <MilkdownView
               content={combinedContent}
-              placeholder="暂无工作内容记录，点击卡片或“展开专注”开始沉淀..."
+              placeholder="暂无工作内容记录，点击此处或“展开专注”开始沉淀..."
             />
           </div>
 
-          <footer className="work-content-card-footer" onClick={(e) => e.stopPropagation()}>
+          <footer className="work-content-card-footer">
             <Button
               size="sm"
               variant="outline"
@@ -376,13 +373,11 @@ export function WorkContentBlock({
               aria-label="简历描述提炼"
             >
               <FileText className="resume-trigger-icon" size={15} aria-hidden="true" />
-              <span className="resume-trigger-label">
-                简历描述提炼
-              </span>
+              <span>简历描述提炼</span>
               <ChevronRight className="resume-trigger-arrow" size={14} aria-hidden="true" />
             </Button>
           </footer>
-        </div>
+        </>
       )}
     </article>
 

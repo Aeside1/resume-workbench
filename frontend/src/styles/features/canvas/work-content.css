@@ -58,7 +58,8 @@
   border-color: var(--border-secondary);
 }
 
-.work-content-card.interactive-card {
+/* 只有正文区域可点击进入编辑（头部操作区与底部按钮区物理解耦） */
+.work-content-card-body {
   cursor: pointer;
 }
 
@@ -134,15 +135,6 @@
   cursor: grabbing;
 }
 
-.archived-badge {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--warning-soft-foreground);
-  background: var(--warning-soft);
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
 .work-content-title {
   margin: 0;
   font-size: 17px;
@@ -205,27 +197,6 @@
   display: flex;
   align-items: center;
   min-height: 20px;
-}
-
-.auto-save-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 11.5px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 9999px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.auto-save-badge.saving {
-  background-color: var(--surface-secondary);
-  color: var(--muted);
-}
-
-.auto-save-badge.saved {
-  background-color: var(--success-soft);
-  color: var(--success-soft-foreground);
 }
 
 .edit-form-kicker {

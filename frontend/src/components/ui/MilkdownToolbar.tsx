@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react'
-import { Button, Tooltip } from '@heroui/react'
+import { Button, Separator, Tooltip } from '@heroui/react'
 import {
   Bold,
   Code,
@@ -154,7 +154,7 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
         </ToolbarButton>
       </div>
 
-      <div className="milkdown-toolbar-divider" />
+      <Separator orientation="vertical" className="milkdown-toolbar-divider" />
 
       {/* 标题层级 */}
       <div className="milkdown-toolbar-group">
@@ -188,7 +188,7 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
         </ToolbarButton>
       </div>
 
-      <div className="milkdown-toolbar-divider" />
+      <Separator orientation="vertical" className="milkdown-toolbar-divider" />
 
       {/* 行内标记 */}
       <div className="milkdown-toolbar-group">
@@ -229,7 +229,7 @@ export function MilkdownToolbar({ view, state, className = '' }: MilkdownToolbar
         </ToolbarButton>
       </div>
 
-      <div className="milkdown-toolbar-divider" />
+      <Separator orientation="vertical" className="milkdown-toolbar-divider" />
 
       {/* 块级结构 */}
       <div className="milkdown-toolbar-group">

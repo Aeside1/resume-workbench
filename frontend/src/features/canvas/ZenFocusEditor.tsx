@@ -218,15 +218,15 @@ export function ZenFocusEditor({
         <div className="zen-topbar-right">
           <div className="zen-save-indicator" aria-live="polite">
             {saveStatus === 'saving' && (
-              <Chip className="zen-save-badge" color="accent" size="sm" role="status">
+              <Chip color="accent" size="sm" role="status">
                 <Spinner size="sm" color="current" />
-                <span>保存中...</span>
+                <Chip.Label>保存中...</Chip.Label>
               </Chip>
             )}
             {saveStatus === 'saved' && (
-              <Chip className="zen-save-badge" color="success" size="sm" role="status">
+              <Chip color="success" size="sm" role="status">
                 <Check size={12} aria-hidden="true" />
-                <span>已自动保存</span>
+                <Chip.Label>已自动保存</Chip.Label>
               </Chip>
             )}
           </div>
@@ -310,7 +310,6 @@ export function ZenFocusEditor({
                   <ResumeVersionsFeed
                     workContent={workContent}
                     onUpdateVersions={onUpdateVersions}
-                    className="zen-feed"
                   />
                 </div>
               </div>

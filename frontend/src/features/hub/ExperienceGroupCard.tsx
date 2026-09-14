@@ -32,31 +32,11 @@ export function ExperienceGroupCard({
     onSelect(group)
   }
 
-  const stopBubble = (e?: MouseEvent | unknown) => {
-    if (e && typeof (e as MouseEvent).stopPropagation === 'function') {
-      (e as MouseEvent).stopPropagation()
-    }
-  }
-
-  const handleEdit = (e?: MouseEvent | unknown) => {
-    stopBubble(e)
-    onEdit?.(group)
-  }
-
-  const handleArchive = (e?: MouseEvent | unknown) => {
-    stopBubble(e)
-    onArchive?.(group)
-  }
-
-  const handleRestore = (e?: MouseEvent | unknown) => {
-    stopBubble(e)
-    onRestore?.(group)
-  }
-
-  const handleDelete = (e?: MouseEvent | unknown) => {
-    stopBubble(e)
-    onDelete?.(group)
-  }
+  // 卡片主体点击区与 Footer 已物理分离，操作按钮无需再阻断冒泡
+  const handleEdit = () => onEdit?.(group)
+  const handleArchive = () => onArchive?.(group)
+  const handleRestore = () => onRestore?.(group)
+  const handleDelete = () => onDelete?.(group)
 
   return (
     <Card
@@ -108,10 +88,7 @@ export function ExperienceGroupCard({
         </Card.Content>
       </div>
 
-      <Card.Footer
-        className="group-card-footer"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <Card.Footer className="group-card-footer">
         <div className="group-card-count">
           <FileText size={14} aria-hidden="true" />
           <span>{workContentCount} 项具体工作</span>
