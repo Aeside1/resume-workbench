@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
-import { Button, Chip, Kbd, Spinner } from '@heroui/react'
-import { ArrowLeft, Check, FileText, PanelRight, PanelRightClose } from 'lucide-react'
+import { Card, ScrollShadow, Surface } from '@heroui/react'
+import { FileText, PanelRight, PanelRightClose } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
-import type { ExperienceGroup, WorkContent } from '../../api'
+import type { WorkContent } from '../../api'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
 import {
   parseSupplementaryNotes,
@@ -17,20 +17,35 @@ import {
 
 export type ZenFocusEditorProps = {
   isOpen: boolean
-  group: ExperienceGroup
   workContent: WorkContent | null
   onClose: () => void
   onSaveContent: (draft: ContentDraft, targetId: number) => Promise<void> | void
   onUpdateVersions: (workContentId: number, versions: ResumeDescriptionVersion[]) => Promise<void> | void
+  /** 伴随栏开合由外壳（AppShell 顶栏插槽）持有；未接入外壳时默认展开 */
+  isCompanionOpen?: boolean
+  /** 就地编辑大标题时把实时标题上抛给顶栏面包屑末级 */
+  onTitleChange?: (title: string) => void
+  /** 外壳（顶栏返回按钮 / 面包屑中间级）发起的关闭命令，+1 递增 */
+  exitSignal?: number
 }
 
+/**
+ * Zen 专注写作区（ADR 004：非模态区域展开）。
+ *
+ * 这里只负责「写作区本身」：区域骨架、大标题、正文编辑器、伴随栏。
+ * 退出入口、保存态 Chip、伴随栏开关全在 AppShell 顶栏（由 onClose /
+ * onTitleChange / isCompanionOpen / exitSignal 四处接线），因此本组件不再
+ * 自足——单独渲染时没有退出按钮、没有保存反馈、没有伴随栏开关。
+ */
 export function ZenFocusEditor({
   isOpen,
-  group,
   workContent,
   onClose,
   onSaveContent,
-  onUpdateVersions
+  onUpdateVersions,
+  isCompanionOpen,
+  onTitleChange,
+  exitSignal
 }: ZenFocusEditorProps) {
   const parsedData = useMemo(
     () => (workContent ? parseSupplementaryNotes(workContent.supplementary_notes) : null),
@@ -47,8 +62,8 @@ export function ZenFocusEditor({
     }
   )
 
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [isCompanionOpen, setIsCompanionOpen] = useState(true)
+  // 保存态 Chip 归 AppShell 顶栏（走 onSaveStatusChange 链路），这里不再维护本地保存状态。
+  const companionOpen = isCompanionOpen ?? true
 
   const draftRef = useRef(draft)
   draftRef.current = draft
@@ -66,6 +81,7 @@ export function ZenFocusEditor({
       draftRef.current = updated
       return updated
     })
+    onTitleChange?.(val)
   }
 
   const handleRecordChange = (val: string) => {
@@ -75,13 +91,13 @@ export function ZenFocusEditor({
       return updated
     })
   }
+
   useEffect(() => {
     if (!workContent) return
     const parsed = parseSupplementaryNotes(workContent.supplementary_notes)
     const initial = buildInitialDraft(workContent, parsed.note)
     setDraft(initial)
     lastSavedSignatureRef.current = getSignature(initial)
-    setSaveStatus('idle')
   }, [workContent])
 
   const performSave = useCallback(async (currentDraft: ContentDraft) => {
@@ -91,7 +107,6 @@ export function ZenFocusEditor({
 
     isSavingRef.current = true
     lastSavedSignatureRef.current = signature
-    setSaveStatus('saving')
 
     const currentNotes = parseSupplementaryNotes(workContent.supplementary_notes)
     const serializedNotes = serializeSupplementaryNotes(
@@ -107,10 +122,8 @@ export function ZenFocusEditor({
         result_data: '',
         supplementary_notes: serializedNotes
       }, workContent.id)
-      setSaveStatus('saved')
     } catch {
       lastSavedSignatureRef.current = ''
-      setSaveStatus('idle')
     } finally {
       isSavingRef.current = false
     }
@@ -141,19 +154,24 @@ export function ZenFocusEditor({
     }
   }, [draft, isOpen, workContent, performSave])
 
+  // 退出路径统一走这里：先 flush 保存，再关闭（ADR 004 §2.4）
+  const handleExit = useCallback(() => {
+    flushSave()
+    onClose()
+  }, [flushSave, onClose])
+
   // 监听物理 Escape 键退出专注模式
   useEffect(() => {
     if (!isOpen) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        const hasActiveModal = !!document.querySelector(
-          '[role="dialog"]:not(.zen-focus-overlay)'
-        )
+        // 区域形态下 Zen 内已无模态层，此守卫为防御性代码：若将来有自绘弹窗
+        // 落在区域内，Esc 应交给那一层处理。
+        const hasActiveModal = !!document.querySelector('[role="dialog"]')
         if (hasActiveModal) return
 
-        flushSave()
-        onClose()
+        handleExit()
       }
     }
 
@@ -161,7 +179,15 @@ export function ZenFocusEditor({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isOpen, onClose, flushSave])
+  }, [isOpen, handleExit])
+
+  // 外壳发起的「返回画布」命令：与 Esc 走同一条退出路径（先 flush 再关闭）
+  const handledExitSignalRef = useRef(exitSignal ?? 0)
+  useEffect(() => {
+    if (exitSignal === undefined || exitSignal === handledExitSignalRef.current) return
+    handledExitSignalRef.current = exitSignal
+    handleExit()
+  }, [exitSignal, handleExit])
 
   // 清理防抖定时器
   useEffect(() => {
@@ -172,123 +198,56 @@ export function ZenFocusEditor({
     }
   }, [])
 
-  const handleExit = () => {
-    flushSave()
-    onClose()
-  }
-
   if (!isOpen || !workContent) return null
 
-  const breadcrumbOrg = group.organization ? `${group.organization} · ` : ''
-  const breadcrumbGroup = `${breadcrumbOrg}${group.name}`
-
   return (
-    <div
-      className="zen-focus-overlay"
-      role="dialog"
-      aria-modal="true"
-      aria-label={`全屏专注工作台: ${workContent.title}`}
+    <Surface
+      className="zen-focus-region"
+      role="region"
+      aria-label={`专注写作区: ${draft.title || workContent.title}`}
     >
-      {/* 顶部极简 Topbar */}
-      <header className="zen-topbar">
-        <div className="zen-topbar-left">
-          <Button
-            size="sm"
-            variant="ghost"
-            className="zen-exit-btn"
-            onPress={handleExit}
-            aria-label="退出全屏"
-          >
-            <ArrowLeft size={15} aria-hidden="true" />
-            <span className="zen-exit-text">退出全屏</span>
-            <Kbd>Esc</Kbd>
-          </Button>
-
-          <nav className="zen-breadcrumbs" aria-label="层级面包屑导航">
-            <span className="zen-breadcrumb-group" title={breadcrumbGroup}>
-              {breadcrumbGroup}
-            </span>
-            <span className="zen-breadcrumb-separator" aria-hidden="true">/</span>
-            <span className="zen-breadcrumb-item-title" title={draft.title || workContent.title}>
-              {draft.title || workContent.title}
-            </span>
-          </nav>
-        </div>
-
-        <div className="zen-topbar-right">
-          <div className="zen-save-indicator" aria-live="polite">
-            {saveStatus === 'saving' && (
-              <Chip color="accent" size="sm" role="status">
-                <Spinner size="sm" color="current" />
-                <Chip.Label>保存中...</Chip.Label>
-              </Chip>
-            )}
-            {saveStatus === 'saved' && (
-              <Chip color="success" size="sm" role="status">
-                <Check size={12} aria-hidden="true" />
-                <Chip.Label>已自动保存</Chip.Label>
-              </Chip>
-            )}
-          </div>
-
-          <Button
-            size="sm"
-            variant={isCompanionOpen ? 'secondary' : 'ghost'}
-            onPress={() => setIsCompanionOpen((prev) => !prev)}
-            aria-label={isCompanionOpen ? '收起伴随栏' : '展开伴随栏'}
-          >
-            {isCompanionOpen
-              ? <PanelRightClose size={14} aria-hidden="true" />
-              : <PanelRight size={14} aria-hidden="true" />}
-            <span>{isCompanionOpen ? '收起伴随栏' : '展开伴随栏'}</span>
-          </Button>
-        </div>
-      </header>
-
       {/* 左右双栏巅峰对照工作区 */}
       <div className="zen-workspace">
-        {/* 左侧主写作区 (70% 或 100%) */}
-        <main className={`zen-main-writer ${isCompanionOpen ? 'zen-main-writer--with-companion' : 'zen-main-writer--full'}`}>
-          <div className="zen-writer-scroll">
-            <div className="zen-writer-canvas">
-              {/* 大标题输入 */}
-              <div className="zen-title-container">
-                <input
-                  id={`zen-title-${workContent.id}`}
-                  type="text"
-                  className="zen-title-input"
-                  value={draft.title}
-                  placeholder="输入工作项大标题..."
-                  aria-label="工作项大标题"
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                />
-              </div>
+        {/* 左侧主写作区（伴随栏收起时独占整宽） */}
+        <ScrollShadow className="zen-main-writer" orientation="vertical" size={48}>
+          <div className="zen-writer-canvas">
+            {/* 大标题输入 */}
+            <div className="zen-title-container">
+              <input
+                id={`zen-title-${workContent.id}`}
+                type="text"
+                className="zen-title-input"
+                value={draft.title}
+                placeholder="输入工作项大标题..."
+                aria-label="工作项大标题"
+                onChange={(e) => handleTitleChange(e.target.value)}
+              />
+            </div>
 
-              {/* 宽阔 Markdown 编辑打字画布 */}
-              <div className="zen-editor-wrapper">
-                <label
-                  id={`zen-editor-${workContent.id}-label`}
-                  htmlFor={`zen-editor-${workContent.id}`}
-                  className="sr-only"
-                >
-                  草稿正文
-                </label>
-                <MilkdownEditor
-                  id={`zen-editor-${workContent.id}`}
-                  cacheKey={`zen-wc-${workContent.id}-record`}
-                  value={draft.detailed_record}
-                  placeholder="在此自由书写项目背景、架构设计、排障推演、核心代码块或量化结果（支持完整 Markdown 排版）..."
-                  rows={20}
-                  onChange={handleRecordChange}
-                />
-              </div>
+            {/* 宽阔 Markdown 编辑打字画布 */}
+            <div className="zen-editor-wrapper">
+              <label
+                id={`zen-editor-${workContent.id}-label`}
+                htmlFor={`zen-editor-${workContent.id}`}
+                className="sr-only"
+              >
+                草稿正文
+              </label>
+              <MilkdownEditor
+                id={`zen-editor-${workContent.id}`}
+                cacheKey={`zen-wc-${workContent.id}-record`}
+                value={draft.detailed_record}
+                placeholder="在此自由书写项目背景、架构设计、排障推演、核心代码块或量化结果（支持完整 Markdown 排版）..."
+                rows={20}
+                onChange={handleRecordChange}
+              />
             </div>
           </div>
-        </main>
+        </ScrollShadow>
 
-        {/* 右侧伴随提炼栏 (带顺滑收起/展开过渡动画) */}
+        {/* 右侧伴随提炼栏（带顺滑收起/展开过渡动画） */}
         <AnimatePresence initial={false}>
-          {isCompanionOpen && (
+          {companionOpen && (
             <motion.aside
               key="zen-companion-sidebar"
               className="zen-companion-sidebar"
@@ -298,25 +257,27 @@ export function ZenFocusEditor({
               exit={{ width: 0, opacity: 0 }}
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className="zen-companion-inner">
-                <header className="zen-companion-header">
-                  <div className="zen-companion-header-title">
+              <Card variant="secondary" className="zen-companion-card">
+                <Card.Header className="zen-companion-header">
+                  <Card.Title className="zen-companion-heading">
                     <FileText className="zen-companion-icon" size={15} aria-hidden="true" />
-                    <h3 className="zen-companion-heading">简历描述提炼</h3>
-                  </div>
-                </header>
+                    简历描述提炼
+                  </Card.Title>
+                </Card.Header>
 
-                <div className="zen-companion-body">
-                  <ResumeVersionsFeed
-                    workContent={workContent}
-                    onUpdateVersions={onUpdateVersions}
-                  />
-                </div>
-              </div>
+                <Card.Content className="zen-companion-body">
+                  <ScrollShadow className="zen-companion-scroll" orientation="vertical" size={32}>
+                    <ResumeVersionsFeed
+                      workContent={workContent}
+                      onUpdateVersions={onUpdateVersions}
+                    />
+                  </ScrollShadow>
+                </Card.Content>
+              </Card>
             </motion.aside>
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </Surface>
   )
 }

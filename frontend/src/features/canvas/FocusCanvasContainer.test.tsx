@@ -510,40 +510,51 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
   })
 
-  it('点击工作项卡片右上角“展开专注”按钮进入全屏专注工作台，支持编辑大标题并保存后退出返回长画布', async () => {
+  it('点击工作项卡片右上角“展开专注”按钮在画布区域内展开专注写作区，支持编辑大标题并保存后退出返回长画布', async () => {
     const scrollIntoViewMock = vi.fn()
+    window.scrollTo = vi.fn()
     window.HTMLElement.prototype.scrollIntoView = scrollIntoViewMock
+
+    const handleZenChange = vi.fn()
 
     render(
       <FocusCanvasContainer
         session={mockSession}
         group={mockGroup}
         onExitFocus={vi.fn()}
+        onZenChange={handleZenChange}
       />
     )
 
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
-    // 初始状态下全屏工作台未开启
-    expect(screen.queryByRole('dialog', { name: /全屏专注工作台/ })).not.toBeInTheDocument()
+    // 初始状态下专注写作区未展开
+    expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
 
     // 点击卡片右上角“展开专注”按钮
     const card101 = document.getElementById('work-content-101')!
     const zenBtn = within(card101).getByRole('button', { name: '展开专注模式' })
     fireEvent.click(zenBtn)
 
-    // 验证全屏专注视窗展开
-    const zenDialog = await screen.findByRole('dialog', { name: /全屏专注工作台: 重构可视化拖拽画布核心渲染引擎/ })
-    expect(zenDialog).toBeInTheDocument()
-    expect(within(zenDialog).getByText('美团 · 基础架构部前端开发')).toBeInTheDocument()
+    // 验证专注写作区展开（区域角色），且画布被区域内替而非叠加
+    const zenRegion = await screen.findByRole('region', { name: /专注写作区: 重构可视化拖拽画布核心渲染引擎/ })
+    expect(zenRegion).toBeInTheDocument()
+    expect(screen.queryByText('经历大纲')).not.toBeInTheDocument()
+    // 区域形态下 Zen 里不再有模态层（旧断言找的是 role="dialog" 的全屏工作台）
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
 
-    // 在全屏模式下修改大标题
-    const titleInput = within(zenDialog).getByLabelText('工作项大标题')
-    fireEvent.change(titleInput, { target: { value: '重构渲染引擎（全屏专注突破版）' } })
+    // 向外壳上报展开状态与实时标题（顶栏三级面包屑数据来源）
+    expect(handleZenChange).toHaveBeenCalledWith({
+      isOpen: true,
+      title: '重构可视化拖拽画布核心渲染引擎'
+    })
 
-    // 点击退出全屏
-    const exitBtn = within(zenDialog).getByRole('button', { name: '退出全屏' })
-    fireEvent.click(exitBtn)
+    // 在区域内修改大标题
+    const titleInput = within(zenRegion).getByLabelText('工作项大标题')
+    fireEvent.change(titleInput, { target: { value: '重构渲染引擎（区域展开突破版）' } })
+
+    // 用 Esc 退出（与顶栏返回按钮、面包屑中间级走同一条先 flush 再关的路径）
+    fireEvent.keyDown(window, { key: 'Escape' })
 
     // 验证保存 API 调用
     await waitFor(() => {
@@ -551,18 +562,19 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
         mockSession.token,
         101,
         expect.objectContaining({
-          title: '重构渲染引擎（全屏专注突破版）'
+          title: '重构渲染引擎（区域展开突破版）'
         })
       )
     })
 
-    // 验证全屏已关闭，长画布卡片标题已即时更新
+    // 验证区域已关闭、长画布重新挂载且卡片标题已即时更新
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /全屏专注工作台/ })).not.toBeInTheDocument()
+      expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
     })
-    expect(await screen.findByRole('heading', { level: 3, name: '重构渲染引擎（全屏专注突破版）' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 3, name: '重构渲染引擎（区域展开突破版）' })).toBeInTheDocument()
+    expect(handleZenChange).toHaveBeenLastCalledWith({ isOpen: false, title: '' })
 
-    // 验证触发滚动返回卡片
+    // 验证退出后把视窗恢复到原卡片位置
     await waitFor(() => {
       expect(scrollIntoViewMock).toHaveBeenCalledWith(
         expect.objectContaining({ behavior: 'smooth', block: 'nearest' })
@@ -570,7 +582,71 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     })
   })
 
-  it('双击长画布卡片标题一键平滑进入专注模式，并在全屏按 Escape 键退出返回', async () => {
+  it('外壳下发的 zenExitSignal 关闭命令同样先 flush 保存再收起区域', async () => {
+    const handleZenChange = vi.fn()
+
+    const { rerender } = render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onZenChange={handleZenChange}
+        zenExitSignal={0}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+
+    const card102 = document.getElementById('work-content-102')!
+    fireEvent.click(within(card102).getByRole('button', { name: '展开专注模式' }))
+
+    const zenRegion = await screen.findByRole('region', { name: /专注写作区: 设计组件库 Tree-shaking 自动化检测管线/ })
+    fireEvent.change(within(zenRegion).getByLabelText('工作项大标题'), {
+      target: { value: '外壳命令关闭时的标题' }
+    })
+
+    rerender(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onZenChange={handleZenChange}
+        zenExitSignal={1}
+      />
+    )
+
+    await waitFor(() => {
+      expect(api.updateWorkContent).toHaveBeenCalledWith(
+        mockSession.token,
+        102,
+        expect.objectContaining({ title: '外壳命令关闭时的标题' })
+      )
+    })
+    await waitFor(() => {
+      expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
+    })
+  })
+
+  it('Zen 展开本身不算脏：没输入任何内容时离开画布不触发 onDirtyChange(true)', async () => {
+    const handleDirtyChange = vi.fn()
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onDirtyChange={handleDirtyChange}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+
+    const card101 = document.getElementById('work-content-101')!
+    fireEvent.click(within(card101).getByRole('button', { name: '展开专注模式' }))
+    await screen.findByRole('region', { name: /专注写作区/ })
+
+    // 关键断言：Zen 展开后脏标记仍为 false（否则离开画布会弹不成立的「放弃修改」确认框）
+    expect(handleDirtyChange).not.toHaveBeenCalledWith(true)
+  })
+
+  it('双击长画布卡片标题一键进入专注模式，并在按 Escape 键退出返回', async () => {
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -584,15 +660,15 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     const titleBtn = screen.getByRole('button', { name: '重构可视化拖拽画布核心渲染引擎' })
     fireEvent.doubleClick(titleBtn)
 
-    // 验证双击进入全屏
-    const zenDialog = await screen.findByRole('dialog', { name: /全屏专注工作台: 重构可视化拖拽画布核心渲染引擎/ })
-    expect(zenDialog).toBeInTheDocument()
+    // 验证双击展开专注写作区
+    const zenRegion = await screen.findByRole('region', { name: /专注写作区: 重构可视化拖拽画布核心渲染引擎/ })
+    expect(zenRegion).toBeInTheDocument()
 
     // 物理键盘按下 Escape 退出
     fireEvent.keyDown(window, { key: 'Escape' })
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /全屏专注工作台/ })).not.toBeInTheDocument()
+      expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
     })
   })
 })

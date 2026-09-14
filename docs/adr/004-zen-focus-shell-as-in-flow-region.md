@@ -49,7 +49,7 @@ HeroUI 迁移（ADR 003）之后，这个自研壳暴露出两个问题：
 ### 2.5 分层边界（执行 ADR 003 §2.2）
 
 - **视觉实体**一律 HeroUI：区域底 `Surface`、面包屑 `Breadcrumbs`、伴随栏面板 `Card`、滚动 `ScrollShadow`、操作 `Button`、保存态 `Chip`、快捷键 `Kbd`；
-- **布局骨架**保留原生 element 且只读语义变量：区域 flex 骨架与左右栅格约 16 行，加上 shell 侧的 `.app-shell--zen` 一组规则；**布局 CSS 落在 `styles/layout/*` 与 `styles/features/canvas/zen-editor.css`**，不碰 Token 区、不新增字面色值、不使用 `!important`。
+- **布局骨架**保留原生 element 且只读语义变量：区域 flex 骨架与左右栅格约 16 行，加上 shell 侧的 `.app-shell--zen` 一组规则；**布局 CSS 落在 `styles/layout/*` 与 `styles/features/canvas/zen-region.css`**（落地期由 `zen-editor.css` 更名，骨架已不再含任何顶栏/覆盖层规则），不碰 Token 区、不新增字面色值、不使用 `!important`。
 
 ## 3. 决策影响（Consequences）
 
@@ -85,5 +85,11 @@ HeroUI 迁移（ADR 003）之后，这个自研壳暴露出两个问题：
 
 ## 6. 落地与遗留
 
-- 落地清单见 `.scratch/hero-ui-migration/issues/12-zen-shell-region-expand.md`；**不要把原型提交 cherry-pick 到迁移线**——原型按 throwaway 标准写（保留未读取的 `group` prop、为兼容旧测试留的字符串面包屑兜底等），实现期按清单重写。
+- **落地状态（2026-09-14）**：已按本 ADR 落地在 `feat/zen-shell-region-expand`（worktree `.worktrees/zen-region-expand`，独立栈 5177/8004/5436），落地清单与逐条证据见 `.scratch/hero-ui-migration/issues/12-zen-shell-region-expand.md` 的 `## Answer`。
+  - `ZenFocusEditor` 的 `group` prop 与 `AppShell` 的 `breadcrumb?: string` 兜底入口均已删除；区域骨架收敛为 `styles/features/canvas/zen-region.css`（原 `zen-editor.css` 删除）。
+  - 退出前的脏判据已按 §2.4 修正为「先 flush 再离开」+ 只反映真正的未保存编辑（「Zen 展开」不再等于 dirty），脏标记改存 ref。
+  - 落地期在排查保存态 Chip 可见性时另修掉一个既有缺陷：`FocusCanvasContainer` 每次保存成功都挂一个 `setTimeout(2500)` 把保存态归零，连续保存时会用陈旧定时器提前清掉新一轮的 `保存中`——已改为单一 `setSaveStatus` 助手重置同一个定时器（§2.2 的「顶栏 Chip 全程可见」随之成立）。
+  - 落地清单 C 的「portal 插槽替代接线」经评估**不采用**（理由见 issue 12 Answer §1）；D4 经用户口径决定**不接**浏览器历史与 `document.title`。
+- 验收关卡：`npm run test` 162 passed、`typecheck` 0 错误、`build` 成功；必保行为在真实浏览器逐条复测（Esc 退出、退出后回到原卡片位置含已滚动场景、800ms 防抖、退出前 flush、伴随栏开合、大标题就地编辑），截图见 `.worktrees/v13-*.png`（深浅各 12 张）。
+- **不要把原型提交 cherry-pick 到迁移线**——原型按 throwaway 标准写（保留未读取的 `group` prop、为兼容旧测试留的字符串面包屑兜底等），实现期按清单重写。
 - 遗留（与外壳形态无关，需单独处理）：真实浏览器里**双击卡片标题不会进入专注模式**。基线栈（5174）与方案 3 栈（5176）用同一脚本复现一致：第一次单击先触发 `onPress` 把卡片切成就地编辑态并重渲染，浏览器不再合成 `dblclick`，标题 `Button` 上的 `onDoubleClick` 永远收不到；jsdom 的 `fireEvent.doubleClick` 直接派发事件，所以测试一直是绿的。建议单独开 issue。

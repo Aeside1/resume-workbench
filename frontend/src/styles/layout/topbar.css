@@ -22,18 +22,37 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  /* Zen 展开后末级是用户随手输入的工作项标题，长度不可控：面包屑组必须可收缩，
+     否则会挤压/顶掉中间的保存态 Chip（ADR 004 §2.3） */
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
 }
 
-.focus-breadcrumb-trail {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+/* 面包屑内部用 HeroUI 公开的 data-slot 钩子收紧布局（不依赖 .breadcrumbs__* 内部类名）。
+   只改布局，不改任何框架视觉值。
+   末级的截断必须发生在“带文本的那个元素”上：框架的 link 是 inline，
+   需先把它变为 block 并收窄，内部的当前级 span 才能被省略号截断。 */
+.focus-breadcrumbs {
+  min-width: 0;
+  flex: 1;
 }
 
-.focus-breadcrumb-separator {
-  color: var(--muted);
-  font-size: 13px;
-  user-select: none;
+.focus-breadcrumbs [data-slot="breadcrumbs-item"] {
+  min-width: 0;
+}
+
+.focus-breadcrumbs [data-slot="breadcrumbs-item"]:last-child {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.focus-breadcrumbs [data-slot="breadcrumbs-item"]:last-child [data-slot="link"] {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .focus-breadcrumb-current {
@@ -43,20 +62,27 @@
   padding: 3px 6px;
 }
 
-.focus-breadcrumb-text {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--foreground);
-}
-
 .focus-status-center {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  padding: 0 12px;
 }
 
 .focus-actions-right {
   display: flex;
   align-items: center;
+  gap: 12px;
   min-width: 32px;
+}
+
+/* Zen 区域展开时顶栏右侧的 Esc 退出提示 */
+.focus-esc-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
 }

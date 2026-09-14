@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { useToast } from '../../components/ui/Toast'
@@ -20,7 +20,16 @@ type Props = {
   onSaveStatusChange?: (status: 'idle' | 'saving' | 'saved') => void
   onDirtyChange?: (isDirty: boolean) => void
   onUpdateGroup?: (group: ExperienceGroup) => void
+  /** 向 AppShell 上报 Zen 展开状态与当前工作项实时标题（顶栏面包屑末级） */
+  onZenChange?: (state: ZenTopbarState) => void
+  /** 伴随栏开合由 WorkbenchShell 持有，这里只透传给 Zen */
+  isCompanionOpen?: boolean
+  /** 外壳发起的「返回画布」命令；+1 递增，由 Zen 自己执行（先 flush 再关闭） */
+  zenExitSignal?: number
 }
+
+/** 顶栏在 Zen 展开时需要的两项语境：是否展开、当前工作项实时标题 */
+export type ZenTopbarState = { isOpen: boolean; title: string }
 
 export function FocusCanvasContainer({
   session,
@@ -28,7 +37,10 @@ export function FocusCanvasContainer({
   onExitFocus,
   onSaveStatusChange,
   onDirtyChange,
-  onUpdateGroup
+  onUpdateGroup,
+  onZenChange,
+  isCompanionOpen,
+  zenExitSignal
 }: Props) {
   const [currentGroup, setCurrentGroup] = useState<ExperienceGroup>(group)
   const [contents, setContents] = useState<WorkContent[]>([])
@@ -46,10 +58,45 @@ export function FocusCanvasContainer({
   }, [group])
 
   const containerRef = useRef<HTMLDivElement>(null)
+  // Zen 展开时画布被区域内替（卸载 → 重挂），退出后需把视窗恢复到原卡片位置
+  const zenReturnScrollRef = useRef(0)
+  /**
+   * 保存态 Chip 归零定时器。
+   * 旧写法每次保存完就挂一个 setTimeout(2500) 直接调 onSaveStatusChange('idle')，
+   * 在连续保存时会用上一次的陈旧定时器把新一轮的「保存中/已保存」提前清掉——
+   * 区域形态下顶栏 Chip 是唯一的保存反馈，这里改为每次状态变更都重置同一个定时器。
+   */
+  const saveStatusIdleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const setSaveStatus = useCallback(
+    (status: 'idle' | 'saving' | 'saved') => {
+      if (saveStatusIdleTimerRef.current) {
+        clearTimeout(saveStatusIdleTimerRef.current)
+        saveStatusIdleTimerRef.current = null
+      }
+      onSaveStatusChange?.(status)
+      if (status === 'saved') {
+        saveStatusIdleTimerRef.current = setTimeout(() => {
+          saveStatusIdleTimerRef.current = null
+          onSaveStatusChange?.('idle')
+        }, 2500)
+      }
+    },
+    [onSaveStatusChange]
+  )
 
   useEffect(() => {
-    onDirtyChange?.(editingContentId !== null || isCreatingNew || zenModeWorkContentId !== null)
-  }, [editingContentId, isCreatingNew, zenModeWorkContentId, onDirtyChange])
+    return () => {
+      if (saveStatusIdleTimerRef.current) clearTimeout(saveStatusIdleTimerRef.current)
+    }
+  }, [])
+
+  // 脏判据（issue 12 D1）：只反映「可能有未保存修改」的就地编辑/新建态。
+  // Zen 展开本身不算脏——退出 Zen 走的是先 flush 再关的路径；
+  // 若把「Zen 展开」也算脏，完全没输入内容时离开也会弹不成立的「放弃修改」确认框。
+  useEffect(() => {
+    onDirtyChange?.(editingContentId !== null || isCreatingNew)
+  }, [editingContentId, isCreatingNew, onDirtyChange])
 
   useEffect(() => {
     api.workContents(session.token, group.id, showArchived)
@@ -109,7 +156,7 @@ export function FocusCanvasContainer({
   const handleSaveContent = async (draft: ContentDraft, targetId: number | null) => {
     if (!draft.title.trim()) return
 
-    onSaveStatusChange?.('saving')
+    setSaveStatus('saving')
     const payload = {
       ...draft,
       title: draft.title.trim(),
@@ -134,25 +181,23 @@ export function FocusCanvasContainer({
         setActiveNavId(`work-content-${created.id}`)
       }
 
-      onSaveStatusChange?.('saved')
-      setTimeout(() => onSaveStatusChange?.('idle'), 2500)
+      setSaveStatus('saved')
     } catch (e) {
       setError((e as Error).message)
-      onSaveStatusChange?.('idle')
+      setSaveStatus('idle')
     }
   }
 
   const handleUpdateOverview = async (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => {
-    onSaveStatusChange?.('saving')
+    setSaveStatus('saving')
     try {
       const updated = await api.updateExperienceGroup(session.token, currentGroup.id, payload)
       setCurrentGroup(updated)
       onUpdateGroup?.(updated)
-      onSaveStatusChange?.('saved')
-      setTimeout(() => onSaveStatusChange?.('idle'), 2500)
+      setSaveStatus('saved')
     } catch (e) {
       setError((e as Error).message)
-      onSaveStatusChange?.('idle')
+      setSaveStatus('idle')
       throw e
     }
   }
@@ -205,20 +250,38 @@ export function FocusCanvasContainer({
   }
 
   const handleOpenZenMode = (item: WorkContent) => {
+    zenReturnScrollRef.current = window.scrollY
+    // 画布被区域内替后原有就地编辑态已不可见，其未决修改也不再有承接者，
+    // 因此退出编辑态并把脏标记归零，避免离开画布时弹出不成立的确认框。
+    setEditingContentId(null)
+    setIsCreatingNew(false)
     setActiveDrawerWorkContentId(null)
     setZenModeWorkContentId(item.id)
+    onZenChange?.({ isOpen: true, title: item.title })
   }
 
-  const handleCloseZenMode = () => {
+  const handleZenTitleChange = (title: string) => {
+    onZenChange?.({ isOpen: true, title })
+  }
+
+  /**
+   * 关闭 Zen 并回到画布。
+   * 画布是「卸载 → 重挂」，仅靠 scrollY 恢复不足以处理布局高度变化，
+   * 因此恢复滚动位置后再把目标卡片滚入视野（block: 'nearest' 只在必要时移动）。
+   */
+  const handleCloseZenMode = useCallback(() => {
     const lastId = zenModeWorkContentId
+    const restoreScroll = zenReturnScrollRef.current
     setZenModeWorkContentId(null)
+    onZenChange?.({ isOpen: false, title: '' })
     if (lastId !== null) {
       setTimeout(() => {
+        window.scrollTo({ top: restoreScroll })
         const el = document.getElementById(`work-content-${lastId}`)
         el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
       }, 50)
     }
-  }
+  }, [zenModeWorkContentId, onZenChange])
 
   const handleUpdateDrawerVersions = async (
     workContentId: number,
@@ -290,74 +353,86 @@ export function FocusCanvasContainer({
     await handleReorderContent(index, targetIndex)
   }
 
+  const zenWorkContent = useMemo(
+    () => contents.find((item) => item.id === zenModeWorkContentId) ?? null,
+    [contents, zenModeWorkContentId]
+  )
+
   return (
-    <div className="focus-canvas-wrapper" ref={containerRef}>
+    <div
+      className={`focus-canvas-wrapper${zenWorkContent ? ' focus-canvas-wrapper--zen' : ''}`}
+      ref={containerRef}
+    >
       {toast.ToastPortal}
-      <div className="focus-canvas-layout">
-        <main className="focus-canvas-main-col">
-          {error && <p className="error" role="alert">{error}</p>}
+      {zenWorkContent ? (
+        /* Zen 展开时区域内替画布（ADR 004 §2.1） */
+        <ZenFocusEditor
+          isOpen={true}
+          workContent={zenWorkContent}
+          onClose={handleCloseZenMode}
+          onSaveContent={handleSaveContent}
+          onUpdateVersions={handleUpdateDrawerVersions}
+          isCompanionOpen={isCompanionOpen}
+          onTitleChange={handleZenTitleChange}
+          exitSignal={zenExitSignal}
+        />
+      ) : (
+        <div className="focus-canvas-layout">
+          <main className="focus-canvas-main-col">
+            {error && <p className="error" role="alert">{error}</p>}
 
-          <FocusCanvasDocument
-            group={currentGroup}
-            contents={contents}
-            editingId={editingContentId}
-            isCreatingNew={isCreatingNew}
-            onStartEdit={handleStartEdit}
-            onCancelEdit={handleCancelEdit}
-            onSaveContent={handleSaveContent}
-            onMoveContent={handleMoveContent}
-            onReorderContent={handleReorderContent}
-            onReorderContents={handleReorderContents}
-            onDeleteContent={handleDeleteContent}
-            onArchiveContent={handleArchiveContent}
-            activeDrawerWorkContentId={activeDrawerWorkContentId}
-            onOpenDrawer={handleOpenDrawer}
-            onOpenZenMode={handleOpenZenMode}
-            onStartCreateNew={() => {
+            <FocusCanvasDocument
+              group={currentGroup}
+              contents={contents}
+              editingId={editingContentId}
+              isCreatingNew={isCreatingNew}
+              onStartEdit={handleStartEdit}
+              onCancelEdit={handleCancelEdit}
+              onSaveContent={handleSaveContent}
+              onMoveContent={handleMoveContent}
+              onReorderContent={handleReorderContent}
+              onReorderContents={handleReorderContents}
+              onDeleteContent={handleDeleteContent}
+              onArchiveContent={handleArchiveContent}
+              activeDrawerWorkContentId={activeDrawerWorkContentId}
+              onOpenDrawer={handleOpenDrawer}
+              onOpenZenMode={handleOpenZenMode}
+              onStartCreateNew={() => {
+                setEditingContentId(null)
+                setIsCreatingNew(true)
+              }}
+              onCancelCreateNew={() => setIsCreatingNew(false)}
+              onUpdateGroup={handleUpdateOverview}
+            />
+          </main>
 
-              setEditingContentId(null)
-              setIsCreatingNew(true)
-            }}
-            onCancelCreateNew={() => setIsCreatingNew(false)}
-            onUpdateGroup={handleUpdateOverview}
-          />
-        </main>
-
-        <aside className="focus-canvas-side-col">
-          <OutlineNavigator
-            group={currentGroup}
-            contents={contents}
-            activeId={activeNavId}
-            onNavigate={handleNavigate}
-            onAddNew={() => {
-              if (editingContentId !== null) {
-                const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
-                if (!confirmed) return
-              }
-              setEditingContentId(null)
-              setIsCreatingNew(true)
-              setTimeout(() => {
-                const el = document.querySelector('.creating-new-card')
-                el?.scrollIntoView({ behavior: 'smooth' })
-              }, 50)
-            }}
-          />
-        </aside>
-      </div>
+          <aside className="focus-canvas-side-col">
+            <OutlineNavigator
+              group={currentGroup}
+              contents={contents}
+              activeId={activeNavId}
+              onNavigate={handleNavigate}
+              onAddNew={() => {
+                if (editingContentId !== null) {
+                  const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
+                  if (!confirmed) return
+                }
+                setEditingContentId(null)
+                setIsCreatingNew(true)
+                setTimeout(() => {
+                  const el = document.querySelector('.creating-new-card')
+                  el?.scrollIntoView({ behavior: 'smooth' })
+                }, 50)
+              }}
+            />
+          </aside>
+        </div>
+      )}
 
       <ResumeDescriptionDrawer
         isOpen={activeDrawerWorkContentId !== null}
         workContent={contents.find((item) => item.id === activeDrawerWorkContentId) ?? null}
         onClose={handleCloseDrawer}
-        onUpdateVersions={handleUpdateDrawerVersions}
-      />
-
-      <ZenFocusEditor
-        isOpen={zenModeWorkContentId !== null}
-        group={currentGroup}
-        workContent={contents.find((item) => item.id === zenModeWorkContentId) ?? null}
-        onClose={handleCloseZenMode}
-        onSaveContent={handleSaveContent}
         onUpdateVersions={handleUpdateDrawerVersions}
       />
     </div>

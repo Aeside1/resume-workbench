@@ -1,0 +1,138 @@
+/* ==========================================================================
+   Zen 专注写作区（非模态区域展开）
+
+   ADR 004：Zen 是 AppShell 内容区里的一块，填满面包屑顶栏以下的剩余高度，
+   不再有自研全屏覆盖层与 Zen 自带顶栏；面包屑、保存态 Chip、伴随栏开关、
+   退出入口均归 AppShell 的 focus-topbar（styles/layout/topbar.css）。
+
+   区域底由 HeroUI Surface 承载，滚动由 ScrollShadow 承载，伴随栏面板由 Card
+   承载；此处只保留布局骨架，色值一律读语义变量。
+   ========================================================================== */
+
+/* 1. 区域根节点（底色与前景色由 HeroUI Surface 提供） */
+.zen-focus-region {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 2. 左右双栏工作区 */
+.zen-workspace {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+}
+
+/* 3. 左侧主写作区（滚动容器由 HeroUI ScrollShadow 提供 overflow） */
+.zen-main-writer {
+  flex: 1;
+  min-width: 0;
+  padding: 0 24px;
+}
+
+.zen-writer-canvas {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 36px 16px 120px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 大标题无边框极简输入（沉浸写作的排版元素，非表单字段，保留原生 input；
+   ADR 003 §2.2 之外的单点例外） */
+.zen-title-container {
+  width: 100%;
+}
+
+.zen-title-input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--foreground);
+  letter-spacing: -0.02em;
+  padding: 8px 0;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.zen-title-input::placeholder {
+  color: var(--muted);
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.zen-title-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+/* 宽阔 Markdown 编辑区域（编辑器外壳样式见 features/editor/milkdown-editor.css） */
+.zen-editor-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.zen-editor-wrapper .milkdown-editor-wrapper {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+/* 4. 右侧伴随提炼栏（面板外观由 HeroUI Card 承载，这里只做区域内边距与动效容器） */
+.zen-companion-sidebar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 16px 20px 16px 0;
+  box-sizing: border-box;
+}
+
+.zen-companion-card {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.zen-companion-header {
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.zen-companion-heading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.zen-companion-icon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.zen-companion-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.zen-companion-scroll {
+  flex: 1;
+  min-height: 0;
+}
+
+/* 5. 版本流适配：栅格布局类已上移至 resume-drawer.css（抽屉与伴随栏共用） */
+.zen-companion-body .resume-versions-scroll-body {
+  padding: 4px 2px;
+}

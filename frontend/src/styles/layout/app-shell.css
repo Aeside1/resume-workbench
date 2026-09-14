@@ -31,3 +31,41 @@
   min-width: 0;
   width: 100%;
 }
+
+/* --------------------------------------------------------------------------
+   Zen 非模态区域展开（ADR 004 §2.1）
+
+   视口高度锁在 shell 上（禁止页面级滚动），把「面包屑顶栏以下的剩余高度」
+   整块交给内容区，由 Zen 自己的滚动容器滚动。因此顶栏（含保存态 Chip）与
+   面包屑在写作全程始终可见可点。
+   -------------------------------------------------------------------------- */
+.app-shell--zen {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.app-shell--zen .app-main--focus {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-shell--zen .workbench-view-container {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* 画布容器的居中与内边距在 Zen 展开时让位给区域骨架 */
+.app-shell--zen .focus-canvas-wrapper--zen {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  padding: 0;
+}

@@ -102,7 +102,15 @@ describe('AppShell 专注模式切换', () => {
 
   it('支持 focus-canvas 模式并隐藏侧边栏与显示顶栏', () => {
     render(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus-canvas" breadcrumb="经历内容 / 蚂蚁集团">
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        mode="focus-canvas"
+        breadcrumbTrail={[
+          { label: '经历内容', onPress: vi.fn() },
+          { label: '蚂蚁集团' }
+        ]}
+      >
         <div>主内容</div>
       </AppShell>
     )
@@ -110,20 +118,29 @@ describe('AppShell 专注模式切换', () => {
     expect(screen.queryByRole('complementary', { name: '主导航' })).not.toBeInTheDocument()
     const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
     expect(breadcrumbNav).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
+    // 中间级改用 HeroUI Breadcrumbs（框架 Link），因此角色由 button 变为 link
+    expect(within(breadcrumbNav).getByRole('link', { name: '经历内容' })).toBeInTheDocument()
     expect(within(breadcrumbNav).getByText('蚂蚁集团')).toBeInTheDocument()
   })
 
   it('focus 模式显示轻量面包屑顶栏', () => {
     render(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" breadcrumb="经历内容 / 测试经历">
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        mode="focus"
+        breadcrumbTrail={[
+          { label: '经历内容', onPress: vi.fn() },
+          { label: '测试经历' }
+        ]}
+      >
         <div>主内容</div>
       </AppShell>
     )
 
     const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
     expect(breadcrumbNav).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
+    expect(within(breadcrumbNav).getByRole('link', { name: '经历内容' })).toBeInTheDocument()
     expect(within(breadcrumbNav).getByText('测试经历')).toBeInTheDocument()
   })
 
@@ -134,7 +151,10 @@ describe('AppShell 专注模式切换', () => {
         session={mockSession}
         onLogout={vi.fn()}
         mode="focus"
-        breadcrumb="经历内容 / 测试经历"
+        breadcrumbTrail={[
+          { label: '经历内容', onPress: handleExitFocus },
+          { label: '测试经历' }
+        ]}
         onExitFocus={handleExitFocus}
       >
         <div>主内容</div>
@@ -147,14 +167,17 @@ describe('AppShell 专注模式切换', () => {
     expect(handleExitFocus).toHaveBeenCalledOnce()
   })
 
-  it('focus 模式顶栏点击面包屑链接触发 onExitFocus 且不渲染退出专注按钮', () => {
+  it('focus 模式顶栏点击面包屑中间级触发该级去向且不渲染退出专注按钮', () => {
     const handleExitFocus = vi.fn()
     render(
       <AppShell
         session={mockSession}
         onLogout={vi.fn()}
         mode="focus"
-        breadcrumb="经历内容 / 测试经历"
+        breadcrumbTrail={[
+          { label: '经历内容', onPress: handleExitFocus },
+          { label: '测试经历' }
+        ]}
         onExitFocus={handleExitFocus}
       >
         <div>主内容</div>
@@ -163,10 +186,81 @@ describe('AppShell 专注模式切换', () => {
 
     expect(screen.queryByRole('button', { name: '退出专注模式' })).not.toBeInTheDocument()
 
-    const breadcrumbLink = screen.getByRole('button', { name: '经历内容' })
-    fireEvent.click(breadcrumbLink)
+    fireEvent.click(screen.getByRole('link', { name: '经历内容' }))
 
     expect(handleExitFocus).toHaveBeenCalledOnce()
+  })
+
+  it('Zen 展开时渲染三级面包屑，末级不可点且中间级与返回按钮都指向回画布', () => {
+    const handleExitFocus = vi.fn()
+    const handleBackToCanvas = vi.fn()
+    render(
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        mode="focus-zen"
+        breadcrumbTrail={[
+          { label: '经历内容', onPress: handleExitFocus },
+          { label: '蚂蚁集团', onPress: handleBackToCanvas },
+          { label: '重构渲染引擎' }
+        ]}
+        onExitFocus={handleExitFocus}
+        backLabel="返回画布"
+        focusActions={<button type="button">收起伴随栏</button>}
+      >
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    expect(screen.getByRole('button', { name: '返回画布' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '收起伴随栏' })).toBeInTheDocument()
+
+    const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
+    const items = within(breadcrumbNav).getAllByRole('listitem')
+    expect(items).toHaveLength(3)
+    expect(items.map((item) => item.textContent)).toEqual([
+      '经历内容',
+      '蚂蚁集团',
+      '重构渲染引擎'
+    ])
+
+    // 第 1 级退出整个专注模式，第 2 级回画布，第 3 级是当前位置（不可点）
+    expect(within(items[0]).getByRole('link')).toBeInTheDocument()
+    expect(within(items[1]).getByRole('link')).toBeInTheDocument()
+    // 第 3 级是当前位置：虽仍渲染为框架 Link，但已标记 aria-current="page"，
+    // 点击不会触发任何去向（onPress 已在 AppShell 侧按“末级不可点”过滤）。
+    expect(within(items[2]).getByRole('link')).toHaveAttribute('aria-current', 'page')
+
+    fireEvent.click(within(items[1]).getByRole('link'))
+    expect(handleBackToCanvas).toHaveBeenCalledOnce()
+  })
+
+  it('面包屑各级按位置（而非文案）绑定去向：重名标题不会导致点错层级', () => {
+    const handleExitFocus = vi.fn()
+    const handleBackToCanvas = vi.fn()
+    render(
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        mode="focus-zen"
+        breadcrumbTrail={[
+          { label: '同名分组', onPress: handleExitFocus },
+          { label: '同名分组', onPress: handleBackToCanvas },
+          { label: '当前工作项' }
+        ]}
+        onExitFocus={handleExitFocus}
+      >
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
+    const links = within(breadcrumbNav).getAllByRole('link', { name: '同名分组' })
+    expect(links).toHaveLength(2)
+
+    fireEvent.click(links[1])
+    expect(handleBackToCanvas).toHaveBeenCalledOnce()
+    expect(handleExitFocus).not.toHaveBeenCalled()
   })
 
   it('focus 模式顶栏显示保存状态微指示器', () => {

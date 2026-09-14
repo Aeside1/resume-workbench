@@ -2,25 +2,12 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ZenFocusEditor } from './ZenFocusEditor'
-import type { ExperienceGroup, WorkContent } from '../../api'
+import type { WorkContent } from '../../api'
 import { pasteMarkdown } from '../../test/pasteMarkdown'
 import { clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 
-describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
+describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域展开）', () => {
   afterEach(cleanup)
-
-  const mockGroup: ExperienceGroup = {
-    id: 10,
-    name: '基础架构部前端开发',
-    type: 'internship',
-    organization: '美团',
-    start_date: '2024-03-01',
-    end_date: '2024-08-31',
-    description: '负责低代码引擎与组件库调优',
-    archived: false,
-    created_at: '2024-03-01T00:00:00Z',
-    updated_at: '2024-03-01T00:00:00Z'
-  }
 
   const mockWorkContent: WorkContent = {
     id: 101,
@@ -60,11 +47,10 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     })
   })
 
-  it('isOpen 为 true 时正常渲染全屏视窗、极简 Topbar、左右双栏对照工作区', () => {
+  it('isOpen 为 true 时渲染专注写作区（region 角色）与左右双栏对照工作区', () => {
     render(
       <ZenFocusEditor
         isOpen={true}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
@@ -72,20 +58,17 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
       />
     )
 
-    // 1. 验证全屏 Overlay 与 Topbar
-    expect(screen.getByRole('dialog', { name: /全屏专注工作台: 重构可视化拖拽画布核心渲染引擎/ })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '退出全屏' })).toBeInTheDocument()
-    expect(screen.getByText('Esc')).toBeInTheDocument()
+    // 1. 区域形态：不再是 dialog 全屏浮层，而是一个带 aria-label 的 region。
+    //    退出按钮、面包屑、保存态 Chip 已整体移到 AppShell 顶栏，区域内不再自渲染。
+    expect(
+      screen.getByRole('region', { name: /专注写作区: 重构可视化拖拽画布核心渲染引擎/ })
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '退出全屏' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '收起伴随栏' })).not.toBeInTheDocument()
+    expect(screen.queryByText('已自动保存')).not.toBeInTheDocument()
 
-    // 2. 验证面包屑
-    expect(screen.getByText('美团 · 基础架构部前端开发')).toBeInTheDocument()
-    expect(screen.getByText('重构可视化拖拽画布核心渲染引擎')).toBeInTheDocument()
-
-    // 3. 验证 Topbar 操作项
-    expect(screen.queryByRole('button', { name: '复制整篇 Markdown' })).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '收起伴随栏' })).toBeInTheDocument()
-
-    // 4. 验证左侧主写作区大标题输入与正文
+    // 2. 左侧主写作区大标题输入与正文
     const titleInput = screen.getByLabelText('工作项大标题')
     expect(titleInput).toBeInTheDocument()
     expect(titleInput).toHaveValue('重构可视化拖拽画布核心渲染引擎')
@@ -94,12 +77,36 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     expect(editorBox).toBeInTheDocument()
     expect(editorBox).toHaveTextContent('旧渲染器全量 re-render 导致大页面卡顿')
 
-    // 5. 验证右侧伴随提炼栏与版本卡片流
+    // 3. 右侧伴随提炼栏改装为 HeroUI Card（Card.Title 即 h3，标题层级不变），版本卡片流仍在
     const companionSidebar = screen.getByLabelText('伴随提炼栏')
     expect(companionSidebar).toBeInTheDocument()
-    expect(within(companionSidebar).getByRole('heading', { level: 3, name: '简历描述提炼' })).toBeInTheDocument()
+    expect(
+      within(companionSidebar).getByRole('heading', { level: 3, name: '简历描述提炼' })
+    ).toBeInTheDocument()
     expect(within(companionSidebar).getByText('技术深度版')).toBeInTheDocument()
     expect(within(companionSidebar).getByText('业务成效版')).toBeInTheDocument()
+    expect(companionSidebar.querySelector('.zen-companion-card')).not.toBeNull()
+  })
+
+  it('就地编辑大标题时把实时标题上抛给外壳（顶栏面包屑末级）', () => {
+    const handleTitleChange = vi.fn()
+
+    render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={vi.fn()}
+        onUpdateVersions={vi.fn()}
+        onTitleChange={handleTitleChange}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项大标题'), {
+      target: { value: '重构渲染引擎（区域展开版）' }
+    })
+
+    expect(handleTitleChange).toHaveBeenCalledWith('重构渲染引擎（区域展开版）')
   })
 
   it('修改工作项大标题并在 800ms 防抖后自动保存', async () => {
@@ -108,7 +115,6 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     render(
       <ZenFocusEditor
         isOpen={true}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={handleSaveContent}
@@ -130,9 +136,6 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
         101
       )
     }, { timeout: 2000 })
-
-    // 验证保存成功后 Topbar 保存状态呈现
-    expect(await screen.findByText('已自动保存')).toBeInTheDocument()
   })
 
   it('修改自由 Markdown 正文并在 800ms 防抖后自动保存', async () => {
@@ -141,7 +144,6 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     render(
       <ZenFocusEditor
         isOpen={true}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={handleSaveContent}
@@ -164,47 +166,43 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     }, { timeout: 2000 })
   })
 
-  it('支持仅通过 Topbar 伴随栏切换按钮收起与重新展开伴随栏', async () => {
-    render(
+  it('伴随栏开合由外壳的 isCompanionOpen 决定（区域内不再自带开关）', async () => {
+    const { rerender } = render(
       <ZenFocusEditor
         isOpen={true}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
         onUpdateVersions={vi.fn()}
+        isCompanionOpen={true}
       />
     )
 
-    // 默认双栏状态
     expect(screen.getByLabelText('伴随提炼栏')).toBeInTheDocument()
 
-    // 1. 点击 Topbar 上的“收起伴随栏”按钮收起侧栏
-    const toggleCollapseBtn = screen.getByRole('button', { name: '收起伴随栏' })
-    fireEvent.click(toggleCollapseBtn)
+    rerender(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={vi.fn()}
+        onUpdateVersions={vi.fn()}
+        isCompanionOpen={false}
+      />
+    )
 
-    // 验证伴随栏平滑收起后已卸载，Topbar 按钮文案切换为“展开伴随栏”
     await waitFor(() => {
       expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument()
     })
-    const toggleExpandBtn = screen.getByRole('button', { name: '展开伴随栏' })
-    expect(toggleExpandBtn).toBeInTheDocument()
-
-    // 2. 再次点击 Topbar 上的“展开伴随栏”按钮重新展开
-    fireEvent.click(toggleExpandBtn)
-    await waitFor(() => {
-      expect(screen.getByLabelText('伴随提炼栏')).toBeInTheDocument()
-    })
   })
 
-  it('按下物理 Escape 键平滑退出专注模式，若有未决修改立即刷新保存', async () => {
+  it('按下物理 Escape 键退出专注模式，若有未决修改立即刷新保存', async () => {
     const handleClose = vi.fn()
     const handleSaveContent = vi.fn().mockResolvedValue(undefined)
 
     render(
       <ZenFocusEditor
         isOpen={true}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={handleClose}
         onSaveContent={handleSaveContent}
@@ -229,24 +227,64 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     expect(handleClose).toHaveBeenCalledTimes(1)
   })
 
-  it('点击 Topbar“退出全屏”按钮亦退出专注模式并刷新保存', async () => {
+  it('Esc 守卫：区域内有模态层（role=dialog）时不退出专注模式', () => {
     const handleClose = vi.fn()
-    const handleSaveContent = vi.fn().mockResolvedValue(undefined)
 
     render(
       <ZenFocusEditor
         isOpen={true}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={handleClose}
-        onSaveContent={handleSaveContent}
+        onSaveContent={vi.fn()}
         onUpdateVersions={vi.fn()}
       />
     )
 
-    const exitBtn = screen.getByRole('button', { name: '退出全屏' })
-    fireEvent.click(exitBtn)
+    const modal = document.createElement('div')
+    modal.setAttribute('role', 'dialog')
+    document.body.appendChild(modal)
 
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(handleClose).not.toHaveBeenCalled()
+
+    document.body.removeChild(modal)
+  })
+
+  it('外壳下发的 exitSignal 关闭命令走同一条退出路径（先 flush 再关）', () => {
+    const handleClose = vi.fn()
+    const handleSaveContent = vi.fn().mockResolvedValue(undefined)
+
+    const { rerender } = render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={handleClose}
+        onSaveContent={handleSaveContent}
+        onUpdateVersions={vi.fn()}
+        exitSignal={0}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项大标题'), {
+      target: { value: '外壳命令关闭前的未决修改' }
+    })
+
+    // 顶栏返回按钮 / 面包屑中间级 → 外壳把计数 +1 下发
+    rerender(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={handleClose}
+        onSaveContent={handleSaveContent}
+        onUpdateVersions={vi.fn()}
+        exitSignal={1}
+      />
+    )
+
+    expect(handleSaveContent).toHaveBeenCalledWith(
+      expect.objectContaining({ title: '外壳命令关闭前的未决修改' }),
+      101
+    )
     expect(handleClose).toHaveBeenCalledTimes(1)
   })
 
@@ -254,7 +292,6 @@ describe('ZenFocusEditor 全屏专注写作工作台组件测试', () => {
     const { container } = render(
       <ZenFocusEditor
         isOpen={false}
-        group={mockGroup}
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
