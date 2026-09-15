@@ -223,7 +223,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
                     >
                       <span className="entry-kicker">组合输出</span>
                       <strong>简历方案</strong>
-                      <span className="entry-copy">后续可按目标岗位组合简历描述。</span>
+                      <span className="entry-copy">后续可按目标岗位组合简历亮点。</span>
                       <span className="entry-action">即将开始</span>
                     </Button>
                   </div>

@@ -35,4 +35,26 @@ docker compose run --rm api pytest -q tests
 
 前端验证：`npm run typecheck`、`npm run test`、`npm run build`。
 
+## 数据库迁移
+
+本仓库**没有版本化迁移机制**（未引入 Alembic）：服务启动时 `Base.metadata.create_all` 会建出缺失的表，结构变更与数据搬运由 `backend/migrate_*.sql` 手写脚本完成，需手动执行一次。
+
+### migrate_003：简历亮点独立成表
+
+把 `work_contents.supplementary_notes` 里的历史描述版本（`versions` / `descriptions+points` / 顶层数组 / 纯文本四种形状）展开为 `resume_descriptions` 行。脚本幂等，可重复执行（幂等键 `(work_content_id, legacy_id)`）。
+
+```powershell
+# 表结构由 API 启动时的 create_all 建立，先重启一次 API
+docker compose up -d --build api
+# 执行搬运（PowerShell 下用 docker cp 避免管道编码问题）
+docker cp backend/migrate_003_resume_descriptions.sql resume-workbench-db-1:/tmp/migrate_003.sql
+docker exec resume-workbench-db-1 psql -U resume -d resume_workbench -v ON_ERROR_STOP=1 -f /tmp/migrate_003.sql
+# 核对
+docker exec resume-workbench-db-1 psql -U resume -d resume_workbench -c "select count(*) from resume_descriptions;"
+```
+
+bash/sh 下可直接重定向：`docker compose exec -T db psql -U resume -d resume_workbench -v ON_ERROR_STOP=1 < backend/migrate_003_resume_descriptions.sql`。
+
+**执行记录（2026-09-15，开发库）**：执行前 `resume_descriptions` 0 行 → 首次执行 `INSERT 0 11` → 二次执行 `INSERT 0 0`（行数仍为 11）。执行前已用 `pg_dump` 备份到 `.worktrees/pre-04a-20260915-160601.sql`（gitignored）。
+
 所有工作区接口都通过当前认证用户的 `owner_id` 查询，跨用户访问统一返回 404，避免泄露资源存在性。

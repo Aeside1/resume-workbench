@@ -2,9 +2,23 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ZenFocusEditor } from './ZenFocusEditor'
-import type { WorkContent } from '../../api'
+import { api, type WorkContent } from '../../api'
+import type { Session } from '../../session'
 import { pasteMarkdown } from '../../test/pasteMarkdown'
 import { clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
+
+vi.mock('../../api', () => ({
+  api: {
+    resumeHighlights: vi.fn(),
+    createResumeHighlight: vi.fn(),
+    updateResumeHighlight: vi.fn(),
+    copyResumeHighlight: vi.fn(),
+    deleteResumeHighlight: vi.fn()
+  }
+}))
+
+const mocked = vi.mocked(api)
+const session: Session = { token: 'test-token', user: { id: 1, email: 'owner@example.com' } }
 
 describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域展开）', () => {
   afterEach(cleanup)
@@ -40,21 +54,39 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
   beforeEach(() => {
     vi.restoreAllMocks()
     clearMilkdownEditorCache()
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined)
+    // 伴随栏的简历亮点来自服务端接口（迁移后不再读 supplementary_notes 里的历史版本）
+    mocked.resumeHighlights.mockResolvedValue([
+      {
+        id: 1,
+        work_content_id: 101,
+        label: '技术深度版',
+        content: '主导画布渲染引擎重构，渲染耗时降低 75%。',
+        position: 0,
+        archived: false,
+        created_at: '2024-03-01T00:00:00Z',
+        updated_at: '2024-03-01T00:00:00Z'
+      },
+      {
+        id: 2,
+        work_content_id: 101,
+        label: '业务成效版',
+        content: '保障数十个业务线可视化大屏平稳上线，提升搭建效率 3 倍。',
+        position: 1,
+        archived: false,
+        created_at: '2024-03-01T00:00:00Z',
+        updated_at: '2024-03-01T00:00:00Z'
       }
-    })
+    ])
   })
 
-  it('isOpen 为 true 时渲染专注写作区（region 角色）与左右双栏对照工作区', () => {
+  it('isOpen 为 true 时渲染专注写作区（region 角色）与左右双栏对照工作区', async () => {
     render(
       <ZenFocusEditor
         isOpen={true}
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
+        session={session}
       />
     )
 
@@ -77,13 +109,13 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
     expect(editorBox).toBeInTheDocument()
     expect(editorBox).toHaveTextContent('旧渲染器全量 re-render 导致大页面卡顿')
 
-    // 3. 右侧伴随提炼栏改装为 HeroUI Card（Card.Title 即 h3，标题层级不变），版本卡片流仍在
+    // 3. 右侧伴随提炼栏改装为 HeroUI Card（Card.Title 即 h3，标题层级不变），简历亮点卡片流仍在
     const companionSidebar = screen.getByLabelText('伴随提炼栏')
     expect(companionSidebar).toBeInTheDocument()
     expect(
-      within(companionSidebar).getByRole('heading', { level: 3, name: '简历描述提炼' })
+      within(companionSidebar).getByRole('heading', { level: 3, name: '简历亮点提炼' })
     ).toBeInTheDocument()
-    expect(within(companionSidebar).getByText('技术深度版')).toBeInTheDocument()
+    expect(await within(companionSidebar).findByText('技术深度版')).toBeInTheDocument()
     expect(within(companionSidebar).getByText('业务成效版')).toBeInTheDocument()
     expect(companionSidebar.querySelector('.zen-companion-card')).not.toBeNull()
   })
@@ -97,7 +129,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
+        session={session}
         onTitleChange={handleTitleChange}
       />
     )
@@ -118,7 +150,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={handleSaveContent}
-        onUpdateVersions={vi.fn()}
+        session={session}
       />
     )
 
@@ -147,7 +179,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={handleSaveContent}
-        onUpdateVersions={vi.fn()}
+        session={session}
       />
     )
 
@@ -173,7 +205,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
+        session={session}
         isCompanionOpen={true}
       />
     )
@@ -186,7 +218,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
+        session={session}
         isCompanionOpen={false}
       />
     )
@@ -206,7 +238,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={handleClose}
         onSaveContent={handleSaveContent}
-        onUpdateVersions={vi.fn()}
+        session={session}
       />
     )
 
@@ -236,7 +268,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={handleClose}
         onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
+        session={session}
       />
     )
 
@@ -260,7 +292,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={handleClose}
         onSaveContent={handleSaveContent}
-        onUpdateVersions={vi.fn()}
+        session={session}
         exitSignal={0}
       />
     )
@@ -276,7 +308,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={handleClose}
         onSaveContent={handleSaveContent}
-        onUpdateVersions={vi.fn()}
+        session={session}
         exitSignal={1}
       />
     )
@@ -295,7 +327,7 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
         workContent={mockWorkContent}
         onClose={vi.fn()}
         onSaveContent={vi.fn()}
-        onUpdateVersions={vi.fn()}
+        session={session}
       />
     )
 

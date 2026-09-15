@@ -138,3 +138,51 @@ class WorkContentView(BaseModel):
 
 class WorkContentReorder(BaseModel):
     work_content_ids: list[int] = Field(min_length=1)
+
+
+class ResumeDescriptionCreate(BaseModel):
+    """新建简历亮点。label 缺省时由服务端给一个可读的默认名。"""
+
+    label: str | None = Field(default=None, max_length=200)
+    content: str | None = None
+
+    @field_validator("label")
+    @classmethod
+    def trim_label(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            raise ValueError("简历亮点名称不能为空")
+        return value
+
+
+class ResumeDescriptionUpdate(BaseModel):
+    label: str | None = Field(default=None, max_length=200)
+    content: str | None = None
+
+    @field_validator("label")
+    @classmethod
+    def trim_optional_label(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            raise ValueError("简历亮点名称不能为空")
+        return value
+
+
+class ResumeDescriptionReorder(BaseModel):
+    resume_description_ids: list[int] = Field(min_length=1)
+
+
+class ResumeDescriptionView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    work_content_id: int
+    label: str
+    content: str
+    position: int
+    archived: bool
+    created_at: datetime
+    updated_at: datetime

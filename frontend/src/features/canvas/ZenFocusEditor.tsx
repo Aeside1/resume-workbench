@@ -3,13 +3,13 @@ import { Card, ScrollShadow, Surface } from '@heroui/react'
 import { FileText, PanelRight, PanelRightClose } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { WorkContent } from '../../api'
+import type { Session } from '../../session'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
 import {
   parseSupplementaryNotes,
-  serializeSupplementaryNotes,
-  type ResumeDescriptionVersion
+  serializeSupplementaryNotes
 } from './supplementaryNotes'
-import { ResumeVersionsFeed } from './ResumeVersionsFeed'
+import { ResumeHighlightsFeed } from './ResumeHighlightsFeed'
 import {
   buildInitialDraft,
   type ContentDraft
@@ -20,7 +20,8 @@ export type ZenFocusEditorProps = {
   workContent: WorkContent | null
   onClose: () => void
   onSaveContent: (draft: ContentDraft, targetId: number) => Promise<void> | void
-  onUpdateVersions: (workContentId: number, versions: ResumeDescriptionVersion[]) => Promise<void> | void
+  /** 简历亮点列表直接读写服务端资源，因此写作区需要携带会话 */
+  session: Session
   /** 伴随栏开合由外壳（AppShell 顶栏插槽）持有；未接入外壳时默认展开 */
   isCompanionOpen?: boolean
   /** 就地编辑大标题时把实时标题上抛给顶栏面包屑末级 */
@@ -42,7 +43,7 @@ export function ZenFocusEditor({
   workContent,
   onClose,
   onSaveContent,
-  onUpdateVersions,
+  session,
   isCompanionOpen,
   onTitleChange,
   exitSignal
@@ -261,15 +262,15 @@ export function ZenFocusEditor({
                 <Card.Header className="zen-companion-header">
                   <Card.Title className="zen-companion-heading">
                     <FileText className="zen-companion-icon" size={15} aria-hidden="true" />
-                    简历描述提炼
+                    简历亮点提炼
                   </Card.Title>
                 </Card.Header>
 
                 <Card.Content className="zen-companion-body">
                   <ScrollShadow className="zen-companion-scroll" orientation="vertical" size={32}>
-                    <ResumeVersionsFeed
+                    <ResumeHighlightsFeed
                       workContent={workContent}
-                      onUpdateVersions={onUpdateVersions}
+                      session={session}
                     />
                   </ScrollShadow>
                 </Card.Content>

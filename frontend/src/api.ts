@@ -2,6 +2,12 @@ export type AuthResponse = { token: string; user: { id: number; email: string } 
 export type ExperienceGroup = { id: number; user_id?: number; name: string; type: 'internship' | 'project'; organization: string | null; start_date: string | null; end_date: string | null; description: string | null; archived: boolean; created_at: string; updated_at: string }
 export type WorkContent = { id: number; experience_group_id: number; title: string; detailed_record: string | null; technical_materials: string | null; result_data: string | null; supplementary_notes: string | null; position: number; archived: boolean; created_at: string; updated_at: string }
 
+/**
+ * 简历亮点（术语见 CONTEXT.md）：具体工作内容下的一种可直接放进简历的写法。
+ * 代码标识符沿用 ResumeDescription，界面与文档统一叫「简历亮点」。
+ */
+export type ResumeHighlight = { id: number; work_content_id: number; label: string; content: string; position: number; archived: boolean; created_at: string; updated_at: string }
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 async function request<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
@@ -34,5 +40,12 @@ export const api = {
   archiveWorkContent: (token: string, id: number) => request<WorkContent>(`/api/work-contents/${id}/archive`, { method: 'POST' }, token),
   restoreWorkContent: (token: string, id: number) => request<WorkContent>(`/api/work-contents/${id}/restore`, { method: 'POST' }, token),
   deleteWorkContent: (token: string, id: number) => request<void>(`/api/work-contents/${id}`, { method: 'DELETE' }, token),
+  resumeHighlights: (token: string, contentId: number, includeArchived = false) => request<ResumeHighlight[]>(`/api/work-contents/${contentId}/resume-descriptions?include_archived=${includeArchived}`, {}, token),
+  createResumeHighlight: (token: string, contentId: number, payload: { label?: string; content?: string } = {}) => request<ResumeHighlight>(`/api/work-contents/${contentId}/resume-descriptions`, { method: 'POST', body: JSON.stringify(payload) }, token),
+  updateResumeHighlight: (token: string, id: number, payload: Partial<Pick<ResumeHighlight, 'label' | 'content'>>) => request<ResumeHighlight>(`/api/resume-descriptions/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
+  copyResumeHighlight: (token: string, id: number) => request<ResumeHighlight>(`/api/resume-descriptions/${id}/copy`, { method: 'POST' }, token),
+  archiveResumeHighlight: (token: string, id: number) => request<ResumeHighlight>(`/api/resume-descriptions/${id}/archive`, { method: 'POST' }, token),
+  restoreResumeHighlight: (token: string, id: number) => request<ResumeHighlight>(`/api/resume-descriptions/${id}/restore`, { method: 'POST' }, token),
+  deleteResumeHighlight: (token: string, id: number) => request<void>(`/api/resume-descriptions/${id}`, { method: 'DELETE' }, token),
 }
 

@@ -66,12 +66,12 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     // 验证旧有的 4 个死板表单分割标题在阅读态已不作为独立 section 标签存在
     expect(screen.queryByRole('heading', { level: 4, name: '背景与难点' })).not.toBeInTheDocument()
 
-    // 验证旧有的平铺简历描述 Tab 已移除，替换为专业实体按钮“简历描述提炼”
+    // 验证旧有的平铺简历描述 Tab 已移除，替换为专业实体按钮“简历亮点提炼”
     expect(screen.queryByRole('tablist')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /简历描述提炼/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /简历亮点提炼/ })).toBeInTheDocument()
   })
 
-  it('点击底部简历描述提炼按钮触发 onOpenDrawer 回调', () => {
+  it('点击底部简历亮点提炼按钮触发 onOpenDrawer 回调', () => {
     const handleOpenDrawer = vi.fn()
 
     render(
@@ -88,7 +88,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       />
     )
 
-    const drawerBtn = screen.getByRole('button', { name: /简历描述提炼/ })
+    const drawerBtn = screen.getByRole('button', { name: /简历亮点提炼/ })
     fireEvent.click(drawerBtn)
     expect(handleOpenDrawer).toHaveBeenCalledTimes(1)
   })
@@ -174,8 +174,8 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     fireEvent.click(within(card).getByText(/平均渲染耗时降低 75%/))
     expect(handleStartEdit).toHaveBeenCalledTimes(1)
 
-    // 底部「简历描述提炼」按钮已与正文热区物理解耦：点击它不会经冒泡误触发编辑
-    fireEvent.click(within(card).getByRole('button', { name: '简历描述提炼' }))
+    // 底部「简历亮点提炼」按钮已与正文热区物理解耦：点击它不会经冒泡误触发编辑
+    fireEvent.click(within(card).getByRole('button', { name: '简历亮点提炼' }))
     expect(handleStartEdit).toHaveBeenCalledTimes(1)
 
     // 标题元素本身（h3，非其中的按钮）不承载点击进入编辑
@@ -278,8 +278,8 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     const highlightEl = screen.getByText('trade off')
     expect(highlightEl.tagName.toLowerCase()).toBe('mark')
 
-    // 验证专业实体按钮“简历描述提炼”
-    expect(screen.getByRole('button', { name: /简历描述提炼/ })).toBeInTheDocument()
+    // 验证专业实体按钮“简历亮点提炼”
+    expect(screen.getByRole('button', { name: /简历亮点提炼/ })).toBeInTheDocument()
   })
 
   it('当 isActive 为 true 时，卡片具有 work-content-card--active 样式类且胶囊按钮具有激活类名', () => {
@@ -299,7 +299,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     const card = document.getElementById(`work-content-${mockWorkItem.id}`)!
     expect(card).toHaveClass('work-content-card--active')
 
-    const drawerBtn = screen.getByRole('button', { name: /简历描述提炼/ })
+    const drawerBtn = screen.getByRole('button', { name: /简历亮点提炼/ })
     expect(drawerBtn).toHaveClass('resume-desc-trigger-btn--active')
   })
 

@@ -385,10 +385,10 @@ export function WorkContentBlock({
               variant="outline"
               className={`resume-desc-trigger-btn${isActive ? ' resume-desc-trigger-btn--active' : ''}`}
               onPress={() => onOpenDrawer?.()}
-              aria-label="简历描述提炼"
+              aria-label="简历亮点提炼"
             >
               <FileText className="resume-trigger-icon" size={15} aria-hidden="true" />
-              <span>简历描述提炼</span>
+              <span>简历亮点提炼</span>
               <ChevronRight className="resume-trigger-arrow" size={14} aria-hidden="true" />
             </Button>
           </footer>

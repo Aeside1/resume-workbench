@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FocusCanvasContainer } from './FocusCanvasContainer'
-import { api, type ExperienceGroup, type WorkContent } from '../../api'
+import { api, type ExperienceGroup, type ResumeHighlight, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 
 afterEach(cleanup)
@@ -78,13 +78,73 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     }
   ]
 
+  /** 简历亮点现在来自服务端独立资源，不再是 work_content 里的 JSON */
+  const mockHighlights: Record<number, ResumeHighlight[]> = {
+    101: [
+      {
+        id: 1,
+        work_content_id: 101,
+        label: '技术深度版',
+        content: '主导画布渲染引擎重构，降低耗时 75%。',
+        position: 0,
+        archived: false,
+        created_at: '2024-03-01T00:00:00Z',
+        updated_at: '2024-03-01T00:00:00Z'
+      }
+    ],
+    102: [
+      {
+        id: 2,
+        work_content_id: 102,
+        label: '工程效率版',
+        content: '搭建 Tree-shaking 自动化门禁，包体积削减 32%。',
+        position: 0,
+        archived: false,
+        created_at: '2024-03-01T00:00:00Z',
+        updated_at: '2024-03-01T00:00:00Z'
+      },
+      {
+        id: 3,
+        work_content_id: 102,
+        label: '架构通用版',
+        content: '输出跨端打包检测方案，并在全组落地应用。',
+        position: 1,
+        archived: false,
+        created_at: '2024-03-01T00:00:00Z',
+        updated_at: '2024-03-01T00:00:00Z'
+      }
+    ]
+  }
+
+  const findHighlight = (id: number) =>
+    Object.values(mockHighlights)
+      .flat()
+      .find((item) => item.id === id)!
+
   beforeEach(() => {
     vi.restoreAllMocks()
-    Object.assign(navigator, {
-      clipboard: {
-        writeText: vi.fn().mockResolvedValue(undefined)
-      }
-    })
+    vi.spyOn(api, 'resumeHighlights').mockImplementation(async (_token, contentId) => mockHighlights[contentId] ?? [])
+    vi.spyOn(api, 'createResumeHighlight').mockImplementation(async (_token, contentId) => ({
+      id: 900,
+      work_content_id: contentId,
+      label: '新的简历亮点',
+      content: '',
+      position: 9,
+      archived: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }))
+    vi.spyOn(api, 'copyResumeHighlight').mockImplementation(async (_token, id) => ({
+      ...findHighlight(id),
+      id: 901,
+      label: `${findHighlight(id).label} 副本`,
+      position: 9
+    }))
+    vi.spyOn(api, 'updateResumeHighlight').mockImplementation(async (_token, id, payload) => ({
+      ...findHighlight(id),
+      ...payload
+    }))
+    vi.spyOn(api, 'deleteResumeHighlight').mockResolvedValue(undefined)
     vi.spyOn(api, 'workContents').mockResolvedValue(mockContents)
     vi.spyOn(api, 'updateWorkContent').mockImplementation(async (_token, id, payload) => {
       const found = mockContents.find((item) => item.id === id)!
@@ -341,7 +401,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     })
   })
 
-  it('点击工作项底部简历描述胶囊按钮，卡片呈现激活微边框并滑出抽屉，展示对应版本卡片', async () => {
+  it('点击工作项底部简历亮点胶囊按钮，卡片呈现激活微边框并滑出抽屉，展示对应亮点卡片', async () => {
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -352,15 +412,15 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
 
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
-    expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog', { name: '简历亮点提炼抽屉' })).not.toBeInTheDocument()
 
-    // 点击第一个工作项的“简历描述提炼”胶囊按钮
+    // 点击第一个工作项的“简历亮点提炼”胶囊按钮
     const card101 = document.getElementById('work-content-101')!
-    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历亮点提炼' })
     fireEvent.click(drawerBtn101)
 
     // 验证抽屉滑出并关联该工作项
-    const drawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
+    const drawer = await screen.findByRole('dialog', { name: '简历亮点提炼抽屉' })
     expect(within(drawer).getByText('重构可视化拖拽画布核心渲染引擎')).toBeInTheDocument()
     expect(within(drawer).getByText('技术深度版')).toBeInTheDocument()
 
@@ -381,28 +441,28 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 打开第一个工作项的抽屉
     const card101 = document.getElementById('work-content-101')!
-    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历亮点提炼' })
     fireEvent.click(drawerBtn101)
 
-    const drawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
+    const drawer = await screen.findByRole('dialog', { name: '简历亮点提炼抽屉' })
     expect(within(drawer).getByText('技术深度版')).toBeInTheDocument()
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
 
     // 抽屉是模态覆盖层：React Aria 给背景加 inert（不可交互 + 移出无障碍树），
     // 因此打开状态下无法操作画布按钮（换绑需先关闭抽屉）
-    expect(screen.queryByRole('button', { name: '简历描述提炼' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '简历亮点提炼' })).not.toBeInTheDocument()
 
     // 关闭抽屉后，点击第二个工作项的胶囊按钮 → 抽屉换绑到该工作项
     fireEvent.keyDown(drawer, { key: 'Escape' })
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: '简历亮点提炼抽屉' })).not.toBeInTheDocument()
     })
 
     const card102 = document.getElementById('work-content-102')!
-    const drawerBtn102 = within(card102).getByRole('button', { name: '简历描述提炼' })
+    const drawerBtn102 = within(card102).getByRole('button', { name: '简历亮点提炼' })
     fireEvent.click(drawerBtn102)
 
-    const reboundDrawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
+    const reboundDrawer = await screen.findByRole('dialog', { name: '简历亮点提炼抽屉' })
     expect(within(reboundDrawer).getByText('设计组件库 Tree-shaking 自动化检测管线')).toBeInTheDocument()
     expect(within(reboundDrawer).getByText('工程效率版')).toBeInTheDocument()
     expect(within(reboundDrawer).getByText('架构通用版')).toBeInTheDocument()
@@ -412,7 +472,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(document.getElementById('work-content-102')).toHaveClass('work-content-card--active')
   })
 
-  it('在抽屉中新建版本并保存，调用 updateWorkContent', async () => {
+  it('在抽屉中新建简历亮点，调用亮点接口而不是回写工作内容', async () => {
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -424,28 +484,25 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 打开第二个工作项的抽屉
     const card102 = document.getElementById('work-content-102')!
-    const drawerBtn102 = within(card102).getByRole('button', { name: '简历描述提炼' })
+    const drawerBtn102 = within(card102).getByRole('button', { name: '简历亮点提炼' })
     fireEvent.click(drawerBtn102)
 
     await screen.findByText('工程效率版')
 
-    // 点击新建版本
-    const addVersionBtn = screen.getByRole('button', { name: '新建简历描述版本' })
-    fireEvent.click(addVersionBtn)
+    // 点击新建亮点
+    fireEvent.click(screen.getByRole('button', { name: '新建简历亮点' }))
 
-    // 验证 updateWorkContent 被调用且包含自定义版本
+    // 亮点是独立资源：只调用亮点接口，不再把列表序列化回 supplementary_notes
     await waitFor(() => {
-      expect(api.updateWorkContent).toHaveBeenCalledWith(
-        mockSession.token,
-        102,
-        expect.objectContaining({
-          supplementary_notes: expect.stringContaining('自定义版本')
-        })
-      )
+      expect(api.createResumeHighlight).toHaveBeenCalledWith(mockSession.token, 102)
     })
+    expect(api.updateWorkContent).not.toHaveBeenCalled()
   })
 
-  it('在抽屉中点击复制按钮一键拷贝版本全文到剪贴板，并触发视觉反馈', async () => {
+  it('在抽屉中点击复制按钮复制出一条新的简历亮点，不再写剪贴板', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+
     render(
       <FocusCanvasContainer
         session={mockSession}
@@ -457,17 +514,18 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 打开第一个工作项的抽屉
     const card101 = document.getElementById('work-content-101')!
-    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历亮点提炼' })
     fireEvent.click(drawerBtn101)
 
-    const drawer = await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })
-    const copyBtn = within(drawer).getByRole('button', { name: '复制 技术深度版' })
-    fireEvent.click(copyBtn)
+    const drawer = await screen.findByRole('dialog', { name: '简历亮点提炼抽屉' })
+    fireEvent.click(within(drawer).getByRole('button', { name: '复制 技术深度版' }))
 
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      '主导画布渲染引擎重构，降低耗时 75%。'
-    )
-    expect(await screen.findByText('已复制')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(api.copyResumeHighlight).toHaveBeenCalledWith(mockSession.token, 1)
+    })
+    // 「复制到剪贴板」已按决策退役
+    expect(writeText).not.toHaveBeenCalled()
+    expect(await within(drawer).findByText('技术深度版 副本')).toBeInTheDocument()
   })
 
   it('点击抽屉关闭按钮或按 Escape 键关闭抽屉，卡片激活高亮移除', async () => {
@@ -482,9 +540,9 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 打开抽屉
     const card101 = document.getElementById('work-content-101')!
-    const drawerBtn101 = within(card101).getByRole('button', { name: '简历描述提炼' })
+    const drawerBtn101 = within(card101).getByRole('button', { name: '简历亮点提炼' })
     fireEvent.click(drawerBtn101)
-    expect(await screen.findByRole('dialog', { name: '简历描述提炼抽屉' })).toBeInTheDocument()
+    expect(await screen.findByRole('dialog', { name: '简历亮点提炼抽屉' })).toBeInTheDocument()
     expect(document.getElementById('work-content-101')).toHaveClass('work-content-card--active')
 
     // 点击右上角关闭按钮
@@ -492,7 +550,7 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     fireEvent.click(closeBtn)
 
     await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: '简历描述提炼抽屉' })).not.toBeInTheDocument()
+      expect(screen.queryByRole('dialog', { name: '简历亮点提炼抽屉' })).not.toBeInTheDocument()
     })
     expect(document.getElementById('work-content-101')).not.toHaveClass('work-content-card--active')
   })

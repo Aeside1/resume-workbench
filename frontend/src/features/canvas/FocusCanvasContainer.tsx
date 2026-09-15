@@ -6,11 +6,6 @@ import { OutlineNavigator } from './OutlineNavigator'
 import { FocusCanvasDocument } from './FocusCanvasDocument'
 import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
 import { ZenFocusEditor } from './ZenFocusEditor'
-import {
-  parseSupplementaryNotes,
-  serializeSupplementaryNotes,
-  type ResumeDescriptionVersion
-} from './supplementaryNotes'
 import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
 import type { ContentDraft } from './WorkContentBlock'
 
@@ -262,30 +257,6 @@ export function FocusCanvasContainer({
     }
   }, [zenModeWorkContentId, onZenChange])
 
-  const handleUpdateDrawerVersions = async (
-    workContentId: number,
-    versions: ResumeDescriptionVersion[]
-  ) => {
-    const target = contents.find((item) => item.id === workContentId)
-    if (!target) return
-    const parsed = parseSupplementaryNotes(target.supplementary_notes)
-    const serializedNotes = serializeSupplementaryNotes(parsed.note, versions)
-    const payload = {
-      title: target.title,
-      detailed_record: target.detailed_record,
-      technical_materials: target.technical_materials,
-      result_data: target.result_data,
-      supplementary_notes: serializedNotes
-    }
-    try {
-      const saved = await api.updateWorkContent(session.token, workContentId, payload)
-      setContents((items) => items.map((item) => (item.id === saved.id ? saved : item)))
-    } catch (e) {
-      setError((e as Error).message)
-    }
-  }
-
-
   const handleReorderContents = async (newContents: WorkContent[]) => {
     setContents(newContents)
     try {
@@ -350,7 +321,7 @@ export function FocusCanvasContainer({
           workContent={zenWorkContent}
           onClose={handleCloseZenMode}
           onSaveContent={handleSaveContent}
-          onUpdateVersions={handleUpdateDrawerVersions}
+          session={session}
           isCompanionOpen={isCompanionOpen}
           onTitleChange={handleZenTitleChange}
           exitSignal={zenExitSignal}
@@ -411,8 +382,8 @@ export function FocusCanvasContainer({
       <ResumeDescriptionDrawer
         isOpen={activeDrawerWorkContentId !== null}
         workContent={contents.find((item) => item.id === activeDrawerWorkContentId) ?? null}
+        session={session}
         onClose={handleCloseDrawer}
-        onUpdateVersions={handleUpdateDrawerVersions}
       />
     </div>
   )
