@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Button, Card, Input } from '@heroui/react'
 import { Check, Copy, FileText, Pencil, Plus, Trash2 } from 'lucide-react'
-import { api, type ResumeHighlight, type WorkContent } from '../../api'
+import { api, isReferenceBlocked, type ResumeHighlight, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { toast } from '../../components/ui/Toast'
 import { MilkdownView, MilkdownEditor, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
+import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 
 export type ResumeHighlightsFeedProps = {
   workContent: WorkContent | null
@@ -30,6 +31,8 @@ export function ResumeHighlightsFeed({
   const [isLoading, setIsLoading] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [error, setError] = useState('')
+  /** 删除被阻断（被简历方案引用）时的模态提示（04j） */
+  const [blockedDelete, setBlockedDelete] = useState<{ title: string; message: string } | null>(null)
   const token = session.token
   const workContentId = workContent?.id ?? null
 
@@ -161,7 +164,11 @@ export function ResumeHighlightsFeed({
         }
       })
     } catch (e) {
-      setError((e as Error).message)
+      // 亮点被方案引用而删不掉：弹窗告知（内联红字在抽屉里可能被滚出视野）
+      setBlockedDelete({
+        title: isReferenceBlocked(e) ? '无法彻底删除' : '删除失败',
+        message: (e as Error).message
+      })
     }
   }
 
@@ -333,6 +340,13 @@ export function ResumeHighlightsFeed({
           <span>新建简历亮点</span>
         </Button>
       </footer>
+
+      <ReferenceBlockedModal
+        isOpen={blockedDelete !== null}
+        title={blockedDelete?.title}
+        message={blockedDelete?.message ?? ''}
+        onClose={() => setBlockedDelete(null)}
+      />
     </div>
   )
 }

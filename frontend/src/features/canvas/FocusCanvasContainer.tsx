@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { api, type ExperienceGroup, type WorkContent } from '../../api'
+import { api, isReferenceBlocked, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { useToast } from '../../components/ui/Toast'
 import { OutlineNavigator } from './OutlineNavigator'
 import { FocusCanvasDocument } from './FocusCanvasDocument'
 import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
+import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 import { ZenFocusEditor } from './ZenFocusEditor'
 import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
 import type { ContentDraft } from './WorkContentBlock'
@@ -45,6 +46,8 @@ export function FocusCanvasContainer({
   const [activeNavId, setActiveNavId] = useState<string>('section-overview')
   const [showArchived, setShowArchived] = useState(false)
   const [error, setError] = useState('')
+  /** 删除被阻断（被简历方案引用）时的模态提示；内联红字在删除路径上看不到，故改弹窗（04j） */
+  const [blockedDelete, setBlockedDelete] = useState<{ title: string; message: string } | null>(null)
   const toast = useToast()
 
   useEffect(() => {
@@ -176,6 +179,14 @@ export function FocusCanvasContainer({
     }
   }
 
+  /** 删除失败的统一反馈：阻断（被引用）与一般失败都弹窗，保证用户一定看得见 */
+  const handleDeleteFailure = (failure: unknown) => {
+    setBlockedDelete({
+      title: isReferenceBlocked(failure) ? '无法彻底删除' : '删除失败',
+      message: (failure as Error).message
+    })
+  }
+
   const handleDeleteContent = async (item: WorkContent) => {
     try {
       await api.deleteWorkContent(session.token, item.id)
@@ -188,7 +199,7 @@ export function FocusCanvasContainer({
       }
       toast.success(`已删除工作内容：“${item.title}”`)
     } catch (e) {
-      setError((e as Error).message)
+      handleDeleteFailure(e)
     }
   }
 
@@ -384,6 +395,13 @@ export function FocusCanvasContainer({
         workContent={contents.find((item) => item.id === activeDrawerWorkContentId) ?? null}
         session={session}
         onClose={handleCloseDrawer}
+      />
+
+      <ReferenceBlockedModal
+        isOpen={blockedDelete !== null}
+        title={blockedDelete?.title}
+        message={blockedDelete?.message ?? ''}
+        onClose={() => setBlockedDelete(null)}
       />
     </div>
   )

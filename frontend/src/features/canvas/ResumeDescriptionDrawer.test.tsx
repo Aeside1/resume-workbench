@@ -13,7 +13,9 @@ vi.mock('../../api', () => ({
     updateResumeHighlight: vi.fn(),
     copyResumeHighlight: vi.fn(),
     deleteResumeHighlight: vi.fn()
-  }
+  },
+  // 与真实实现同义：只对 409 为真（真实实现在 api.ts）
+  isReferenceBlocked: (error: unknown) => Boolean((error as { status?: number })?.status === 409)
 }))
 
 const mocked = vi.mocked(api)

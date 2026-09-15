@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FocusCanvasContainer } from './FocusCanvasContainer'
-import { api, type ExperienceGroup, type ResumeHighlight, type WorkContent } from '../../api'
+import { api, ApiError, type ExperienceGroup, type ResumeHighlight, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 
 afterEach(cleanup)
@@ -721,5 +721,28 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     await waitFor(() => {
       expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
     })
+  })
+
+  it('删除被方案引用的工作内容时用弹窗告知，而不是内联红字（04j）', async () => {
+    vi.spyOn(api, 'deleteWorkContent').mockRejectedValue(
+      new ApiError('该内容正被简历方案《Test》引用，请先在方案中移除或替换对应条目，再执行删除。', 409)
+    )
+
+    render(<FocusCanvasContainer session={mockSession} group={mockGroup} />)
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+
+    const card101 = document.getElementById('work-content-101')!
+    fireEvent.click(within(card101).getByRole('button', { name: '删除' }))
+    const confirm = await screen.findByRole('dialog', { name: '确认删除工作项' })
+    fireEvent.click(within(confirm).getByRole('button', { name: '确认删除' }))
+
+    const blocked = await screen.findByRole('dialog', { name: '无法彻底删除' })
+    expect(within(blocked).getByText(/《Test》/)).toBeInTheDocument()
+    // 关闭后卡片仍在（没有真删）
+    fireEvent.click(within(blocked).getByRole('button', { name: '知道了' }))
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '无法彻底删除' })).not.toBeInTheDocument()
+    })
+    expect(screen.getByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })).toBeInTheDocument()
   })
 })

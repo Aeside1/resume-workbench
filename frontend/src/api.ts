@@ -27,6 +27,27 @@ export type PlanCandidates = { experience_groups: Array<{ id: number; name: stri
 
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
+/**
+ * 带 HTTP 状态码的接口错误。
+ *
+ * 调用方需要区分「被引用而拒绝删除（409）」与一般失败，才能决定用哪种反馈方式
+ * （阻断性弹窗 vs 内联提示），因此不能在抛出时丢掉 status。
+ */
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
+/** 是否属于「被简历方案引用」而拒绝删除（409） */
+export function isReferenceBlocked(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 409
+}
+
 async function request<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set('Content-Type', 'application/json')
@@ -34,7 +55,7 @@ async function request<T>(path: string, init: RequestInit = {}, token?: string):
   const response = await fetch(`${API_URL}${path}`, { ...init, headers })
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new Error(body.detail ?? '请求失败，请稍后重试')
+    throw new ApiError(body.detail ?? '请求失败，请稍后重试', response.status)
   }
   return response.status === 204 ? (undefined as T) : response.json()
 }

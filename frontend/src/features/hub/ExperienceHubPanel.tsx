@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Button, Chip, Tabs } from '@heroui/react'
 import { Archive, FilePlus2, Plus } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { api, type ExperienceGroup, type WorkContent } from '../../api'
+import { api, isReferenceBlocked, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { useToast } from '../../components/ui/Toast'
 import { CreateExperienceDraft, CreateExperienceModal } from './CreateExperienceModal'
@@ -10,6 +10,7 @@ import { EditExperienceDraft, EditExperienceModal } from './EditExperienceModal'
 import { ConfirmDeleteModal } from './ConfirmDeleteModal'
 import { EmptyStateCard } from './EmptyStateCard'
 import { ExperienceGroupCard } from './ExperienceGroupCard'
+import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 
 
 const isTestEnv = import.meta.env.MODE === 'test'
@@ -31,6 +32,8 @@ export function ExperienceHubPanel({
   const [groupToDelete, setGroupToDelete] = useState<ExperienceGroup | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  /** 删除被阻断（被简历方案引用）时的模态提示（04j） */
+  const [blockedDelete, setBlockedDelete] = useState<{ title: string; message: string } | null>(null)
   const toast = useToast()
 
 
@@ -142,6 +145,14 @@ export function ExperienceHubPanel({
     }
   }
 
+  /** 删除失败的统一反馈：阻断（被引用）与一般失败都弹窗 */
+  const handleDeleteFailure = (failure: unknown) => {
+    setBlockedDelete({
+      title: isReferenceBlocked(failure) ? '无法彻底删除' : '删除失败',
+      message: (failure as Error).message
+    })
+  }
+
   const handleRequestDelete = (group: ExperienceGroup) => {
     setGroupToDelete(group)
   }
@@ -155,7 +166,9 @@ export function ExperienceHubPanel({
       toast.success(`经历分组“${target.name}”已彻底删除。`)
       setGroupToDelete(null)
     } catch (e) {
-      setError((e as Error).message)
+      // 先关确认弹窗，避免阻断弹窗叠在它上面；用户可重新发起删除
+      setGroupToDelete(null)
+      handleDeleteFailure(e)
     }
   }
 
@@ -297,6 +310,13 @@ export function ExperienceHubPanel({
         groupName={groupToDelete?.name ?? ''}
         onClose={() => setGroupToDelete(null)}
         onConfirm={handleConfirmDelete}
+      />
+
+      <ReferenceBlockedModal
+        isOpen={blockedDelete !== null}
+        title={blockedDelete?.title}
+        message={blockedDelete?.message ?? ''}
+        onClose={() => setBlockedDelete(null)}
       />
     </div>
   )

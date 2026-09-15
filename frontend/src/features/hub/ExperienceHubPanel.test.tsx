@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ExperienceHubPanel } from './ExperienceHubPanel'
 import { api } from '../../api'
@@ -14,7 +14,9 @@ vi.mock('../../api', () => ({
     restoreExperienceGroup: vi.fn(),
     deleteExperienceGroup: vi.fn(),
     workContents: vi.fn()
-  }
+  },
+  // 与真实实现同义：只对 409 为真（真实实现在 api.ts）
+  isReferenceBlocked: (error: unknown) => Boolean((error as { status?: number })?.status === 409)
 }))
 const mocked = vi.mocked(api)
 
@@ -286,6 +288,26 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
       expect(screen.getByText('微信支付核心系统开发')).toBeInTheDocument()
       expect(screen.getByText(/已成功保存修改/)).toBeInTheDocument()
     })
+  })
+
+  it('删除被方案引用的经历分组时用弹窗告知，并先关掉确认弹窗（04j）', async () => {
+    mocked.experienceGroups.mockResolvedValue([{ ...mockGroups[0], archived: true }])
+    mocked.deleteExperienceGroup.mockRejectedValue({
+      status: 409,
+      message: '该内容正被简历方案《Test》引用，请先在方案中移除或替换对应条目，再执行删除。'
+    })
+
+    render(<ExperienceHubPanel session={mockSession} onSelectExperience={vi.fn()} />)
+
+    fireEvent.click(await screen.findByRole('tab', { name: /归档箱/ }))
+    fireEvent.click(await screen.findByRole('button', { name: '彻底删除经历分组' }))
+    const confirm = await screen.findByRole('dialog', { name: '确认彻底删除' })
+    fireEvent.click(within(confirm).getByRole('button', { name: '确认彻底删除' }))
+
+    const blocked = await screen.findByRole('dialog', { name: '无法彻底删除' })
+    expect(within(blocked).getByText(/《Test》/)).toBeInTheDocument()
+    // 确认弹窗已先关闭，阻断弹窗不会叠在它上面
+    expect(screen.queryByRole('dialog', { name: '确认彻底删除' })).not.toBeInTheDocument()
   })
 })
 
