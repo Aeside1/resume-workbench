@@ -13,6 +13,7 @@ import {
 import type { Session } from '../../session'
 import { useToast } from '../../components/ui/Toast'
 import { EmptyStateCard } from '../hub/EmptyStateCard'
+import { WorkAreaHeader } from '../WorkAreaHeader'
 import type { SaveStatus } from '../useTransientSaveStatus'
 import { AddExperienceGroupDialog } from './AddExperienceGroupDialog'
 import { HighlightPicker } from './HighlightPicker'
@@ -22,7 +23,10 @@ import { PlanDocumentView } from './PlanDocumentView'
 export type PlanEditorProps = {
   session: Session
   plan: ResumePlan
+  saveStatus?: SaveStatus
   onSaveStatusChange?: (status: SaveStatus) => void
+  /** 返回简历方案列表（内容区页头里的返回） */
+  onExit: () => void
 }
 
 /**
@@ -32,7 +36,7 @@ export type PlanEditorProps = {
  * 板块由经历分组的类型自动决定，不给手改。方案只保存引用，文稿是读时装配出来的
  * ——「预览」开关切到纯阅读态，看到的就是「下载」拿到的那份 Markdown。
  */
-export function PlanEditor({ session, plan, onSaveStatusChange }: PlanEditorProps) {
+export function PlanEditor({ session, plan, saveStatus, onSaveStatusChange, onExit }: PlanEditorProps) {
   const [detail, setDetail] = useState<ResumePlanDetail | null>(null)
   const [document, setDocument] = useState<PlanDocument | null>(null)
   const [candidates, setCandidates] = useState<PlanCandidates | null>(null)
@@ -212,31 +216,33 @@ export function PlanEditor({ session, plan, onSaveStatusChange }: PlanEditorProp
 
   return (
     <div className="plan-editor">
-      <div className="plan-editor-header">
-        <div className="plan-editor-title">
-          <h2 className="plan-editor-name">{detail?.name ?? plan.name}</h2>
-          <p className="plan-editor-purpose">{detail?.purpose || '未填写简历用途'}</p>
-        </div>
-
-        <div className="plan-editor-actions">
-          <Chip size="sm">
-            <Chip.Label>{blocks.length} 段经历</Chip.Label>
-          </Chip>
-          <Button
-            size="sm"
-            variant={isPreview ? 'secondary' : 'ghost'}
-            aria-pressed={isPreview}
-            onPress={() => setIsPreview((current) => !current)}
-          >
-            <Eye size={14} aria-hidden="true" />
-            {isPreview ? '返回编排' : '预览'}
-          </Button>
-          <Button size="sm" variant="ghost" onPress={handleDownload}>
-            <Download size={14} aria-hidden="true" />
-            下载简历文稿
-          </Button>
-        </div>
-      </div>
+      <WorkAreaHeader
+        backLabel="返回简历方案"
+        onBack={onExit}
+        title={detail?.name ?? plan.name}
+        subtitle={detail?.purpose || '未填写简历用途'}
+        saveStatus={saveStatus}
+        actions={
+          <>
+            <Chip size="sm">
+              <Chip.Label>{blocks.length} 段经历</Chip.Label>
+            </Chip>
+            <Button
+              size="sm"
+              variant={isPreview ? 'secondary' : 'ghost'}
+              aria-pressed={isPreview}
+              onPress={() => setIsPreview((current) => !current)}
+            >
+              <Eye size={14} aria-hidden="true" />
+              {isPreview ? '返回编排' : '预览'}
+            </Button>
+            <Button size="sm" variant="ghost" onPress={handleDownload}>
+              <Download size={14} aria-hidden="true" />
+              下载简历文稿
+            </Button>
+          </>
+        }
+      />
 
       {error && (
         <p className="error" role="alert">

@@ -5,39 +5,12 @@
    两栏骨架、条目行布局与语义变量色值，不写 !important。
    ========================================================================== */
 
+/* 页头已由 WorkAreaHeader 承担（04g），此处只保留编排区自身的骨架 */
 .plan-editor {
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
-}
-
-.plan-editor-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.plan-editor-name {
-  margin: 0;
-  font-size: 1.4rem;
-  font-weight: 650;
-  color: var(--foreground);
-}
-
-.plan-editor-purpose {
-  margin: 4px 0 0;
-  font-size: 0.875rem;
-  color: var(--muted);
-}
-
-.plan-editor-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
 }
 
 .plan-editor-body {
@@ -141,7 +114,7 @@
 
 .plan-item-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   padding: 10px 12px;
   border: 1px solid var(--separator);
@@ -152,28 +125,30 @@
 
 .plan-item-drag {
   display: inline-flex;
+  margin-top: 2px;
   color: var(--muted);
 }
 
 .plan-item-main {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   flex: 1;
   min-width: 0;
 }
 
+/* 条目名 = 具体工作内容标题 · 简历亮点名称（04g），允许换行 */
 .plan-item-label {
   font-size: 0.9rem;
+  font-weight: 550;
   color: var(--foreground);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.plan-item-source {
-  font-size: 0.78rem;
-  color: var(--muted);
+/* 亮点正文常驻显示：不再需要切「预览」才看得到内容 */
+.plan-item-content {
+  font-size: 0.86rem;
+  color: var(--foreground);
+  opacity: 0.88;
 }
 
 .plan-item-empty {

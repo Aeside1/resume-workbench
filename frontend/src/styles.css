@@ -19,6 +19,7 @@
 @import "./styles/layout/app-shell.css";
 @import "./styles/layout/sidebar.css";
 @import "./styles/layout/topbar.css";
+@import "./styles/layout/work-area-header.css";
 @import "./styles/layout/workbench-view.css";
 
 /* 4. Features Layer (业务场景模块) */

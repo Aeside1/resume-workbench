@@ -4,7 +4,8 @@ import { ArrowRight, FileText, LayoutGrid, Layers, PanelRight, PanelRightClose }
 import { motion } from 'framer-motion'
 import type { ExperienceGroup, ResumePlan } from '../api'
 import type { Session } from '../session'
-import { AppShell, isFocusMode, type AppShellMode, type FocusBreadcrumbLevel } from './AppShell'
+import { AppShell, type AppShellMode, type FocusBreadcrumbLevel } from './AppShell'
+import { WorkAreaHeader } from './WorkAreaHeader'
 import { ExperienceHubPanel } from './hub/ExperienceHubPanel'
 import { PlanEditor } from './plans/PlanEditor'
 import { PlanHubPanel } from './plans/PlanHubPanel'
@@ -14,10 +15,12 @@ import { ToastProvider } from '../components/ui/Toast'
 
 type Props = { session: Session; onLogout: () => void }
 type View = 'dashboard' | 'experiences' | 'plans'
+/** 内容区是否展开了某个对象（分组画布 / 简历方案编辑器）；外壳形态由它推导（04g） */
+type WorkbenchStage = 'hub' | 'expanded'
 
 export function WorkbenchShell({ session, onLogout }: Props) {
   const [view, setView] = useState<View>('experiences')
-  const [mode, setMode] = useState<AppShellMode>('hub')
+  const [stage, setStage] = useState<WorkbenchStage>('hub')
   const [activeExperience, setActiveExperience] = useState<ExperienceGroup | null>(null)
   const [activePlan, setActivePlan] = useState<ResumePlan | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
@@ -43,7 +46,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
 
   const handleSelectExperience = (group: ExperienceGroup) => {
     setActiveExperience(group)
-    setMode('focus-canvas')
+    setStage('expanded')
     updateCanvasDirty(false)
   }
 
@@ -52,7 +55,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       const confirmed = window.confirm('当前有未保存的工作内容编辑，确定要放弃修改并退出吗？')
       if (!confirmed) return
     }
-    setMode('hub')
+    setStage('hub')
     setActiveExperience(null)
     resetZenState()
   }
@@ -62,12 +65,12 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   // 因此不需要「未保存就离开」的确认。
   const handleSelectPlan = (plan: ResumePlan) => {
     setActivePlan(plan)
-    setMode('focus-canvas')
+    setStage('expanded')
     resetZenState()
   }
 
   const handleExitPlan = () => {
-    setMode('hub')
+    setStage('hub')
     setActivePlan(null)
     resetZenState()
   }
@@ -78,7 +81,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       if (!confirmed) return
     }
     setView(nextView)
-    setMode('hub')
+    setStage('hub')
     setActiveExperience(null)
     setActivePlan(null)
     resetZenState()
@@ -124,9 +127,19 @@ export function WorkbenchShell({ session, onLogout }: Props) {
     </>
   )
 
-  const isZen = mode === 'focus-canvas' && zen.isOpen
-  const isFocus = isFocusMode(mode)
-  const shellMode: AppShellMode = mode === 'hub' ? 'hub' : isZen ? 'focus-zen' : 'focus-canvas'
+  const isZen = stage === 'expanded' && zen.isOpen
+  // 画布 / 方案编辑器都在壳内展开（侧栏常驻）；只有 Zen 接管整屏（04g）
+  const isWorkspaceOpen = stage === 'expanded'
+  const shellMode: AppShellMode = stage === 'hub' ? 'hub' : isZen ? 'zen' : 'workspace'
+
+  // 面包屑只服务 Zen 的整屏接管：经历内容 / <分组名> / <工作项标题>；末级不可点且实时更新。
+  const zenBreadcrumbTrail: FocusBreadcrumbLevel[] = activeExperience
+    ? [
+        { label: '经历内容', onPress: handleExitFocus },
+        { label: activeExperience.name, onPress: handleBackToCanvas },
+        { label: zen.title.trim() || '未命名工作项' }
+      ]
+    : [{ label: '经历内容' }]
 
   // 三级面包屑：经历内容 / <分组名> / <工作项标题>；末级不可点且随大标题实时更新。
   // 简历方案编辑器复用同一套外壳：简历方案 / <方案名>。
@@ -142,6 +155,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           ...(isZen ? [{ label: zen.title.trim() || '未命名工作项' }] : [])
         ]
       : [{ label: '经历内容' }]
+
 
   const focusActions = isZen ? (
     <>
@@ -170,17 +184,17 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         onLogout={onLogout}
         navigationButtons={navigationButtons}
         mode={shellMode}
-        breadcrumbTrail={breadcrumbTrail}
+        breadcrumbTrail={zenBreadcrumbTrail}
         focusActions={focusActions}
-        backLabel={activePlan ? '返回简历方案' : isZen ? '返回画布' : '返回经历内容'}
+        backLabel={isZen ? '返回画布' : '返回经历内容'}
         onExitFocus={handleExitFocus}
         saveStatus={saveStatus}
       >
         <motion.div
           key={
             view === 'experiences'
-              ? isFocus && activeExperience
-                ? `focus-${activeExperience.id}`
+              ? isWorkspaceOpen && activeExperience
+                ? `canvas-${activeExperience.id}`
                 : 'hub-experiences'
               : view === 'plans' && activePlan
                 ? `plan-${activePlan.id}`
@@ -192,17 +206,24 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           className="workbench-view-container"
         >
           {view === 'experiences' && (
-            isFocus && activeExperience ? (
-              <FocusCanvasContainer
-                session={session}
-                group={activeExperience}
-                onSaveStatusChange={setSaveStatus}
-                onDirtyChange={updateCanvasDirty}
-                onUpdateGroup={setActiveExperience}
-                onZenChange={handleZenChange}
-                isCompanionOpen={isCompanionOpen}
-                zenExitSignal={zenExitSignal}
-              />
+            isWorkspaceOpen && activeExperience ? (
+              <>
+                <WorkAreaHeader
+                  backLabel="返回经历内容"
+                  onBack={handleExitFocus}
+                  saveStatus={saveStatus}
+                />
+                <FocusCanvasContainer
+                  session={session}
+                  group={activeExperience}
+                  onSaveStatusChange={setSaveStatus}
+                  onDirtyChange={updateCanvasDirty}
+                  onUpdateGroup={setActiveExperience}
+                  onZenChange={handleZenChange}
+                  isCompanionOpen={isCompanionOpen}
+                  zenExitSignal={zenExitSignal}
+                />
+              </>
             ) : (
               <ExperienceHubPanel
                 session={session}
@@ -258,7 +279,13 @@ export function WorkbenchShell({ session, onLogout }: Props) {
 
           {view === 'plans' && (
             activePlan ? (
-              <PlanEditor session={session} plan={activePlan} onSaveStatusChange={setSaveStatus} />
+              <PlanEditor
+                session={session}
+                plan={activePlan}
+                saveStatus={saveStatus}
+                onSaveStatusChange={setSaveStatus}
+                onExit={handleExitPlan}
+              />
             ) : (
               <PlanHubPanel session={session} onSelectPlan={handleSelectPlan} />
             )

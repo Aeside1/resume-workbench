@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Button, Card, Chip, Switch } from '@heroui/react'
 import { ArrowDown, ArrowUp, GripVertical, Plus, Trash2 } from 'lucide-react'
 import type { PlanBlock, PlanItem } from '../../api'
+import { MilkdownView } from '../../components/ui/MilkdownView'
 
 export type PlanBlockCardProps = {
   block: PlanBlock
@@ -20,6 +21,11 @@ const STATUS_LABEL: Record<PlanItem['status'], string> = {
   ok: '',
   missing_highlight: '待选简历亮点',
   missing_source: '引用已失效'
+}
+
+/** 条目名 = 具体工作内容标题 · 简历亮点名称（04g 口径） */
+function itemName(item: PlanItem): string {
+  return [item.work_content_title, item.highlight_label].filter(Boolean).join(' · ')
 }
 
 /**
@@ -104,7 +110,7 @@ export function PlanBlockCard({
               <Switch.Control>
                 <Switch.Thumb />
               </Switch.Control>
-              显示工作内容标题
+              文稿中打印工作内容标题
             </Switch.Content>
           </Switch>
         </div>
@@ -129,14 +135,16 @@ export function PlanBlockCard({
 
               <div className="plan-item-main">
                 {item.status === 'ok' ? (
-                  <span className="plan-item-label">{item.highlight_label}</span>
+                  <span className="plan-item-label">{itemName(item)}</span>
                 ) : (
                   <Chip size="sm">
                     <Chip.Label>{STATUS_LABEL[item.status]}</Chip.Label>
                   </Chip>
                 )}
-                {block.show_work_content_titles && item.work_content_title && (
-                  <span className="plan-item-source">{item.work_content_title}</span>
+                {item.status === 'ok' && (
+                  <div className="plan-item-content">
+                    <MilkdownView content={item.highlight_content ?? ''} placeholder="这条亮点还没有正文。" />
+                  </div>
                 )}
               </div>
 
@@ -145,7 +153,7 @@ export function PlanBlockCard({
                   isIconOnly
                   size="sm"
                   variant="ghost"
-                  aria-label={`上移条目 ${item.highlight_label ?? item.id}`}
+                  aria-label={`上移条目 ${itemName(item) || item.id}`}
                   isDisabled={itemIndex === 0}
                   onPress={() => onMoveItem(block, itemIndex, -1)}
                 >
@@ -155,7 +163,7 @@ export function PlanBlockCard({
                   isIconOnly
                   size="sm"
                   variant="ghost"
-                  aria-label={`下移条目 ${item.highlight_label ?? item.id}`}
+                  aria-label={`下移条目 ${itemName(item) || item.id}`}
                   isDisabled={itemIndex === block.items.length - 1}
                   onPress={() => onMoveItem(block, itemIndex, 1)}
                 >
@@ -165,7 +173,7 @@ export function PlanBlockCard({
                   isIconOnly
                   size="sm"
                   variant="ghost"
-                  aria-label={`移除条目 ${item.highlight_label ?? item.id}`}
+                  aria-label={`移除条目 ${itemName(item) || item.id}`}
                   onPress={() => onRemoveItem(block, item)}
                 >
                   <Trash2 size={13} aria-hidden="true" />

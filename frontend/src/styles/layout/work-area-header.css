@@ -1,0 +1,53 @@
+/* ==========================================================================
+   Work Area Header (内容区自带页头)
+
+   04g 之后，分组画布与简历方案编辑器都在壳内展开（侧栏常驻），
+   因此「返回 / 标题 / 保存态 / 动作」由内容区自己的一行承担；
+   全局顶栏只服务 Zen 的整屏接管。此处只做布局骨架与语义变量色值。
+   ========================================================================== */
+
+.work-area-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.work-area-header-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.work-area-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.work-area-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.work-area-subtitle {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.work-area-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}

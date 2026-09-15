@@ -1,5 +1,8 @@
 /* ==========================================================================
-   AppShell Dual Mode Layout (Hub 模式 / Focus 模式顶层架构)
+   AppShell Layout (Hub / Workspace / Zen)
+
+   04g 口径：只有 Zen（具体工作内容的「展开专注」）接管整屏；
+   hub 与 workspace 都保留左侧导航，只在内容区切换视图。
    ========================================================================== */
 
 .app-shell {
@@ -7,26 +10,32 @@
   background: var(--background);
 }
 
-.app-shell--hub {
+/* hub（列表页）与 workspace（分组画布 / 简历方案编辑器）都是「侧栏 + 内容区」 */
+.app-shell--hub,
+.app-shell--workspace {
   display: flex;
   width: 100%;
 }
 
-.app-shell--focus {
+.app-shell--zen {
   display: flex;
   flex-direction: column;
   width: 100%;
 }
 
 /* App Main Content Containers */
-.app-main--hub {
+.app-main--hub,
+.app-main--workspace {
   flex: 1;
   min-width: 0;
   padding: 24px clamp(20px, 3vw, 48px) 56px;
+}
+
+.app-main--hub {
   max-width: 1400px;
 }
 
-.app-main--focus {
+.app-main--zen {
   flex: 1;
   min-width: 0;
   width: 100%;
@@ -44,7 +53,7 @@
   overflow: hidden;
 }
 
-.app-shell--zen .app-main--focus {
+.app-shell--zen .app-main--zen {
   display: flex;
   flex-direction: column;
   min-height: 0;

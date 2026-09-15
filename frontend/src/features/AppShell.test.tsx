@@ -74,42 +74,47 @@ describe('AppShell 侧边栏', () => {
   })
 })
 
-describe('AppShell 专注模式切换', () => {
-  it('默认处于 hub 模式，侧边栏可见', () => {
+describe('AppShell 形态切换（04g：只有展开专注接管整屏）', () => {
+  it('默认处于 hub 形态：侧栏可见且不渲染顶栏', () => {
     render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
     expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
   })
 
-  it('进入 focus 模式后隐藏侧边栏', () => {
-    const { rerender } = render(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="hub">
+  it('workspace 形态保留侧边栏、不渲染顶栏（分组画布与简历方案编辑器都在壳内展开）', () => {
+    render(
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="workspace">
         <div>主内容</div>
       </AppShell>
     )
 
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
+  })
 
-    rerender(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus">
+  it('只有 zen 形态隐藏侧边栏并交由面包屑顶栏接管', () => {
+    const { rerender } = render(
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        mode="workspace"
+        breadcrumbTrail={[{ label: '经历内容', onPress: vi.fn() }, { label: '蚂蚁集团' }]}
+      >
         <div>主内容</div>
       </AppShell>
     )
 
-    expect(screen.queryByRole('complementary', { name: '主导航' })).not.toBeInTheDocument()
-  })
+    // workspace 下即便传了面包屑也不渲染顶栏，侧栏仍在
+    expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
 
-  it('支持 focus-canvas 模式并隐藏侧边栏与显示顶栏', () => {
-    render(
+    rerender(
       <AppShell
         session={mockSession}
         onLogout={vi.fn()}
-        mode="focus-canvas"
-        breadcrumbTrail={[
-          { label: '经历内容', onPress: vi.fn() },
-          { label: '蚂蚁集团' }
-        ]}
+        mode="zen"
+        breadcrumbTrail={[{ label: '经历内容', onPress: vi.fn() }, { label: '蚂蚁集团' }]}
       >
         <div>主内容</div>
       </AppShell>
@@ -123,34 +128,13 @@ describe('AppShell 专注模式切换', () => {
     expect(within(breadcrumbNav).getByText('蚂蚁集团')).toBeInTheDocument()
   })
 
-  it('focus 模式显示轻量面包屑顶栏', () => {
-    render(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="focus"
-        breadcrumbTrail={[
-          { label: '经历内容', onPress: vi.fn() },
-          { label: '测试经历' }
-        ]}
-      >
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
-    expect(breadcrumbNav).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByRole('link', { name: '经历内容' })).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByText('测试经历')).toBeInTheDocument()
-  })
-
-  it('focus 模式下点击面包屑返回按钮触发 onExitFocus', () => {
+  it('zen 形态顶栏的返回按钮触发 onExitFocus', () => {
     const handleExitFocus = vi.fn()
     render(
       <AppShell
         session={mockSession}
         onLogout={vi.fn()}
-        mode="focus"
+        mode="zen"
         breadcrumbTrail={[
           { label: '经历内容', onPress: handleExitFocus },
           { label: '测试经历' }
@@ -161,44 +145,19 @@ describe('AppShell 专注模式切换', () => {
       </AppShell>
     )
 
-    const backButton = screen.getByRole('button', { name: '返回经历内容' })
-    fireEvent.click(backButton)
+    fireEvent.click(screen.getByRole('button', { name: '返回经历内容' }))
 
     expect(handleExitFocus).toHaveBeenCalledOnce()
   })
 
-  it('focus 模式顶栏点击面包屑中间级触发该级去向且不渲染退出专注按钮', () => {
-    const handleExitFocus = vi.fn()
-    render(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="focus"
-        breadcrumbTrail={[
-          { label: '经历内容', onPress: handleExitFocus },
-          { label: '测试经历' }
-        ]}
-        onExitFocus={handleExitFocus}
-      >
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    expect(screen.queryByRole('button', { name: '退出专注模式' })).not.toBeInTheDocument()
-
-    fireEvent.click(screen.getByRole('link', { name: '经历内容' }))
-
-    expect(handleExitFocus).toHaveBeenCalledOnce()
-  })
-
-  it('Zen 展开时渲染三级面包屑，末级不可点且中间级与返回按钮都指向回画布', () => {
+  it('zen 形态渲染三级面包屑，末级不可点且中间级与返回按钮都指向回画布', () => {
     const handleExitFocus = vi.fn()
     const handleBackToCanvas = vi.fn()
     render(
       <AppShell
         session={mockSession}
         onLogout={vi.fn()}
-        mode="focus-zen"
+        mode="zen"
         breadcrumbTrail={[
           { label: '经历内容', onPress: handleExitFocus },
           { label: '蚂蚁集团', onPress: handleBackToCanvas },
@@ -242,7 +201,7 @@ describe('AppShell 专注模式切换', () => {
       <AppShell
         session={mockSession}
         onLogout={vi.fn()}
-        mode="focus-zen"
+        mode="zen"
         breadcrumbTrail={[
           { label: '同名分组', onPress: handleExitFocus },
           { label: '同名分组', onPress: handleBackToCanvas },
@@ -263,9 +222,9 @@ describe('AppShell 专注模式切换', () => {
     expect(handleExitFocus).not.toHaveBeenCalled()
   })
 
-  it('focus 模式顶栏显示保存状态微指示器', () => {
+  it('zen 形态顶栏显示保存状态微指示器', () => {
     const { rerender } = render(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" saveStatus="saving">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="zen" saveStatus="saving">
         <div>主内容</div>
       </AppShell>
     )
@@ -273,7 +232,7 @@ describe('AppShell 专注模式切换', () => {
     expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('保存中...')
 
     rerender(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="focus" saveStatus="saved">
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="zen" saveStatus="saved">
         <div>主内容</div>
       </AppShell>
     )

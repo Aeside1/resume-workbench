@@ -4,15 +4,21 @@ import type { Session } from '../session'
 import { ThemeToggle } from '../components/ui/ThemeToggle'
 import type { SaveStatus } from './useTransientSaveStatus'
 
-export type AppShellMode = 'hub' | 'focus' | 'focus-canvas' | 'focus-zen'
+/**
+ * 外壳形态（04g 收窄后）：
+ * - `hub`：侧栏 + 内容区（工作台概览 / 经历内容列表 / 简历方案列表）
+ * - `workspace`：侧栏 + 内容区，内容区里展开某一分组画布或某个简历方案编辑器
+ * - `zen`：唯一的整屏接管（具体工作内容的「展开专注」），隐藏侧栏、顶栏换成面包屑
+ */
+export type AppShellMode = 'hub' | 'workspace' | 'zen'
 
-/** 专注场景（画布或 Zen 展开）下顶栏可见、侧边栏隐藏 */
+/** 只有「展开专注」隐藏侧栏并整屏接管 */
 export function isFocusMode(mode: AppShellMode): boolean {
-  return mode !== 'hub'
+  return mode === 'zen'
 }
 
 /**
- * 顶栏面包屑的一级（ADR 004 §2.2）。
+ * 顶栏面包屑的一级（ADR 004 §2.2）。仅在 Zen 接管时出现。
  * 末级是当前位置（不可点），其余级由 `onPress` 决定去向。
  */
 export type FocusBreadcrumbLevel = { label: string; onPress?: () => void }
@@ -22,12 +28,12 @@ type Props = {
   onLogout: () => void
   children: ReactNode
   mode?: AppShellMode
-  /** 结构化面包屑；Zen 展开时由外壳扩展为三级「经历内容 / 分组 / 工作项」 */
+  /** Zen 接管时的多级面包屑；非 Zen 形态下由内容区自带的页头承担去向 */
   breadcrumbTrail?: FocusBreadcrumbLevel[]
-  /** 顶栏右侧插槽：由外壳传入当前场景的操作（Zen 展开时放 Esc 提示与「收起伴随栏」） */
+  /** 顶栏右侧插槽：Zen 展开时放 Esc 提示与「收起伴随栏」 */
   focusActions?: ReactNode
   onExitFocus?: () => void
-  /** 顶栏返回按钮的可访问名，随语义变化：画布模式「返回经历内容」，Zen 展开「返回画布」 */
+  /** 顶栏返回按钮的可访问名；Zen 下随语义变化（返回画布 / 返回经历内容） */
   backLabel?: string
   saveStatus?: SaveStatus
   navigationButtons?: ReactNode
@@ -45,12 +51,11 @@ export function AppShell({
   saveStatus,
   navigationButtons
 }: Props) {
-  const isFocus = isFocusMode(mode)
-  const isZen = mode === 'focus-zen'
-  // 侧边栏用户名片首字母（仅 hub 模式可见）
+  const isZen = mode === 'zen'
+  // 侧边栏用户名片首字母（Zen 接管时侧栏隐藏，不渲染）
   const workspaceInitial = session.user.email.slice(0, 1).toUpperCase()
 
-  // 返回按钮 = 面包屑的上一级：画布模式回经历内容，Zen 展开时回画布。
+  // 返回按钮 = 面包屑的上一级：Zen 下回画布。
   // 末级永远不可点，因此上一级就是倒数第二级。
   const trail: FocusBreadcrumbLevel[] = breadcrumbTrail?.length
     ? breadcrumbTrail
@@ -58,15 +63,13 @@ export function AppShell({
   const parentLevel = trail.length > 1 ? trail[trail.length - 2] : undefined
   const handleBack = parentLevel?.onPress ?? (trail.length > 1 ? undefined : onExitFocus)
 
+  const shellLayoutClass =
+    mode === 'zen' ? 'app-shell--zen' : mode === 'workspace' ? 'app-shell--workspace' : 'app-shell--hub'
+  const mainClass = mode === 'zen' ? 'app-main--zen' : mode === 'workspace' ? 'app-main--workspace' : 'app-main--hub'
+
   return (
-    <div
-      className={[
-        'app-shell',
-        isFocus ? 'app-shell--focus' : 'app-shell--hub',
-        isZen ? 'app-shell--zen' : ''
-      ].filter(Boolean).join(' ')}
-    >
-      {!isFocus && (
+    <div className={['app-shell', shellLayoutClass].filter(Boolean).join(' ')}>
+      {!isZen && (
         <aside role="complementary" aria-label="主导航" className="app-sidebar">
           <div className="sidebar-header">
             <Card variant="secondary">
@@ -95,7 +98,7 @@ export function AppShell({
         </aside>
       )}
 
-      {isFocus && (
+      {isZen && (
         <nav role="navigation" aria-label="面包屑导航" className="focus-topbar">
           <div className="focus-breadcrumb-group">
             {handleBack && (
@@ -153,9 +156,7 @@ export function AppShell({
         </nav>
       )}
 
-      <main className={`app-main ${isFocus ? 'app-main--focus' : 'app-main--hub'}`}>
-        {children}
-      </main>
+      <main className={`app-main ${mainClass}`}>{children}</main>
     </div>
   )
 }

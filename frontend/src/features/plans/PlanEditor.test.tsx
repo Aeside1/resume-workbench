@@ -46,6 +46,10 @@ const HIGHLIGHTS = {
 } as const
 type HighlightLabel = keyof typeof HIGHLIGHTS
 
+const WORK_CONTENT_TITLE = '收银台跨端组件重构'
+/** 条目名 = 具体工作内容标题 · 简历亮点名称（04g 口径） */
+const itemNameOf = (label: HighlightLabel) => `${WORK_CONTENT_TITLE} · ${label}`
+
 const candidates: PlanCandidates = {
   experience_groups: [
     {
@@ -59,7 +63,7 @@ const candidates: PlanCandidates = {
       work_contents: [
         {
           id: 21,
-          title: '收银台跨端组件重构',
+          title: WORK_CONTENT_TITLE,
           already_added: false,
           highlights: (Object.keys(HIGHLIGHTS) as HighlightLabel[]).map((label, index) => ({
             id: HIGHLIGHTS[label].id,
@@ -83,7 +87,7 @@ function makeItem(highlightId: number, label: HighlightLabel): PlanItem {
     work_content_id: 21,
     resume_description_id: highlightId,
     position: blocks[0]?.items.length ?? 0,
-    work_content_title: '收银台跨端组件重构',
+    work_content_title: WORK_CONTENT_TITLE,
     highlight_label: label,
     highlight_content: HIGHLIGHTS[label].content,
     status: 'ok'
@@ -166,7 +170,7 @@ beforeEach(() => {
 function renderEditor() {
   render(
     <ToastProvider>
-      <PlanEditor session={session} plan={plan} />
+      <PlanEditor session={session} plan={plan} onExit={vi.fn()} />
     </ToastProvider>
   )
 }
@@ -203,7 +207,7 @@ async function pickHighlights(labels: HighlightLabel[]) {
 async function addBlockAndHighlight() {
   await addExperienceBlock()
   await pickHighlights(['技术深度版'])
-  await screen.findByText('技术深度版')
+  await screen.findByText(itemNameOf('技术深度版'))
 }
 
 describe('简历编排主工作面', () => {
@@ -214,6 +218,14 @@ describe('简历编排主工作面', () => {
     // 板块由经历分组类型自动决定
     expect(screen.getByRole('region', { name: '实习经历' })).toBeInTheDocument()
     expect(screen.getByRole('region', { name: '项目经历' })).toBeInTheDocument()
+  })
+
+  it('编排态直接显示条目名（工作内容标题 · 亮点名称）与亮点正文，不需要切预览', async () => {
+    await addBlockAndHighlight()
+
+    const blockCard = screen.getByRole('article', { name: '经历块 支付平台实习' })
+    expect(within(blockCard).getByText(itemNameOf('技术深度版'))).toBeInTheDocument()
+    expect(within(blockCard).getByText(HIGHLIGHTS.技术深度版.content)).toBeInTheDocument()
   })
 
   it('在经历块里挑简历亮点：勾选加入简历，再点一次移出', async () => {
@@ -238,9 +250,9 @@ describe('简历编排主工作面', () => {
   it('块内条目可用按钮排序，提交完整序列', async () => {
     await addExperienceBlock()
     await pickHighlights(['技术深度版', '业务成效版'])
-    await screen.findByRole('button', { name: '下移条目 技术深度版' })
+    await screen.findByRole('button', { name: `下移条目 ${itemNameOf('技术深度版')}` })
 
-    fireEvent.click(screen.getByRole('button', { name: '下移条目 技术深度版' }))
+    fireEvent.click(screen.getByRole('button', { name: `下移条目 ${itemNameOf('技术深度版')}` }))
 
     await waitFor(() => {
       expect(mocked.reorderPlanItems).toHaveBeenCalledWith('test-token', 7, 101, [912, 911])
@@ -250,7 +262,7 @@ describe('简历编排主工作面', () => {
   it('移除条目只解除引用，不触碰经历资产', async () => {
     await addBlockAndHighlight()
 
-    fireEvent.click(screen.getByRole('button', { name: '移除条目 技术深度版' }))
+    fireEvent.click(screen.getByRole('button', { name: `移除条目 ${itemNameOf('技术深度版')}` }))
 
     await waitFor(() => {
       expect(mocked.removePlanItem).toHaveBeenCalledWith('test-token', 7, 911)
@@ -260,20 +272,23 @@ describe('简历编排主工作面', () => {
     expect(mocked.deleteExperienceGroup).not.toHaveBeenCalled()
   })
 
-  it('关掉「显示工作内容标题」后，文稿里不再打印该标题', async () => {
+  it('关掉「文稿中打印工作内容标题」后，文稿里不再打印该标题', async () => {
     await addBlockAndHighlight()
     const blockCard = screen.getByRole('article', { name: '经历块 支付平台实习' })
 
-    fireEvent.click(within(blockCard).getByRole('switch', { name: '显示工作内容标题' }))
+    fireEvent.click(within(blockCard).getByRole('switch', { name: '文稿中打印工作内容标题' }))
 
     await waitFor(() => {
       expect(mocked.updatePlanBlock).toHaveBeenCalledWith('test-token', 7, 101, { show_work_content_titles: false })
     })
 
+    // 编排区照旧显示条目名与正文（开关只影响文稿）
+    expect(within(blockCard).getByText(itemNameOf('技术深度版'))).toBeInTheDocument()
+
     fireEvent.click(screen.getByRole('button', { name: '预览' }))
     const preview = await screen.findByLabelText('简历文稿预览')
     expect(within(preview).getByText(/主导收银台跨端组件重构/)).toBeInTheDocument()
-    expect(within(preview).queryByText('收银台跨端组件重构')).not.toBeInTheDocument()
+    expect(within(preview).queryByText(WORK_CONTENT_TITLE)).not.toBeInTheDocument()
   })
 
   it('预览开关展示与下载同一份文稿，下载文件名带 .md', async () => {
@@ -290,7 +305,7 @@ describe('简历编排主工作面', () => {
     fireEvent.click(screen.getByRole('button', { name: '预览' }))
     const preview = await screen.findByLabelText('简历文稿预览')
     // 预览渲染的就是下载拿到的那份 Markdown：工作内容标题印成粗体
-    expect(within(preview).getByText('收银台跨端组件重构')).toBeInTheDocument()
+    expect(within(preview).getByText(WORK_CONTENT_TITLE)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: '下载简历文稿' }))
 
@@ -299,5 +314,18 @@ describe('简历编排主工作面', () => {
     })
     expect(downloadedName).toBe('2026 后端岗.md')
     clickSpy.mockRestore()
+  })
+
+  it('内容区页头提供返回简历方案的入口', async () => {
+    const onExit = vi.fn()
+    render(
+      <ToastProvider>
+        <PlanEditor session={session} plan={plan} onExit={onExit} />
+      </ToastProvider>
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: '返回简历方案' }))
+
+    expect(onExit).toHaveBeenCalledOnce()
   })
 })
