@@ -27,6 +27,7 @@ const FRONTEND_ROUTES: Route[] = [
   { apiMethod: 'archiveResumePlan', method: 'POST', path: '/api/resume-plans/${planId}/archive' },
   { apiMethod: 'restoreResumePlan', method: 'POST', path: '/api/resume-plans/${planId}/restore' },
   { apiMethod: 'deleteResumePlan', method: 'DELETE', path: '/api/resume-plans/${planId}' },
+  { apiMethod: 'forkResumePlan', method: 'POST', path: '/api/resume-plans/${planId}/fork' },
   { apiMethod: 'addPlanBlock', method: 'POST', path: '/api/resume-plans/${planId}/experience-groups' },
   { apiMethod: 'updatePlanBlock', method: 'PATCH', path: '/api/resume-plans/${planId}/experience-groups/${blockId}' },
   { apiMethod: 'removePlanBlock', method: 'DELETE', path: '/api/resume-plans/${planId}/experience-groups/${blockId}' },

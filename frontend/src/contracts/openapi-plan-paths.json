@@ -58,6 +58,7 @@
       "item_ids"
     ]
   },
+  "POST /api/resume-plans/{plan_id}/fork": {},
   "POST /api/resume-plans/{plan_id}/items": {
     "request_fields": [
       "block_id",

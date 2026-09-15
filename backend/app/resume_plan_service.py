@@ -52,6 +52,41 @@ class ResumePlanService:
     def delete_plan(self, plan_id: int) -> None:
         self.repository.delete(self.plan(plan_id))
 
+    def fork_plan(self, plan_id: int) -> ResumePlan:
+        """Fork（界面称「复制简历方案」）。
+
+        只复制**引用**（经历块 + 条目 + 两级顺序 + 块级开关），不复制内容、也不复制历史留档：
+        新方案与父方案指向同一条简历亮点，之后在经历资产里改这条亮点，两者同时变化。
+        界面文案对外只用「复制」；Fork 是内部概念（代码/接口/文档），见 CONTEXT.md。
+        """
+        source = self.plan(plan_id)
+        fork = self.repository.save(
+            ResumePlan(user_id=self.user.id, name=f"{source.name} 副本", purpose=source.purpose)
+        )
+        for block in sorted(source.experience_groups, key=lambda candidate: (candidate.position, candidate.id)):
+            new_block = PlanExperienceGroup(
+                plan_id=fork.id,
+                experience_group_id=block.experience_group_id,
+                position=block.position,
+                show_work_content_titles=block.show_work_content_titles,
+            )
+            self.db.add(new_block)
+            self.db.flush()
+            for item in sorted(block.items, key=lambda candidate: (candidate.position, candidate.id)):
+                self.db.add(
+                    PlanItem(
+                        plan_experience_group_id=new_block.id,
+                        work_content_id=item.work_content_id,
+                        resume_description_id=item.resume_description_id,
+                        position=item.position,
+                    )
+                )
+        self.db.commit()
+        # 血缘不落列：把来源写进新方案的第一条留档，需要时在历史面板里就查得到
+        self.record_revision(fork, f"复制自《{source.name}》")
+        self.db.expire_all()
+        return self.plan(fork.id)
+
     def document(self, plan_id: int) -> dict:
         """读时装配（ADR 005 §2.3）：与中栏预览、切片 05 的导出快照共用同一份结果。"""
         return assemble_plan(self.plan(plan_id))

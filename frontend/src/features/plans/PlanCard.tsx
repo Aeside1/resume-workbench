@@ -1,5 +1,5 @@
 import { Button, Card, Chip } from '@heroui/react'
-import { Archive, FileText, Pencil, RotateCcw, Trash2 } from 'lucide-react'
+import { Archive, Copy, FileText, Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import type { ResumePlan } from '../../api'
 
 export type PlanCardProps = {
@@ -7,6 +7,8 @@ export type PlanCardProps = {
   blockCount?: number
   onSelect: (plan: ResumePlan) => void
   onEdit?: (plan: ResumePlan) => void
+  /** 复制（内部概念叫 Fork）：只复制引用，不复制内容与历史 */
+  onFork?: (plan: ResumePlan) => void
   onArchive?: (plan: ResumePlan) => void
   onRestore?: (plan: ResumePlan) => void
   onDelete?: (plan: ResumePlan) => void
@@ -16,7 +18,7 @@ export type PlanCardProps = {
  * 简历方案卡片（一张卡片 = 一个岗位方向的一版简历）。
  * 卡片主体点击进入简历编排；Footer 的操作区与主体物理解耦（AGENTS.md 第 2 条）。
  */
-export function PlanCard({ plan, blockCount = 0, onSelect, onEdit, onArchive, onRestore, onDelete }: PlanCardProps) {
+export function PlanCard({ plan, blockCount = 0, onSelect, onEdit, onFork, onArchive, onRestore, onDelete }: PlanCardProps) {
   const isArchived = plan.archived
   const updatedAt = plan.updated_at ? plan.updated_at.slice(0, 10) : ''
 
@@ -78,6 +80,10 @@ export function PlanCard({ plan, blockCount = 0, onSelect, onEdit, onArchive, on
             </>
           ) : (
             <>
+              <Button size="sm" variant="ghost" aria-label="复制简历方案" onPress={() => onFork?.(plan)}>
+                <Copy size={14} aria-hidden="true" />
+                复制
+              </Button>
               <Button size="sm" variant="ghost" aria-label="编辑简历方案" onPress={() => onEdit?.(plan)}>
                 <Pencil size={14} aria-hidden="true" />
                 编辑

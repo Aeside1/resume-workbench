@@ -14,7 +14,8 @@ vi.mock('../../api', () => ({
     updateResumePlan: vi.fn(),
     archiveResumePlan: vi.fn(),
     restoreResumePlan: vi.fn(),
-    deleteResumePlan: vi.fn()
+    deleteResumePlan: vi.fn(),
+    forkResumePlan: vi.fn()
   }
 }))
 
@@ -80,6 +81,12 @@ beforeEach(() => {
   })
   mocked.deleteResumePlan.mockImplementation(async (_token, id) => {
     plans = plans.filter((plan) => plan.id !== id)
+  })
+  mocked.forkResumePlan.mockImplementation(async (_token, id) => {
+    const source = plans.find((plan) => plan.id === id)!
+    const forked: ResumePlan = { ...source, id: 99, name: `${source.name} 副本` }
+    plans = [forked, ...plans]
+    return { ...forked, experience_groups: [] }
   })
 })
 
@@ -173,6 +180,19 @@ describe('简历方案列表页', () => {
     await waitFor(() => {
       expect(mocked.deleteResumePlan).toHaveBeenCalledWith('test-token', 7)
     })
+  })
+
+  it('复制方案：调用 fork 接口、列表新增一条并进入新方案编辑器（04f）', async () => {
+    const onSelectPlan = renderHub()
+    await screen.findByRole('heading', { name: '2026 后端岗' })
+
+    fireEvent.click(screen.getByRole('button', { name: '复制简历方案' }))
+
+    await waitFor(() => {
+      expect(mocked.forkResumePlan).toHaveBeenCalledWith('test-token', 7)
+    })
+    expect(onSelectPlan).toHaveBeenCalledWith(expect.objectContaining({ name: '2026 后端岗 副本' }))
+    expect(await screen.findByText('2026 后端岗 副本')).toBeInTheDocument()
   })
 
   it('卡片 Footer 的归档按钮不会误触发进入编辑器', async () => {

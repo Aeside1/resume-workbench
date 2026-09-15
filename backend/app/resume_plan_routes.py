@@ -76,6 +76,13 @@ def delete_resume_plan(plan_id: int, user: User = Depends(current_user), db: Ses
     service(user, db).delete_plan(plan_id)
 
 
+@router.post("/api/resume-plans/{plan_id}/fork", response_model=ResumePlanDetailView, status_code=201)
+def fork_resume_plan(plan_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    """Fork（界面称「复制简历方案」）：只复制引用，不复制内容与历史。"""
+    plan = service(user, db).fork_plan(plan_id)
+    return build_detail(plan)
+
+
 @router.post("/api/resume-plans/{plan_id}/experience-groups", response_model=PlanBlockView, status_code=201)
 def add_plan_experience_group(
     plan_id: int,

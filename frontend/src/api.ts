@@ -107,5 +107,7 @@ export const api = {
   planDocument: (token: string, planId: number) => request<PlanDocument>(`/api/resume-plans/${planId}/document`, {}, token),
   planArchives: (token: string, planId: number) => request<PlanArchive[]>(`/api/resume-plans/${planId}/archives`, {}, token),
   restorePlanArchive: (token: string, planId: number, archiveId: number) => request<ResumePlanDetail>(`/api/resume-plans/${planId}/archives/${archiveId}/restore`, { method: 'POST' }, token),
+  /** Fork（界面称「复制简历方案」）：只复制引用，不复制内容与历史 */
+  forkResumePlan: (token: string, id: number) => request<ResumePlanDetail>(`/api/resume-plans/${id}/fork`, { method: 'POST' }, token),
 }
 

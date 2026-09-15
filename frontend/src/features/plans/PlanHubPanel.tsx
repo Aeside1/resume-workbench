@@ -79,6 +79,29 @@ export function PlanHubPanel({ session, onSelectPlan }: PlanHubPanelProps) {
     setPlanToEdit(null)
   }
 
+  /** 复制方案（内部概念 Fork）：只复制引用，不复制内容与历史；复制后直接进新方案编辑器 */
+  const handleFork = async (plan: ResumePlan) => {
+    try {
+      const forked = await api.forkResumePlan(session.token, plan.id)
+      const listEntry: ResumePlan = {
+        id: forked.id,
+        user_id: forked.user_id,
+        name: forked.name,
+        purpose: forked.purpose,
+        archived: forked.archived,
+        created_at: forked.created_at,
+        updated_at: forked.updated_at
+      }
+      setPlans((items) => [listEntry, ...items])
+      setBlockCounts((prev) => ({ ...prev, [forked.id]: forked.experience_groups.length }))
+      setActiveTab('active')
+      toast.success(`已复制出《${forked.name}》`)
+      onSelectPlan(listEntry)
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+
   const handleArchive = async (plan: ResumePlan) => {
     try {
       const updated = await api.archiveResumePlan(session.token, plan.id)
@@ -197,6 +220,7 @@ export function PlanHubPanel({ session, onSelectPlan }: PlanHubPanelProps) {
               blockCount={blockCounts[plan.id] ?? 0}
               onSelect={onSelectPlan}
               onEdit={setPlanToEdit}
+              onFork={handleFork}
               onArchive={handleArchive}
               onRestore={handleRestore}
               onDelete={setPlanToDelete}
