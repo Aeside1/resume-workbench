@@ -6,6 +6,7 @@
   "GET /api/resume-descriptions/{highlight_id}": {},
   "GET /api/resume-plans": {},
   "GET /api/resume-plans/{plan_id}": {},
+  "GET /api/resume-plans/{plan_id}/archives": {},
   "GET /api/resume-plans/{plan_id}/candidates": {},
   "GET /api/resume-plans/{plan_id}/document": {},
   "GET /api/work-contents/{content_id}/resume-descriptions": {},
@@ -41,6 +42,7 @@
     ]
   },
   "POST /api/resume-plans/{plan_id}/archive": {},
+  "POST /api/resume-plans/{plan_id}/archives/{archive_id}/restore": {},
   "POST /api/resume-plans/{plan_id}/experience-groups": {
     "request_fields": [
       "experience_group_id"

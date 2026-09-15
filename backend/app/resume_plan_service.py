@@ -1,10 +1,12 @@
+import json
+
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from .experience_repository import ExperienceRepository
-from .models import ExperienceGroup, PlanExperienceGroup, PlanItem, ResumeDescription, ResumePlan, User, WorkContent
+from .models import ExperienceGroup, PlanArchive, PlanExperienceGroup, PlanItem, ResumeDescription, ResumePlan, User, WorkContent
 from .resume_description_repository import ResumeDescriptionRepository
-from .resume_plan_assembly import assemble_plan
+from .resume_plan_assembly import REVISION_SOURCE, assemble_plan, snapshot_plan
 from .resume_plan_repository import ResumePlanRepository
 
 
@@ -30,13 +32,17 @@ class ResumePlanService:
         return self.repository.list_plans(self.user.id, include_archived)
 
     def create_plan(self, values: dict) -> ResumePlan:
-        return self.repository.save(ResumePlan(user_id=self.user.id, **values))
+        plan = self.repository.save(ResumePlan(user_id=self.user.id, **values))
+        self.record_revision(plan, "创建方案")
+        return plan
 
     def update_plan(self, plan_id: int, values: dict) -> ResumePlan:
         plan = self.plan(plan_id)
         for key, value in values.items():
             setattr(plan, key, value)
-        return self.repository.save(plan)
+        saved = self.repository.save(plan)
+        self.record_revision(saved, "修改方案名称或用途")
+        return saved
 
     def set_plan_archived(self, plan_id: int, archived: bool) -> ResumePlan:
         plan = self.plan(plan_id)
@@ -77,18 +83,29 @@ class ResumePlanService:
             experience_group_id=group.id,
             position=max_position + 1 if max_position is not None else 0,
         )
-        return self.repository.save(block)
+        saved = self.repository.save(block)
+        self.record_revision(plan, f"添加经历分组：{group.name}")
+        return saved
 
     def update_block(self, plan_id: int, block_id: int, values: dict) -> PlanExperienceGroup:
         plan = self.plan(plan_id)
         block = self.block(plan, block_id)
         for key, value in values.items():
             setattr(block, key, value)
-        return self.repository.save(block)
+        saved = self.repository.save(block)
+        if "show_work_content_titles" in values:
+            self.record_revision(
+                plan,
+                "文稿中打印工作内容标题" if values["show_work_content_titles"] else "文稿中不打印工作内容标题",
+            )
+        return saved
 
     def remove_block(self, plan_id: int, block_id: int) -> None:
         plan = self.plan(plan_id)
-        self.repository.delete(self.block(plan, block_id))
+        block = self.block(plan, block_id)
+        group_name = block.experience_group.name if block.experience_group is not None else "经历分组"
+        self.repository.delete(block)
+        self.record_revision(plan, f"移除经历分组：{group_name}")
 
     def reorder_blocks(self, plan_id: int, block_ids: list[int]) -> list[PlanExperienceGroup]:
         plan = self.plan(plan_id)
@@ -99,6 +116,7 @@ class ResumePlanService:
         for position, block_id in enumerate(block_ids):
             by_id[block_id].position = position
         self.repository.commit()
+        self.record_revision(plan, "调整经历块顺序")
         return [by_id[block_id] for block_id in block_ids]
 
     # ---------- 简历条目 ----------
@@ -157,7 +175,9 @@ class ResumePlanService:
             resume_description_id=highlight.id,
             position=max_position + 1 if max_position is not None else 0,
         )
-        return self.repository.save(item)
+        saved = self.repository.save(item)
+        self.record_revision(plan, f"添加简历亮点：{highlight.label}")
+        return saved
 
     def switch_item_highlight(self, plan_id: int, item_id: int, highlight_id: int) -> PlanItem:
         plan = self.plan(plan_id)
@@ -166,11 +186,16 @@ class ResumePlanService:
             raise HTTPException(status_code=422, detail="这条条目的来源已失效，请先重新选择具体工作内容")
         highlight = self._validated_highlight(item.work_content, highlight_id)
         item.resume_description_id = highlight.id
-        return self.repository.save(item)
+        saved = self.repository.save(item)
+        self.record_revision(plan, f"更换简历亮点：{highlight.label}")
+        return saved
 
     def remove_item(self, plan_id: int, item_id: int) -> None:
         plan = self.plan(plan_id)
-        self.repository.delete(self.item(plan, item_id))
+        item = self.item(plan, item_id)
+        label = item.resume_description.label if item.resume_description is not None else "简历条目"
+        self.repository.delete(item)
+        self.record_revision(plan, f"移除简历条目：{label}")
 
     def reorder_items(self, plan_id: int, block_id: int, item_ids: list[int]) -> list[PlanItem]:
         plan = self.plan(plan_id)
@@ -182,7 +207,88 @@ class ResumePlanService:
         for position, item_id in enumerate(item_ids):
             by_id[item_id].position = position
         self.repository.commit()
+        self.record_revision(plan, "调整条目顺序")
         return [by_id[item_id] for item_id in item_ids]
+
+    # ---------- 方案留档（ADR 005 §2.3） ----------
+
+    def record_revision(self, plan: ResumePlan, summary: str) -> PlanArchive:
+        """结构性变更追加一条 revision 留档。
+
+        追加即不可变，**不做同分钟合并**：每次变更一条，回滚粒度就是每次变更。
+        拖拽排序会产生多条记录，属真实历史。
+        """
+        self.db.refresh(plan)  # 变更已提交：重新加载以保证快照读到的关系是最新的
+        archive = PlanArchive(
+            plan_id=plan.id,
+            source=REVISION_SOURCE,
+            summary=summary,
+            snapshot=json.dumps(snapshot_plan(plan), ensure_ascii=False),
+        )
+        return self.repository.save(archive)
+
+    def list_archives(self, plan_id: int) -> list[PlanArchive]:
+        return self.repository.list_archives(self.plan(plan_id).id)
+
+    def restore_archive(self, plan_id: int, archive_id: int) -> ResumePlan:
+        """按留档的**资产 id** 重建经历块与条目，然后追加一条新留档（历史只增不减）。"""
+        plan = self.plan(plan_id)
+        archive = self.repository.archive_for_plan(archive_id, plan.id)
+        if archive is None:
+            raise HTTPException(status_code=404, detail="方案留档不存在")
+        data = json.loads(archive.snapshot)
+
+        for block in list(plan.experience_groups):
+            self.db.delete(block)
+        self.db.commit()
+
+        skipped = 0
+        for block_data in sorted(data.get("blocks", []), key=lambda entry: entry["position"]):
+            group = self.experience.group_for_owner(block_data["experience_group_id"], self.user.id)
+            if group is None:
+                skipped += 1
+                continue
+            block = PlanExperienceGroup(
+                plan_id=plan.id,
+                experience_group_id=group.id,
+                position=block_data["position"],
+                show_work_content_titles=block_data.get("show_work_content_titles", True),
+            )
+            self.db.add(block)
+            self.db.flush()
+            for item_data in sorted(block_data.get("items", []), key=lambda entry: entry["position"]):
+                content = (
+                    self.experience.content_for_owner(item_data["work_content_id"], self.user.id)
+                    if item_data.get("work_content_id") is not None
+                    else None
+                )
+                highlight = None
+                if content is not None and item_data.get("resume_description_id") is not None:
+                    candidate = self.highlights.highlight_for_owner(item_data["resume_description_id"], self.user.id)
+                    if candidate is not None and candidate.work_content_id == content.id:
+                        highlight = candidate
+                if content is None:
+                    skipped += 1
+                self.db.add(
+                    PlanItem(
+                        plan_experience_group_id=block.id,
+                        work_content_id=content.id if content is not None else None,
+                        resume_description_id=highlight.id if highlight is not None else None,
+                        position=item_data["position"],
+                    )
+                )
+
+        plan.name = data.get("name") or plan.name
+        plan.purpose = data.get("purpose")
+        self.db.commit()
+
+        summary = f"回滚到 {archive.created_at:%Y-%m-%d %H:%M}"
+        if skipped:
+            # 与 04b 同口径：引用解析不到时不静默丢弃，保留占位让用户重修（“引用已失效”）
+            summary += f"（{skipped} 条引用已失效，已保留占位）"
+        self.record_revision(plan, summary)
+        self.db.expire_all()
+        return self.plan(plan_id)
 
     # ---------- 可选素材 ----------
 

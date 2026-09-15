@@ -37,6 +37,8 @@ const FRONTEND_ROUTES: Route[] = [
   { apiMethod: 'reorderPlanItems', method: 'POST', path: '/api/resume-plans/${planId}/experience-groups/${blockId}/items/reorder' },
   { apiMethod: 'planCandidates', method: 'GET', path: '/api/resume-plans/${planId}/candidates' },
   { apiMethod: 'planDocument', method: 'GET', path: '/api/resume-plans/${planId}/document' },
+  { apiMethod: 'planArchives', method: 'GET', path: '/api/resume-plans/${planId}/archives' },
+  { apiMethod: 'restorePlanArchive', method: 'POST', path: '/api/resume-plans/${planId}/archives/${archiveId}/restore' },
   { apiMethod: 'resumeHighlights', method: 'GET', path: '/api/work-contents/${contentId}/resume-descriptions' },
   { apiMethod: 'createResumeHighlight', method: 'POST', path: '/api/work-contents/${contentId}/resume-descriptions' },
   { apiMethod: 'updateResumeHighlight', method: 'PATCH', path: '/api/resume-descriptions/${id}' },

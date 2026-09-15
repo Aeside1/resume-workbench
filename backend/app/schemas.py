@@ -331,3 +331,14 @@ class PlanCandidatesView(BaseModel):
 class PlanDocumentView(BaseModel):
     markdown: str
     outline: dict
+
+
+class PlanArchiveView(BaseModel):
+    """方案留档的历史列表项（不返回 snapshot 全文，面板不需要）。"""
+
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    plan_id: int
+    source: Literal["revision", "export"]
+    summary: str | None
+    created_at: datetime

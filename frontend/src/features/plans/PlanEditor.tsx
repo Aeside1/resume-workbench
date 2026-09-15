@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Button, Chip } from '@heroui/react'
-import { Download, Eye, FilePlus2, Pencil, Plus } from 'lucide-react'
+import { Download, Eye, FilePlus2, History, Pencil, Plus } from 'lucide-react'
 import {
   api,
+  type PlanArchive,
   type PlanBlock,
   type PlanCandidates,
   type PlanDocument,
@@ -19,6 +20,7 @@ import { AddExperienceGroupDialog } from './AddExperienceGroupDialog'
 import { HighlightPicker } from './HighlightPicker'
 import { PlanBlockCard } from './PlanBlockCard'
 import { PlanDocumentView } from './PlanDocumentView'
+import { PlanHistoryPanel } from './PlanHistoryPanel'
 
 export type PlanEditorProps = {
   session: Session
@@ -40,6 +42,8 @@ export function PlanEditor({ session, plan, saveStatus, onSaveStatusChange, onEx
   const [detail, setDetail] = useState<ResumePlanDetail | null>(null)
   const [document, setDocument] = useState<PlanDocument | null>(null)
   const [candidates, setCandidates] = useState<PlanCandidates | null>(null)
+  const [archives, setArchives] = useState<PlanArchive[]>([])
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [pickerBlock, setPickerBlock] = useState<PlanBlock | null>(null)
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false)
   const [isPreview, setIsPreview] = useState(false)
@@ -48,12 +52,14 @@ export function PlanEditor({ session, plan, saveStatus, onSaveStatusChange, onEx
   const toast = useToast()
 
   const load = useCallback(async () => {
-    const [nextDetail, nextDocument] = await Promise.all([
+    const [nextDetail, nextDocument, nextArchives] = await Promise.all([
       api.resumePlan(session.token, plan.id),
-      api.planDocument(session.token, plan.id)
+      api.planDocument(session.token, plan.id),
+      api.planArchives(session.token, plan.id)
     ])
     setDetail(nextDetail)
     setDocument(nextDocument)
+    setArchives(nextArchives)
   }, [session.token, plan.id])
 
   const loadCandidates = useCallback(async () => {
@@ -175,6 +181,11 @@ export function PlanEditor({ session, plan, saveStatus, onSaveStatusChange, onEx
     await runMutation(() => api.updatePlanBlock(session.token, plan.id, block.id, { show_work_content_titles: value }))
   }
 
+  const handleRestoreArchive = async (archive: PlanArchive) => {
+    await runMutation(() => api.restorePlanArchive(session.token, plan.id, archive.id))
+    toast.success(`已回滚到 ${archive.summary || '该版本'}；历史记录保留。`)
+  }
+
   const handleDownload = () => {
     if (!document) return
     const blob = new Blob([document.markdown], { type: 'text/markdown;charset=utf-8' })
@@ -236,6 +247,16 @@ export function PlanEditor({ session, plan, saveStatus, onSaveStatusChange, onEx
               <Eye size={14} aria-hidden="true" />
               {isPreview ? '返回编排' : '预览'}
             </Button>
+            <Button
+              size="sm"
+              variant={isHistoryOpen ? 'secondary' : 'ghost'}
+              aria-pressed={isHistoryOpen}
+              aria-label="历史版本"
+              onPress={() => setIsHistoryOpen((current) => !current)}
+            >
+              <History size={14} aria-hidden="true" />
+              历史版本
+            </Button>
             <Button size="sm" variant="ghost" onPress={handleDownload}>
               <Download size={14} aria-hidden="true" />
               下载简历文稿
@@ -254,28 +275,39 @@ export function PlanEditor({ session, plan, saveStatus, onSaveStatusChange, onEx
       {isPreview ? (
         <PlanDocumentView markdown={document?.markdown ?? ''} />
       ) : (
-        <div className="plan-editor-body">
-          <div className="plan-editor-toolbar">
-            <Button variant="primary" size="sm" onPress={() => void handleOpenAddGroup()}>
-              <Plus size={15} aria-hidden="true" />
-              添加经历分组
-            </Button>
-            <span className="plan-editor-hint">板块由经历分组的类型自动决定；已归档的内容不会再出现在候选里。</span>
+        <div className="plan-editor-layout">
+          <div className="plan-editor-body">
+            <div className="plan-editor-toolbar">
+              <Button variant="primary" size="sm" onPress={() => void handleOpenAddGroup()}>
+                <Plus size={15} aria-hidden="true" />
+                添加经历分组
+              </Button>
+              <span className="plan-editor-hint">板块由经历分组的类型自动决定；已归档的内容不会再出现在候选里。</span>
+            </div>
+
+            {!loading && blocks.length === 0 ? (
+              <EmptyStateCard
+                title="先添加一段经历"
+                description="这份简历还是空的。点「添加经历分组」把一段实习或项目经历纳入方案，再在块内挑简历亮点。"
+                actionLabel="添加经历分组"
+                onAction={() => void handleOpenAddGroup()}
+                icon={<FilePlus2 size={32} aria-hidden="true" />}
+              />
+            ) : (
+              <>
+                {renderBlockSection('实习经历', internshipBlocks)}
+                {renderBlockSection('项目经历', projectBlocks)}
+              </>
+            )}
           </div>
 
-          {!loading && blocks.length === 0 ? (
-            <EmptyStateCard
-              title="先添加一段经历"
-              description="这份简历还是空的。点「添加经历分组」把一段实习或项目经历纳入方案，再在块内挑简历亮点。"
-              actionLabel="添加经历分组"
-              onAction={() => void handleOpenAddGroup()}
-              icon={<FilePlus2 size={32} aria-hidden="true" />}
+          {isHistoryOpen && (
+            <PlanHistoryPanel
+              archives={archives}
+              isLoading={loading}
+              onRestore={handleRestoreArchive}
+              onClose={() => setIsHistoryOpen(false)}
             />
-          ) : (
-            <>
-              {renderBlockSection('实习经历', internshipBlocks)}
-              {renderBlockSection('项目经历', projectBlocks)}
-            </>
           )}
         </div>
       )}

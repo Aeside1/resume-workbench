@@ -10,6 +10,8 @@ vi.mock('../../api', () => ({
   api: {
     resumePlan: vi.fn(),
     planDocument: vi.fn(),
+    planArchives: vi.fn(),
+    restorePlanArchive: vi.fn(),
     planCandidates: vi.fn(),
     addPlanBlock: vi.fn(),
     removePlanBlock: vi.fn(),
@@ -115,6 +117,11 @@ beforeEach(() => {
     outline: { name: plan.name, purpose: plan.purpose, sections: [] }
   }))
   mocked.planCandidates.mockResolvedValue(candidates)
+  mocked.planArchives.mockResolvedValue([
+    { id: 501, plan_id: 7, source: 'revision', summary: '添加简历亮点：技术深度版', created_at: '2026-02-01T10:00:00Z' },
+    { id: 500, plan_id: 7, source: 'revision', summary: '创建方案', created_at: '2026-02-01T09:59:00Z' }
+  ])
+  mocked.restorePlanArchive.mockImplementation(async () => ({ ...plan, experience_groups: blocks }) as ResumePlanDetail)
   mocked.addPlanBlock.mockImplementation(async () => {
     blocks = [
       {
@@ -314,6 +321,29 @@ describe('简历编排主工作面', () => {
     })
     expect(downloadedName).toBe('2026 后端岗.md')
     clickSpy.mockRestore()
+  })
+
+  it('打开历史版本面板并回滚到某一版（04e）', async () => {
+    await addBlockAndHighlight()
+
+    fireEvent.click(screen.getByRole('button', { name: '历史版本' }))
+    const panel = await screen.findByLabelText('方案历史版本')
+    expect(within(panel).getByText('添加简历亮点：技术深度版')).toBeInTheDocument()
+    expect(within(panel).getByText('创建方案')).toBeInTheDocument()
+
+    fireEvent.click(within(panel).getByRole('button', { name: /回滚到 添加简历亮点/ }))
+
+    await waitFor(() => {
+      expect(mocked.restorePlanArchive).toHaveBeenCalledWith('test-token', 7, 501)
+    })
+    // 回滚后编排区仍在（面板是非模态的）
+    expect(screen.getByRole('article', { name: '经历块 支付平台实习' })).toBeInTheDocument()
+
+    // 可收起
+    fireEvent.click(within(panel).getByRole('button', { name: '收起历史版本' }))
+    await waitFor(() => {
+      expect(screen.queryByLabelText('方案历史版本')).not.toBeInTheDocument()
+    })
   })
 
   it('内容区页头提供返回简历方案的入口', async () => {

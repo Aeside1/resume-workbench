@@ -25,6 +25,9 @@ export type PlanDocument = { markdown: string; outline: { name: string; purpose:
 
 export type PlanCandidates = { experience_groups: Array<{ id: number; name: string; type: 'internship' | 'project'; organization: string | null; start_date: string | null; end_date: string | null; already_added: boolean; work_contents: Array<{ id: number; title: string; already_added: boolean; highlights: Array<{ id: number; label: string; content: string; position: number; already_added: boolean }> }> }> }
 
+/** 方案留档：source=revision（结构性自动留档）/ export（导出快照，切片 05） */
+export type PlanArchive = { id: number; plan_id: number; source: 'revision' | 'export'; summary: string | null; created_at: string }
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 /**
@@ -102,5 +105,7 @@ export const api = {
   reorderPlanItems: (token: string, planId: number, blockId: number, itemIds: number[]) => request<PlanItem[]>(`/api/resume-plans/${planId}/experience-groups/${blockId}/items/reorder`, { method: 'POST', body: JSON.stringify({ item_ids: itemIds }) }, token),
   planCandidates: (token: string, planId: number) => request<PlanCandidates>(`/api/resume-plans/${planId}/candidates`, {}, token),
   planDocument: (token: string, planId: number) => request<PlanDocument>(`/api/resume-plans/${planId}/document`, {}, token),
+  planArchives: (token: string, planId: number) => request<PlanArchive[]>(`/api/resume-plans/${planId}/archives`, {}, token),
+  restorePlanArchive: (token: string, planId: number, archiveId: number) => request<ResumePlanDetail>(`/api/resume-plans/${planId}/archives/${archiveId}/restore`, { method: 'POST' }, token),
 }
 

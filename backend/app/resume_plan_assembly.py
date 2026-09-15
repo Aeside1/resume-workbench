@@ -18,6 +18,38 @@ SECTIONS: tuple[tuple[str, str], ...] = (("internship", "实习经历"), ("proje
 MISSING_SOURCE_LABEL = "引用已失效"
 MISSING_HIGHLIGHT_LABEL = "待选简历亮点"
 
+# 方案留档的两类来源（ADR 005 §2.3）
+REVISION_SOURCE = "revision"
+EXPORT_SOURCE = "export"
+
+
+def snapshot_plan(plan: ResumePlan) -> dict:
+    """留档用的结构快照。
+
+    只存**资产 id**（经历分组 / 具体工作内容 / 简历亮点）与顺序、块级开关、方案名称与用途；
+    不存经历块 id 与条目 id——回滚是按资产重建的，条目 id 在重建后必然变化（04e 票面提醒）。
+    """
+    return {
+        "name": plan.name,
+        "purpose": plan.purpose,
+        "blocks": [
+            {
+                "experience_group_id": block.experience_group_id,
+                "position": block.position,
+                "show_work_content_titles": block.show_work_content_titles,
+                "items": [
+                    {
+                        "work_content_id": item.work_content_id,
+                        "resume_description_id": item.resume_description_id,
+                        "position": item.position,
+                    }
+                    for item in sorted(block.items, key=lambda candidate: (candidate.position, candidate.id))
+                ],
+            }
+            for block in sorted(plan.experience_groups, key=lambda candidate: (candidate.position, candidate.id))
+        ],
+    }
+
 
 def format_month(value: date | None) -> str | None:
     return f"{value.year:04d}.{value.month:02d}" if value is not None else None

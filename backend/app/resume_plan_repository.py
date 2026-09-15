@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from .models import (
     ExperienceGroup,
+    PlanArchive,
     PlanExperienceGroup,
     PlanItem,
     ResumeDescription,
@@ -26,6 +27,26 @@ class ResumePlanRepository:
         if not include_archived:
             query = query.where(ResumePlan.archived.is_(False))
         return list(self.db.scalars(query.order_by(ResumePlan.updated_at.desc(), ResumePlan.id)).all())
+
+    def latest_archive(self, plan_id: int) -> PlanArchive | None:
+        return self.db.scalar(
+            select(PlanArchive)
+            .where(PlanArchive.plan_id == plan_id)
+            .order_by(PlanArchive.id.desc())
+            .limit(1)
+        )
+
+    def list_archives(self, plan_id: int) -> list[PlanArchive]:
+        return list(
+            self.db.scalars(
+                select(PlanArchive).where(PlanArchive.plan_id == plan_id).order_by(PlanArchive.id.desc())
+            ).all()
+        )
+
+    def archive_for_plan(self, archive_id: int, plan_id: int) -> PlanArchive | None:
+        return self.db.scalar(
+            select(PlanArchive).where(PlanArchive.id == archive_id, PlanArchive.plan_id == plan_id)
+        )
 
     def max_block_position(self, plan_id: int) -> int | None:
         return self.db.scalar(

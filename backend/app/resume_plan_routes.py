@@ -7,6 +7,7 @@ from .models import User
 from .resume_plan_assembly import build_detail, render_block, render_item
 from .resume_plan_service import ResumePlanService
 from .schemas import (
+    PlanArchiveView,
     PlanBlockCreate,
     PlanBlockReorder,
     PlanBlockUpdate,
@@ -169,3 +170,19 @@ def get_plan_candidates(plan_id: int, user: User = Depends(current_user), db: Se
 @router.get("/api/resume-plans/{plan_id}/document", response_model=PlanDocumentView)
 def get_plan_document(plan_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
     return service(user, db).document(plan_id)
+
+
+@router.get("/api/resume-plans/{plan_id}/archives", response_model=list[PlanArchiveView])
+def list_plan_archives(plan_id: int, user: User = Depends(current_user), db: Session = Depends(get_db)):
+    return service(user, db).list_archives(plan_id)
+
+
+@router.post("/api/resume-plans/{plan_id}/archives/{archive_id}/restore", response_model=ResumePlanDetailView)
+def restore_plan_archive(
+    plan_id: int,
+    archive_id: int,
+    user: User = Depends(current_user),
+    db: Session = Depends(get_db),
+):
+    plan = service(user, db).restore_archive(plan_id, archive_id)
+    return build_detail(plan)

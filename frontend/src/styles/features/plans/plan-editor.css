@@ -17,6 +17,84 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  flex: 1;
+  min-width: 0;
+}
+
+/* 两栏：编排区 + 可收起的非模态历史版本面板（ADR 005 §2.5） */
+.plan-editor-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.plan-history-panel {
+  flex: 0 0 300px;
+  width: 300px;
+  position: sticky;
+  top: 16px;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding: 14px;
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.plan-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.plan-history-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.plan-history-hint {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.plan-history-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-history-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--separator);
+  border-radius: 8px;
+}
+
+.plan-history-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plan-history-time {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.plan-history-summary {
+  font-size: 0.82rem;
+  color: var(--foreground);
 }
 
 .plan-editor-toolbar {
