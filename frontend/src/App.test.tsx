@@ -5,10 +5,10 @@ import { App } from './App'
 import { api } from './api'
 import { pasteMarkdown } from './test/pasteMarkdown'
 
-vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn(), deleteWorkContent: vi.fn(), resumeHighlights: vi.fn(), createResumeHighlight: vi.fn(), updateResumeHighlight: vi.fn(), copyResumeHighlight: vi.fn(), archiveResumeHighlight: vi.fn(), restoreResumeHighlight: vi.fn(), deleteResumeHighlight: vi.fn() } }))
+vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn(), deleteWorkContent: vi.fn(), resumeHighlights: vi.fn(), createResumeHighlight: vi.fn(), updateResumeHighlight: vi.fn(), copyResumeHighlight: vi.fn(), archiveResumeHighlight: vi.fn(), restoreResumeHighlight: vi.fn(), deleteResumeHighlight: vi.fn(), resumePlans: vi.fn(), createResumePlan: vi.fn(), resumePlan: vi.fn(), updateResumePlan: vi.fn(), archiveResumePlan: vi.fn(), restoreResumePlan: vi.fn(), deleteResumePlan: vi.fn(), addPlanBlock: vi.fn(), updatePlanBlock: vi.fn(), removePlanBlock: vi.fn(), reorderPlanBlocks: vi.fn(), addPlanItem: vi.fn(), updatePlanItem: vi.fn(), removePlanItem: vi.fn(), reorderPlanItems: vi.fn(), planCandidates: vi.fn(), planDocument: vi.fn() } }))
 const mocked = vi.mocked(api)
 
-beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]); mocked.resumeHighlights.mockResolvedValue([]) })
+beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]); mocked.resumeHighlights.mockResolvedValue([]); mocked.resumePlans.mockResolvedValue([]) })
 afterEach(cleanup)
 
 describe('认证后的工作台', () => {

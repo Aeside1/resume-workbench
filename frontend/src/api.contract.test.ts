@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import contract from '../../contracts/openapi-plan-paths.json'
+import contract from './contracts/openapi-plan-paths.json'
 import { api } from './api'
 
 /**
  * 前后端契约测试（切片 04b）。
  *
- * 快照由后端 `backend/tests/test_openapi_contract.py` 生成并提交，
- * 这里断言 `api.ts` 里的每个方案/亮点调用在后端都真实存在，
+ * 快照由后端 `backend/tests/test_openapi_contract.py` 生成并提交（放在 src 内，因为
+ * web 镜像的构建上下文只有 frontend/），这里断言 `api.ts` 里的每个方案/亮点调用在后端都真实存在，
  * 且后端的每个方案/亮点路由都被前端覆盖（或在 BACKEND_ONLY 里写明原因）。
  * 这样任何一侧单独改路径或字段都会红，而不是静默 404。
  */

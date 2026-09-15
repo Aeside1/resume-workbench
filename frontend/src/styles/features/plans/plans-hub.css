@@ -1,0 +1,116 @@
+/* ==========================================================================
+   Resume Plan Hub (简历方案列表页)
+
+   卡片与徽章外观由 HeroUI 承载；此处只保留布局骨架与语义变量色值
+   （AGENTS.md 第 3 条：严禁对抗式覆盖框架外观）。
+   ========================================================================== */
+
+.plan-hub-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.plan-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: 100%;
+  min-height: 180px;
+  padding: 20px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.plan-card:hover {
+  transform: translateY(-2px);
+}
+
+.plan-card--archived {
+  opacity: 0.72;
+  border-style: dashed;
+}
+
+.plan-card-clickable-area {
+  cursor: pointer;
+  outline: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+}
+
+.plan-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-card-top-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plan-card-name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.plan-card-purpose {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.plan-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plan-card-meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.plan-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.plan-card-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.plan-card-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}

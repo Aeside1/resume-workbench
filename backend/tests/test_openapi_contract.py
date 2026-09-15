@@ -10,7 +10,9 @@ from pathlib import Path
 from app.main import app
 
 
-CONTRACT = Path(__file__).resolve().parents[2] / "contracts" / "openapi-plan-paths.json"
+CONTRACT = Path(__file__).resolve().parents[2] / "frontend" / "src" / "contracts" / "openapi-plan-paths.json"
+# 快照放在前端源码树内：web 镜像的构建上下文只有 `frontend/`，而 `npm run build` 会
+# typecheck 测试文件，放在仓库根会导致容器内构建失败。
 TRACKED_PREFIXES = (
     "/api/resume-plans",
     "/api/resume-descriptions",

@@ -40,6 +40,10 @@
 @import "./styles/features/editor/milkdown-editor.css";
 @import "./styles/features/editor/milkdown-toolbar.css";
 
+/* 4.5 Resume Plans（简历方案列表 + 简历编排主工作面） */
+@import "./styles/features/plans/plans-hub.css";
+@import "./styles/features/plans/plan-editor.css";
+
 /* ==========================================================================
    5. Theme Tokens (品牌色与品牌私有色 —— 全站唯一允许出现硬编码色值的地方)
    除本区块外，任何模块内都禁止新增硬编码色值（issue 11 审计口径）。

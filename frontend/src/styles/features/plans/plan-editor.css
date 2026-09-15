@@ -1,0 +1,254 @@
+/* ==========================================================================
+   Resume Plan Editor (简历编排主工作面)
+
+   排版与外观尽量交回 HeroUI（Card / Button / Chip / Switch）；此处只做
+   两栏骨架、条目行布局与语义变量色值，不写 !important。
+   ========================================================================== */
+
+.plan-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+
+.plan-editor-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.plan-editor-name {
+  margin: 0;
+  font-size: 1.4rem;
+  font-weight: 650;
+  color: var(--foreground);
+}
+
+.plan-editor-purpose {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--muted);
+}
+
+.plan-editor-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.plan-editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.plan-editor-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.plan-editor-hint {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.plan-editor-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-editor-section-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--foreground);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.plan-editor-section-empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* 经历块 */
+
+.plan-block-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+.plan-block-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.plan-block-name {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.plan-block-subtitle {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.plan-block-actions,
+.plan-item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.plan-block-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plan-block-toggle {
+  display: flex;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* 条目行 */
+
+.plan-item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.plan-item-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  cursor: grab;
+}
+
+.plan-item-drag {
+  display: inline-flex;
+  color: var(--muted);
+}
+
+.plan-item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-item-label {
+  font-size: 0.9rem;
+  color: var(--foreground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.plan-item-source {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.plan-item-empty {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* 选择器（添加经历分组 / 挑简历亮点） */
+
+.plan-picker-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 52vh;
+  overflow-y: auto;
+}
+
+.plan-picker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--separator);
+  border-radius: 10px;
+}
+
+.plan-picker-row--stacked {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.plan-picker-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.plan-picker-row-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  font-weight: 550;
+  color: var(--foreground);
+}
+
+.plan-picker-row-subtitle,
+.plan-picker-context {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.plan-picker-empty {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.plan-highlight-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 文稿预览 */
+
+.plan-document-view {
+  padding: 20px 24px;
+  border: 1px solid var(--separator);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--foreground);
+}

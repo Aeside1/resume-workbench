@@ -2,10 +2,12 @@ import { useCallback, useRef, useState } from 'react'
 import { Button, Card, Kbd } from '@heroui/react'
 import { ArrowRight, FileText, LayoutGrid, Layers, PanelRight, PanelRightClose } from 'lucide-react'
 import { motion } from 'framer-motion'
-import type { ExperienceGroup } from '../api'
+import type { ExperienceGroup, ResumePlan } from '../api'
 import type { Session } from '../session'
 import { AppShell, isFocusMode, type AppShellMode, type FocusBreadcrumbLevel } from './AppShell'
 import { ExperienceHubPanel } from './hub/ExperienceHubPanel'
+import { PlanEditor } from './plans/PlanEditor'
+import { PlanHubPanel } from './plans/PlanHubPanel'
 import { FocusCanvasContainer, type ZenTopbarState } from './canvas/FocusCanvasContainer'
 import type { SaveStatus } from './useTransientSaveStatus'
 import { ToastProvider } from '../components/ui/Toast'
@@ -17,6 +19,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const [view, setView] = useState<View>('experiences')
   const [mode, setMode] = useState<AppShellMode>('hub')
   const [activeExperience, setActiveExperience] = useState<ExperienceGroup | null>(null)
+  const [activePlan, setActivePlan] = useState<ResumePlan | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isCanvasDirty, setIsCanvasDirty] = useState(false)
   // Zen 展开后顶栏归 AppShell 所有（ADR 004 §2.2/§2.4）：
@@ -54,6 +57,21 @@ export function WorkbenchShell({ session, onLogout }: Props) {
     resetZenState()
   }
 
+  // 简历方案编辑器同样进入专注场景（ADR 005 §2.5）：隐藏侧栏、顶栏换面包屑，
+  // 让中间那一栏（简历编排主工作面）拿到全部宽度。方案的结构性变更即时落库，
+  // 因此不需要「未保存就离开」的确认。
+  const handleSelectPlan = (plan: ResumePlan) => {
+    setActivePlan(plan)
+    setMode('focus-canvas')
+    resetZenState()
+  }
+
+  const handleExitPlan = () => {
+    setMode('hub')
+    setActivePlan(null)
+    resetZenState()
+  }
+
   const handleNavClick = (nextView: View) => {
     if (canvasDirtyRef.current) {
       const confirmed = window.confirm('当前有未保存的工作内容编辑，确定要放弃修改并离开吗？')
@@ -62,6 +80,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
     setView(nextView)
     setMode('hub')
     setActiveExperience(null)
+    setActivePlan(null)
     resetZenState()
   }
 
@@ -110,16 +129,19 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const shellMode: AppShellMode = mode === 'hub' ? 'hub' : isZen ? 'focus-zen' : 'focus-canvas'
 
   // 三级面包屑：经历内容 / <分组名> / <工作项标题>；末级不可点且随大标题实时更新。
-  const breadcrumbTrail: FocusBreadcrumbLevel[] = activeExperience
-    ? [
-        { label: '经历内容', onPress: handleExitFocus },
-        {
-          label: activeExperience.name,
-          onPress: isZen ? handleBackToCanvas : undefined
-        },
-        ...(isZen ? [{ label: zen.title.trim() || '未命名工作项' }] : [])
-      ]
-    : [{ label: '经历内容' }]
+  // 简历方案编辑器复用同一套外壳：简历方案 / <方案名>。
+  const breadcrumbTrail: FocusBreadcrumbLevel[] = activePlan
+    ? [{ label: '简历方案', onPress: handleExitPlan }, { label: activePlan.name }]
+    : activeExperience
+      ? [
+          { label: '经历内容', onPress: handleExitFocus },
+          {
+            label: activeExperience.name,
+            onPress: isZen ? handleBackToCanvas : undefined
+          },
+          ...(isZen ? [{ label: zen.title.trim() || '未命名工作项' }] : [])
+        ]
+      : [{ label: '经历内容' }]
 
   const focusActions = isZen ? (
     <>
@@ -150,7 +172,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         mode={shellMode}
         breadcrumbTrail={breadcrumbTrail}
         focusActions={focusActions}
-        backLabel={isZen ? '返回画布' : '返回经历内容'}
+        backLabel={activePlan ? '返回简历方案' : isZen ? '返回画布' : '返回经历内容'}
         onExitFocus={handleExitFocus}
         saveStatus={saveStatus}
       >
@@ -160,7 +182,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
               ? isFocus && activeExperience
                 ? `focus-${activeExperience.id}`
                 : 'hub-experiences'
-              : view
+              : view === 'plans' && activePlan
+                ? `plan-${activePlan.id}`
+                : view
           }
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
@@ -233,12 +257,11 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           )}
 
           {view === 'plans' && (
-            <Card>
-              <Card.Header>
-                <Card.Title>简历方案</Card.Title>
-                <Card.Description>简历方案将在经历描述模块完成后开放。</Card.Description>
-              </Card.Header>
-            </Card>
+            activePlan ? (
+              <PlanEditor session={session} plan={activePlan} onSaveStatusChange={setSaveStatus} />
+            ) : (
+              <PlanHubPanel session={session} onSelectPlan={handleSelectPlan} />
+            )
           )}
         </motion.div>
       </AppShell>
