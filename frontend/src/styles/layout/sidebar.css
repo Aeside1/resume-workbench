@@ -1,5 +1,5 @@
 /* ==========================================================================
-   App Sidebar Topology (Hub Mode 侧边栏与用户卡片)
+   App Sidebar Topology (侧边栏与用户卡片；支持折叠为图标态)
 
    视觉实体已交由 HeroUI Card / Avatar / Button 承载；
    此处只保留布局骨架与语义变量色值，不再自研组件外观。
@@ -17,10 +17,46 @@
   top: 0;
   height: 100vh;
   user-select: none;
+  transition: width 0.18s cubic-bezier(0.4, 0, 0.2, 1), flex-basis 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 折叠态：只剩图标（文本节点由组件条件渲染，避免隐藏文本影响可访问名） */
+.app-sidebar--collapsed {
+  width: 76px;
+  flex: 0 0 76px;
 }
 
 .sidebar-header {
   padding: 16px 14px 12px;
+}
+
+.sidebar-header-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sidebar-user-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.app-sidebar--collapsed .sidebar-header {
+  padding: 14px 10px 10px;
+}
+
+.app-sidebar--collapsed .sidebar-header-row {
+  flex-direction: column;
+  gap: 10px;
+}
+
+.app-sidebar--collapsed .sidebar-user-card {
+  width: 100%;
+}
+
+.app-sidebar--collapsed .sidebar-user-content {
+  justify-content: center;
+  padding: 6px;
 }
 
 .sidebar-user-content {
@@ -61,6 +97,13 @@
   flex: 1;
 }
 
+/* 导航/底部项的包裹层：仅用于折叠态的原生悬停提示（HeroUI Button 不接受 title） */
+.sidebar-nav-item,
+.sidebar-footer-item {
+  display: flex;
+  width: 100%;
+}
+
 .sidebar-footer {
   padding: 14px;
   border-top: 1px solid var(--separator);
@@ -68,4 +111,13 @@
   flex-direction: column;
   align-items: stretch;
   gap: 8px;
+}
+
+.app-sidebar--collapsed .sidebar-nav {
+  padding: 10px;
+}
+
+.app-sidebar--collapsed .sidebar-footer {
+  padding: 10px;
+  align-items: center;
 }

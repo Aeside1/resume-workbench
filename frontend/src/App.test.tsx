@@ -165,5 +165,36 @@ describe('认证后的工作台', () => {
       expect(screen.getByRole('alert')).toHaveTextContent('已彻底删除')
     })
   })
+
+  it('侧栏可折叠为图标态：导航项仍可按可访问名查到，并写入本地持久化（04h）', async () => {
+    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'collapse@example.com' } })
+
+    render(<App />)
+    fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'collapse@example.com' } })
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: '登录' }))
+    await waitFor(() => expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: '收起侧栏' }))
+
+    expect(localStorage.getItem('resume-sidebar-collapsed')).toBe('true')
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(sidebar).toHaveClass('app-sidebar--collapsed')
+    // 图标态：文本节点不再渲染，但可访问名仍在（aria-label）
+    expect(within(sidebar).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
+    expect(within(sidebar).queryByText('经历内容')).not.toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: '展开侧栏' })).toBeInTheDocument()
+  })
+
+  it('以折叠态启动：localStorage 已记录时直接渲染图标态（04h）', async () => {
+    localStorage.setItem('resume-sidebar-collapsed', 'true')
+    localStorage.setItem('resume-session', JSON.stringify({ token: 'token', user: { id: 1, email: 'collapse2@example.com' } }))
+    mocked.me.mockResolvedValue({ id: 1, email: 'collapse2@example.com' })
+
+    render(<App />)
+
+    expect(await screen.findByRole('button', { name: '展开侧栏' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: '主导航' })).toHaveClass('app-sidebar--collapsed')
+  })
 })
 

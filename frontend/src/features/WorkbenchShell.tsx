@@ -15,12 +15,19 @@ import { ToastProvider } from '../components/ui/Toast'
 
 type Props = { session: Session; onLogout: () => void }
 type View = 'dashboard' | 'experiences' | 'plans'
+/** 侧栏折叠状态的持久化键（04h） */
+const SIDEBAR_COLLAPSED_KEY = 'resume-sidebar-collapsed'
+
 /** 内容区是否展开了某个对象（分组画布 / 简历方案编辑器）；外壳形态由它推导（04g） */
 type WorkbenchStage = 'hub' | 'expanded'
 
 export function WorkbenchShell({ session, onLogout }: Props) {
   const [view, setView] = useState<View>('experiences')
   const [stage, setStage] = useState<WorkbenchStage>('hub')
+  // 侧栏折叠：刷新后保持（04h）
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(
+    () => localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+  )
   const [activeExperience, setActiveExperience] = useState<ExperienceGroup | null>(null)
   const [activePlan, setActivePlan] = useState<ResumePlan | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
@@ -98,32 +105,53 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   // 而不是由外壳直接卸载，否则会绕过 flush 保存（ADR 004 §2.4）。
   const handleBackToCanvas = useCallback(() => setZenExitSignal((n) => n + 1), [])
 
+  const toggleSidebar = useCallback(() => {
+    setIsSidebarCollapsed((current) => {
+      const next = !current
+      localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(next))
+      return next
+    })
+  }, [])
+
   const navigationButtons = (
     <>
-      <Button
-        variant={view === 'dashboard' ? 'secondary' : 'ghost'}
-        fullWidth
-        onPress={() => handleNavClick('dashboard')}
-      >
-        <LayoutGrid size={18} aria-hidden="true" />
-        <span>工作台概览</span>
-      </Button>
-      <Button
-        variant={view === 'experiences' ? 'secondary' : 'ghost'}
-        fullWidth
-        onPress={() => handleNavClick('experiences')}
-      >
-        <Layers size={18} aria-hidden="true" />
-        <span>经历内容</span>
-      </Button>
-      <Button
-        variant={view === 'plans' ? 'secondary' : 'ghost'}
-        fullWidth
-        onPress={() => handleNavClick('plans')}
-      >
-        <FileText size={18} aria-hidden="true" />
-        <span>简历方案</span>
-      </Button>
+      {/* HeroUI Button 不接受 title，折叠态的悬停提示放在包裹层上 */}
+      <div className="sidebar-nav-item" title={isSidebarCollapsed ? '工作台概览' : undefined}>
+        <Button
+          variant={view === 'dashboard' ? 'secondary' : 'ghost'}
+          fullWidth
+          isIconOnly={isSidebarCollapsed}
+          aria-label="工作台概览"
+          onPress={() => handleNavClick('dashboard')}
+        >
+          <LayoutGrid size={18} aria-hidden="true" />
+          {!isSidebarCollapsed && <span>工作台概览</span>}
+        </Button>
+      </div>
+      <div className="sidebar-nav-item" title={isSidebarCollapsed ? '经历内容' : undefined}>
+        <Button
+          variant={view === 'experiences' ? 'secondary' : 'ghost'}
+          fullWidth
+          isIconOnly={isSidebarCollapsed}
+          aria-label="经历内容"
+          onPress={() => handleNavClick('experiences')}
+        >
+          <Layers size={18} aria-hidden="true" />
+          {!isSidebarCollapsed && <span>经历内容</span>}
+        </Button>
+      </div>
+      <div className="sidebar-nav-item" title={isSidebarCollapsed ? '简历方案' : undefined}>
+        <Button
+          variant={view === 'plans' ? 'secondary' : 'ghost'}
+          fullWidth
+          isIconOnly={isSidebarCollapsed}
+          aria-label="简历方案"
+          onPress={() => handleNavClick('plans')}
+        >
+          <FileText size={18} aria-hidden="true" />
+          {!isSidebarCollapsed && <span>简历方案</span>}
+        </Button>
+      </div>
     </>
   )
 
@@ -183,6 +211,8 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         session={session}
         onLogout={onLogout}
         navigationButtons={navigationButtons}
+        isSidebarCollapsed={isSidebarCollapsed}
+        onToggleSidebar={toggleSidebar}
         mode={shellMode}
         breadcrumbTrail={zenBreadcrumbTrail}
         focusActions={focusActions}

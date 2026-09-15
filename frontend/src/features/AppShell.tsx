@@ -1,5 +1,6 @@
 import { ReactNode } from 'react'
 import { Avatar, Breadcrumbs, Button, Card, Chip, IconChevronLeft, SuccessIcon } from '@heroui/react'
+import { LogOut, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import type { Session } from '../session'
 import { ThemeToggle } from '../components/ui/ThemeToggle'
 import type { SaveStatus } from './useTransientSaveStatus'
@@ -37,6 +38,9 @@ type Props = {
   backLabel?: string
   saveStatus?: SaveStatus
   navigationButtons?: ReactNode
+  /** 侧栏折叠为图标态（04h）；状态由调用方持有并持久化 */
+  isSidebarCollapsed?: boolean
+  onToggleSidebar?: () => void
 }
 
 export function AppShell({
@@ -49,7 +53,9 @@ export function AppShell({
   onExitFocus,
   backLabel = '返回经历内容',
   saveStatus,
-  navigationButtons
+  navigationButtons,
+  isSidebarCollapsed = false,
+  onToggleSidebar
 }: Props) {
   const isZen = mode === 'zen'
   // 侧边栏用户名片首字母（Zen 接管时侧栏隐藏，不渲染）
@@ -70,19 +76,42 @@ export function AppShell({
   return (
     <div className={['app-shell', shellLayoutClass].filter(Boolean).join(' ')}>
       {!isZen && (
-        <aside role="complementary" aria-label="主导航" className="app-sidebar">
+        <aside
+          role="complementary"
+          aria-label="主导航"
+          className={['app-sidebar', isSidebarCollapsed ? 'app-sidebar--collapsed' : ''].filter(Boolean).join(' ')}
+        >
           <div className="sidebar-header">
-            <Card variant="secondary">
-              <Card.Content className="sidebar-user-content">
-                <Avatar size="sm" variant="soft" color="default">
-                  <Avatar.Fallback>{workspaceInitial}</Avatar.Fallback>
-                </Avatar>
-                <div className="user-card-info">
-                  <span className="user-title">个人职业工作台</span>
-                  <span className="user-email">{session.user.email}</span>
-                </div>
-              </Card.Content>
-            </Card>
+            <div className="sidebar-header-row">
+              <Card variant="secondary" className="sidebar-user-card">
+                <Card.Content className="sidebar-user-content" title={session.user.email}>
+                  <Avatar size="sm" variant="soft" color="default">
+                    <Avatar.Fallback>{workspaceInitial}</Avatar.Fallback>
+                  </Avatar>
+                  {/* 折叠时只留头像：文本不渲染（而不是被隐藏），保证可访问名不依赖被藏文本 */}
+                  {!isSidebarCollapsed && (
+                    <div className="user-card-info">
+                      <span className="user-title">个人职业工作台</span>
+                      <span className="user-email">{session.user.email}</span>
+                    </div>
+                  )}
+                </Card.Content>
+              </Card>
+
+              {onToggleSidebar && (
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="ghost"
+                  aria-label={isSidebarCollapsed ? '展开侧栏' : '收起侧栏'}
+                  onPress={onToggleSidebar}
+                >
+                  {isSidebarCollapsed
+                    ? <PanelLeftOpen size={16} aria-hidden="true" />
+                    : <PanelLeftClose size={16} aria-hidden="true" />}
+                </Button>
+              )}
+            </div>
           </div>
 
           <nav role="navigation" aria-label="主要模块" className="sidebar-nav">
@@ -90,10 +119,19 @@ export function AppShell({
           </nav>
 
           <div className="sidebar-footer">
-            <ThemeToggle />
-            <Button variant="ghost" fullWidth onPress={onLogout}>
-              退出登录
-            </Button>
+            <ThemeToggle showLabel={!isSidebarCollapsed} />
+            {/* HeroUI Button 不接受 title，悬停提示放在包裹层上 */}
+            <div className="sidebar-footer-item" title={isSidebarCollapsed ? '退出登录' : undefined}>
+              <Button
+                variant="ghost"
+                fullWidth
+                isIconOnly={isSidebarCollapsed}
+                aria-label="退出登录"
+                onPress={onLogout}
+              >
+                {isSidebarCollapsed ? <LogOut size={18} aria-hidden="true" /> : '退出登录'}
+              </Button>
+            </div>
           </div>
         </aside>
       )}

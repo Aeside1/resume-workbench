@@ -242,3 +242,73 @@ describe('AppShell 形态切换（04g：只有展开专注接管整屏）', () =
     expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('所有修改已保存')
   })
 })
+
+describe('AppShell 侧栏折叠（04h）', () => {
+  const navButtons = (
+    <button type="button" aria-label="经历内容">
+      <span>经历内容</span>
+    </button>
+  )
+
+  it('默认展开：渲染用户邮箱与「收起侧栏」开关', () => {
+    render(
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        navigationButtons={navButtons}
+        isSidebarCollapsed={false}
+        onToggleSidebar={vi.fn()}
+      >
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(sidebar).not.toHaveClass('app-sidebar--collapsed')
+    expect(within(sidebar).getByText('user@example.com')).toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: '收起侧栏' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
+  })
+
+  it('折叠态：加折叠类、不渲染邮箱，退出登录与主题开关仍保留可访问名', () => {
+    render(
+      <AppShell
+        session={mockSession}
+        onLogout={vi.fn()}
+        navigationButtons={navButtons}
+        isSidebarCollapsed={true}
+        onToggleSidebar={vi.fn()}
+      >
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(sidebar).toHaveClass('app-sidebar--collapsed')
+    expect(within(sidebar).queryByText('user@example.com')).not.toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: '展开侧栏' })).toBeInTheDocument()
+    // 图标态不影响可访问名（不依赖被隐藏的文本）
+    expect(within(sidebar).getByRole('button', { name: '退出登录' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('switch', { name: '深色模式' })).toBeInTheDocument()
+  })
+
+  it('点折叠开关触发 onToggleSidebar', () => {
+    const onToggle = vi.fn()
+    render(
+      <AppShell session={mockSession} onLogout={vi.fn()} onToggleSidebar={onToggle} isSidebarCollapsed={false}>
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: '收起侧栏' }))
+
+    expect(onToggle).toHaveBeenCalledOnce()
+  })
+
+  it('未提供 onToggleSidebar 时不渲染折叠开关（不造死按钮）', () => {
+    render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
+
+    expect(screen.queryByRole('button', { name: '收起侧栏' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '展开侧栏' })).not.toBeInTheDocument()
+  })
+})
