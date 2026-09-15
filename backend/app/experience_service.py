@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from .experience_repository import ExperienceRepository
 from .models import ExperienceGroup, User, WorkContent
+from .resume_plan_repository import PlanReferenceGuard
 
 
 class ExperienceGroupService:
@@ -10,6 +11,7 @@ class ExperienceGroupService:
 
     def __init__(self, db: Session, user: User):
         self.repository = ExperienceRepository(db)
+        self.references = PlanReferenceGuard(db)
         self.user = user
 
     def group(self, group_id: int) -> ExperienceGroup:
@@ -48,6 +50,8 @@ class ExperienceGroupService:
 
     def delete_group(self, group_id: int) -> None:
         group = self.group(group_id)
+        # 被简历方案引用的经历分组（含其下具体工作内容）不允许彻底删除（ADR 005 §2.4）
+        self.references.ensure_group_deletable(group.id)
         self.repository.delete(group)
 
     def list_contents(self, group_id: int, include_archived: bool) -> list[WorkContent]:
@@ -88,5 +92,6 @@ class ExperienceGroupService:
 
     def delete_content(self, content_id: int) -> None:
         content = self.content(content_id)
+        self.references.ensure_content_deletable(content.id)
         self.repository.delete(content)
 

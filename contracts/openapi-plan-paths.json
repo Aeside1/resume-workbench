@@ -1,0 +1,78 @@
+{
+  "DELETE /api/resume-descriptions/{highlight_id}": {},
+  "DELETE /api/resume-plans/{plan_id}": {},
+  "DELETE /api/resume-plans/{plan_id}/experience-groups/{block_id}": {},
+  "DELETE /api/resume-plans/{plan_id}/items/{item_id}": {},
+  "GET /api/resume-descriptions/{highlight_id}": {},
+  "GET /api/resume-plans": {},
+  "GET /api/resume-plans/{plan_id}": {},
+  "GET /api/resume-plans/{plan_id}/candidates": {},
+  "GET /api/resume-plans/{plan_id}/document": {},
+  "GET /api/work-contents/{content_id}/resume-descriptions": {},
+  "PATCH /api/resume-descriptions/{highlight_id}": {
+    "request_fields": [
+      "content",
+      "label"
+    ]
+  },
+  "PATCH /api/resume-plans/{plan_id}": {
+    "request_fields": [
+      "name",
+      "purpose"
+    ]
+  },
+  "PATCH /api/resume-plans/{plan_id}/experience-groups/{block_id}": {
+    "request_fields": [
+      "show_work_content_titles"
+    ]
+  },
+  "PATCH /api/resume-plans/{plan_id}/items/{item_id}": {
+    "request_fields": [
+      "resume_description_id"
+    ]
+  },
+  "POST /api/resume-descriptions/{highlight_id}/archive": {},
+  "POST /api/resume-descriptions/{highlight_id}/copy": {},
+  "POST /api/resume-descriptions/{highlight_id}/restore": {},
+  "POST /api/resume-plans": {
+    "request_fields": [
+      "name",
+      "purpose"
+    ]
+  },
+  "POST /api/resume-plans/{plan_id}/archive": {},
+  "POST /api/resume-plans/{plan_id}/experience-groups": {
+    "request_fields": [
+      "experience_group_id"
+    ]
+  },
+  "POST /api/resume-plans/{plan_id}/experience-groups/reorder": {
+    "request_fields": [
+      "block_ids"
+    ]
+  },
+  "POST /api/resume-plans/{plan_id}/experience-groups/{block_id}/items/reorder": {
+    "request_fields": [
+      "item_ids"
+    ]
+  },
+  "POST /api/resume-plans/{plan_id}/items": {
+    "request_fields": [
+      "block_id",
+      "resume_description_id",
+      "work_content_id"
+    ]
+  },
+  "POST /api/resume-plans/{plan_id}/restore": {},
+  "POST /api/work-contents/{content_id}/resume-descriptions": {
+    "request_fields": [
+      "content",
+      "label"
+    ]
+  },
+  "POST /api/work-contents/{content_id}/resume-descriptions/reorder": {
+    "request_fields": [
+      "resume_description_ids"
+    ]
+  }
+}

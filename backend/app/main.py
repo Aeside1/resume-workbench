@@ -7,6 +7,7 @@ from .auth_routes import router as auth_router
 from .database import Base, engine
 from .experience_routes import router as experience_router
 from .resume_description_routes import router as resume_description_router
+from .resume_plan_routes import router as resume_plan_router
 
 DEFAULT_CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
 
@@ -24,6 +25,7 @@ app.add_middleware(CORSMiddleware, allow_origins=cors_origins(), allow_credentia
 app.include_router(auth_router)
 app.include_router(experience_router)
 app.include_router(resume_description_router)
+app.include_router(resume_plan_router)
 
 
 @app.get("/api/health")

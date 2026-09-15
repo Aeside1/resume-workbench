@@ -8,6 +8,23 @@ export type WorkContent = { id: number; experience_group_id: number; title: stri
  */
 export type ResumeHighlight = { id: number; work_content_id: number; label: string; content: string; position: number; archived: boolean; created_at: string; updated_at: string }
 
+/** 简历方案（术语见 CONTEXT.md）：面向一次求职准备的一套可编辑简历组合 */
+export type ResumePlan = { id: number; user_id: number; name: string; purpose: string | null; archived: boolean; created_at: string; updated_at: string }
+
+/** 简历条目引用的解析状态：ok / 没选亮点 / 来源已不存在 */
+export type PlanItemStatus = 'ok' | 'missing_highlight' | 'missing_source'
+
+export type PlanItem = { id: number; plan_experience_group_id: number; work_content_id: number | null; resume_description_id: number | null; position: number; work_content_title: string | null; highlight_label: string | null; highlight_content: string | null; status: PlanItemStatus }
+
+/** 经历块：简历大纲里引用的一段经历分组，块内承载若干简历条目 */
+export type PlanBlock = { id: number; plan_id: number; experience_group_id: number; position: number; show_work_content_titles: boolean; name: string; type: 'internship' | 'project'; organization: string | null; start_date: string | null; end_date: string | null; items: PlanItem[] }
+
+export type ResumePlanDetail = ResumePlan & { experience_groups: PlanBlock[] }
+
+export type PlanDocument = { markdown: string; outline: { name: string; purpose: string | null; sections: Array<{ section: 'internship' | 'project'; title: string; blocks: PlanBlock[] }> } }
+
+export type PlanCandidates = { experience_groups: Array<{ id: number; name: string; type: 'internship' | 'project'; organization: string | null; start_date: string | null; end_date: string | null; already_added: boolean; work_contents: Array<{ id: number; title: string; already_added: boolean; highlights: Array<{ id: number; label: string; content: string; position: number; already_added: boolean }> }> }> }
+
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 async function request<T>(path: string, init: RequestInit = {}, token?: string): Promise<T> {
@@ -47,5 +64,22 @@ export const api = {
   archiveResumeHighlight: (token: string, id: number) => request<ResumeHighlight>(`/api/resume-descriptions/${id}/archive`, { method: 'POST' }, token),
   restoreResumeHighlight: (token: string, id: number) => request<ResumeHighlight>(`/api/resume-descriptions/${id}/restore`, { method: 'POST' }, token),
   deleteResumeHighlight: (token: string, id: number) => request<void>(`/api/resume-descriptions/${id}`, { method: 'DELETE' }, token),
+  resumePlans: (token: string, includeArchived = false) => request<ResumePlan[]>(`/api/resume-plans?include_archived=${includeArchived}`, {}, token),
+  createResumePlan: (token: string, payload: { name: string; purpose?: string | null }) => request<ResumePlan>('/api/resume-plans', { method: 'POST', body: JSON.stringify(payload) }, token),
+  resumePlan: (token: string, id: number) => request<ResumePlanDetail>(`/api/resume-plans/${id}`, {}, token),
+  updateResumePlan: (token: string, id: number, payload: Partial<Pick<ResumePlan, 'name' | 'purpose'>>) => request<ResumePlan>(`/api/resume-plans/${id}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
+  archiveResumePlan: (token: string, id: number) => request<ResumePlan>(`/api/resume-plans/${id}/archive`, { method: 'POST' }, token),
+  restoreResumePlan: (token: string, id: number) => request<ResumePlan>(`/api/resume-plans/${id}/restore`, { method: 'POST' }, token),
+  deleteResumePlan: (token: string, id: number) => request<void>(`/api/resume-plans/${id}`, { method: 'DELETE' }, token),
+  addPlanBlock: (token: string, planId: number, experienceGroupId: number) => request<PlanBlock>(`/api/resume-plans/${planId}/experience-groups`, { method: 'POST', body: JSON.stringify({ experience_group_id: experienceGroupId }) }, token),
+  updatePlanBlock: (token: string, planId: number, blockId: number, payload: { show_work_content_titles: boolean }) => request<PlanBlock>(`/api/resume-plans/${planId}/experience-groups/${blockId}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
+  removePlanBlock: (token: string, planId: number, blockId: number) => request<void>(`/api/resume-plans/${planId}/experience-groups/${blockId}`, { method: 'DELETE' }, token),
+  reorderPlanBlocks: (token: string, planId: number, blockIds: number[]) => request<PlanBlock[]>(`/api/resume-plans/${planId}/experience-groups/reorder`, { method: 'POST', body: JSON.stringify({ block_ids: blockIds }) }, token),
+  addPlanItem: (token: string, planId: number, payload: { block_id: number; work_content_id: number; resume_description_id?: number }) => request<PlanItem>(`/api/resume-plans/${planId}/items`, { method: 'POST', body: JSON.stringify(payload) }, token),
+  updatePlanItem: (token: string, planId: number, itemId: number, payload: { resume_description_id: number }) => request<PlanItem>(`/api/resume-plans/${planId}/items/${itemId}`, { method: 'PATCH', body: JSON.stringify(payload) }, token),
+  removePlanItem: (token: string, planId: number, itemId: number) => request<void>(`/api/resume-plans/${planId}/items/${itemId}`, { method: 'DELETE' }, token),
+  reorderPlanItems: (token: string, planId: number, blockId: number, itemIds: number[]) => request<PlanItem[]>(`/api/resume-plans/${planId}/experience-groups/${blockId}/items/reorder`, { method: 'POST', body: JSON.stringify({ item_ids: itemIds }) }, token),
+  planCandidates: (token: string, planId: number) => request<PlanCandidates>(`/api/resume-plans/${planId}/candidates`, {}, token),
+  planDocument: (token: string, planId: number) => request<PlanDocument>(`/api/resume-plans/${planId}/document`, {}, token),
 }
 

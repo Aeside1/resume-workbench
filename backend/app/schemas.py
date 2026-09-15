@@ -186,3 +186,148 @@ class ResumeDescriptionView(BaseModel):
     archived: bool
     created_at: datetime
     updated_at: datetime
+
+
+class ResumePlanCreate(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    purpose: str | None = Field(default=None, max_length=200)
+
+    @field_validator("name")
+    @classmethod
+    def trim_name(cls, value: str) -> str:
+        value = value.strip()
+        if not value:
+            raise ValueError("简历方案名称不能为空")
+        return value
+
+    @field_validator("purpose")
+    @classmethod
+    def trim_purpose(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        return value.strip() or None
+
+
+class ResumePlanUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=200)
+    purpose: str | None = Field(default=None, max_length=200)
+
+    @field_validator("name")
+    @classmethod
+    def trim_optional_name(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        value = value.strip()
+        if not value:
+            raise ValueError("简历方案名称不能为空")
+        return value
+
+    @field_validator("purpose")
+    @classmethod
+    def trim_optional_purpose(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        return value.strip() or None
+
+
+class ResumePlanView(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+    user_id: int
+    name: str
+    purpose: str | None
+    archived: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class PlanItemView(BaseModel):
+    id: int
+    plan_experience_group_id: int
+    work_content_id: int | None
+    resume_description_id: int | None
+    position: int
+    # 解析后的展示信息；资产缺失时为 None，由 status 说明原因
+    work_content_title: str | None = None
+    highlight_label: str | None = None
+    highlight_content: str | None = None
+    status: Literal["ok", "missing_highlight", "missing_source"] = "ok"
+
+
+class PlanBlockView(BaseModel):
+    id: int
+    plan_id: int
+    experience_group_id: int
+    position: int
+    show_work_content_titles: bool
+    name: str
+    type: Literal["internship", "project"]
+    organization: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    items: list[PlanItemView] = Field(default_factory=list)
+
+
+class ResumePlanDetailView(ResumePlanView):
+    experience_groups: list[PlanBlockView] = Field(default_factory=list)
+
+
+class PlanBlockCreate(BaseModel):
+    experience_group_id: int
+
+
+class PlanBlockUpdate(BaseModel):
+    show_work_content_titles: bool | None = None
+
+
+class PlanBlockReorder(BaseModel):
+    block_ids: list[int] = Field(min_length=1)
+
+
+class PlanItemCreate(BaseModel):
+    block_id: int
+    work_content_id: int
+    resume_description_id: int | None = None
+
+
+class PlanItemUpdate(BaseModel):
+    resume_description_id: int
+
+
+class PlanItemReorder(BaseModel):
+    item_ids: list[int] = Field(min_length=1)
+
+
+class CandidateHighlightView(BaseModel):
+    id: int
+    label: str
+    content: str
+    position: int
+    already_added: bool
+
+
+class CandidateWorkContentView(BaseModel):
+    id: int
+    title: str
+    already_added: bool
+    highlights: list[CandidateHighlightView] = Field(default_factory=list)
+
+
+class CandidateGroupView(BaseModel):
+    id: int
+    name: str
+    type: Literal["internship", "project"]
+    organization: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    already_added: bool
+    work_contents: list[CandidateWorkContentView] = Field(default_factory=list)
+
+
+class PlanCandidatesView(BaseModel):
+    experience_groups: list[CandidateGroupView] = Field(default_factory=list)
+
+
+class PlanDocumentView(BaseModel):
+    markdown: str
+    outline: dict

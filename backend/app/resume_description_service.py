@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from .models import ResumeDescription, User, WorkContent
 from .resume_description_repository import ResumeDescriptionRepository
+from .resume_plan_repository import PlanReferenceGuard
 
 
 DEFAULT_LABEL = "新的简历亮点"
@@ -13,6 +14,7 @@ class ResumeDescriptionService:
 
     def __init__(self, db: Session, user: User):
         self.repository = ResumeDescriptionRepository(db)
+        self.references = PlanReferenceGuard(db)
         self.user = user
 
     def content(self, content_id: int) -> WorkContent:
@@ -66,7 +68,10 @@ class ResumeDescriptionService:
         return self.repository.save(highlight)
 
     def delete_highlight(self, highlight_id: int) -> None:
-        self.repository.delete(self.highlight(highlight_id))
+        highlight = self.highlight(highlight_id)
+        # 被简历方案条目引用的亮点不允许彻底删除（ADR 005 §2.4）；归档不受影响
+        self.references.ensure_highlight_deletable(highlight.id)
+        self.repository.delete(highlight)
 
     def reorder_highlights(self, content_id: int, highlight_ids: list[int]) -> list[ResumeDescription]:
         content = self.content(content_id)
