@@ -4,7 +4,6 @@
 - **日期（Date）**：2026-09-12
 - **决策者（Deciders）**：用户 & AI Pair
 - **关联文档**：[CONTEXT.md](../../CONTEXT.md)、[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)
-
 ---
 
 ## 1. 背景与问题陈述（Context）
@@ -41,3 +40,10 @@
 - **代价与处理**：
   - 需要重构后端表模型（外键切换）与路由；
   - 原定的新建工作区工单 `02-create-workspace-modal.md` 关闭为 `wontfix`。
+
+## 4. 后续修正说明（2026-09-14）
+
+本 ADR 的结论在切片 04 设计评审中被再次确认，并顺带修正了两处与本决策不一致的文档残留：
+
+1. **spec §4 的 API 路径口径**：核心闭环规格原写 `/api/workspaces/:id/...`，与本 ADR「下线所有 `/api/workspaces` 路由」直接冲突。已改为用户作用域直挂（`/api/experience-groups`、`/api/resume-plans` 等），并写明服务端一律从当前认证用户解析归属。
+2. **「导出快照保存独立内容」与「组合不落库」的边界**：由 [ADR 005](005-resume-plan-reference-model-and-archive-boundary.md) §2.2/§2.3 接续定义——简历方案只保存引用，只有方案留档是写时快照。
