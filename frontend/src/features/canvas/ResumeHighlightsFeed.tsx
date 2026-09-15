@@ -297,7 +297,7 @@ export function ResumeHighlightsFeed({
                         cacheKey={`highlight-${highlight.id}`}
                         value={highlight.content}
                         rows={4}
-                        placeholder="编写这份写法的完整简历描述段落（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
+                        placeholder="编写这条写法的完整正文（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
                         onChange={(val) => handleUpdateContent(highlight.id, val)}
                       />
                     </Card.Content>

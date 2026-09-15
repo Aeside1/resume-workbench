@@ -39,7 +39,7 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
     expect(getCombinedDetailedRecord({})).toBe('')
   })
 
-  it('默认以规整 Typography 阅读态排版展示单一 Markdown 正文，底部渲染极简简历描述胶囊按钮', () => {
+  it('默认以规整 Typography 阅读态排版展示单一 Markdown 正文，底部渲染极简简历亮点胶囊按钮', () => {
     render(
       <WorkContentBlock
         item={mockWorkItem}
