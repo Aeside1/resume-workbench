@@ -9,4 +9,5 @@ frontend/dist/
 .scratch/*.png
 .scratch/chrome-*/
 .scratch/live-editor-artifacts/
+.scratch/data-backups/
 .worktrees/
