@@ -1,9 +1,10 @@
 /* ==========================================================================
    Zen 专注写作区（非模态区域展开）
 
-   ADR 004：Zen 是 AppShell 内容区里的一块，填满面包屑顶栏以下的剩余高度，
+   ADR 004：Zen 是 AppShell 内容区里的一块，填满内容区页头以下的剩余高度，
    不再有自研全屏覆盖层与 Zen 自带顶栏；面包屑、保存态 Chip、伴随栏开关、
-   退出入口均归 AppShell 的 focus-topbar（styles/layout/topbar.css）。
+   退出入口均归内容区页头（04k 起为 features/FocusTopbar.tsx，
+   样式在 styles/layout/topbar.css）。
 
    区域底由 HeroUI Surface 承载，滚动由 ScrollShadow 承载，伴随栏面板由 Card
    承载；此处只保留布局骨架，色值一律读语义变量。

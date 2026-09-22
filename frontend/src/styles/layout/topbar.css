@@ -1,7 +1,9 @@
 /* ==========================================================================
-   Focus Canvas Topbar (Scene 2 专注模式顶栏与面包屑导航)
+   Focus Topbar（专注写作区的内容区页头与面包屑导航）
 
-   视觉实体已交由 HeroUI Button / Chip 承载；
+   04k：专注不再整屏接管，这条页头由内容区（WorkbenchShell 的 FocusTopbar）
+   渲染，不再吸顶（页面级不滚动，滚动发生在区域内部）。
+   视觉实体已交由 HeroUI Button / Chip / Breadcrumbs 承载；
    此处只保留布局骨架与语义变量色值。
    ========================================================================== */
 
@@ -9,13 +11,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex: 0 0 auto;
   height: 56px;
   padding: 0 28px;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
-  position: sticky;
-  top: 0;
-  z-index: 40;
 }
 
 .focus-breadcrumb-group {

@@ -190,12 +190,14 @@ export function ZenFocusEditor({
     handleExit()
   }, [exitSignal, handleExit])
 
-  // 清理防抖定时器
+  // 卸载时的兵底：未到 800ms 防抖就离开（面包屑第 1 级「经历内容」、侧栏模块导航）
+  // 会把写作区直接卸载，此时必须先把待保存的草稿 flush 出去，而不是只清定时器——
+  // 否则最后 800ms 内敲的字会被静默丢掉（ADR 004 §2.4「所有离开路径都要落盘」）。
+  const flushSaveRef = useRef(flushSave)
+  flushSaveRef.current = flushSave
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current)
-      }
+      flushSaveRef.current()
     }
   }, [])
 

@@ -4,7 +4,8 @@ import { ArrowRight, FileText, LayoutGrid, Layers, PanelRight, PanelRightClose }
 import { motion } from 'framer-motion'
 import type { ExperienceGroup, ResumePlan } from '../api'
 import type { Session } from '../session'
-import { AppShell, type AppShellMode, type FocusBreadcrumbLevel } from './AppShell'
+import { AppShell, type AppShellMode } from './AppShell'
+import { FocusTopbar, type FocusBreadcrumbLevel } from './FocusTopbar'
 import { WorkAreaHeader } from './WorkAreaHeader'
 import { ExperienceHubPanel } from './hub/ExperienceHubPanel'
 import { PlanEditor } from './plans/PlanEditor'
@@ -32,11 +33,14 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const [activePlan, setActivePlan] = useState<ResumePlan | null>(null)
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const [isCanvasDirty, setIsCanvasDirty] = useState(false)
-  // Zen 展开后顶栏归 AppShell 所有（ADR 004 §2.2/§2.4）：
+  // 展开专注后页头由内容区自己渲染（FocusTopbar，04k）：
   // 工作项实时标题、伴随栏开合、关闭命令（计数下行）均由外壳持有。
   const [zen, setZen] = useState<ZenTopbarState>({ isOpen: false, title: '' })
   const [isCompanionOpen, setIsCompanionOpen] = useState(true)
   const [zenExitSignal, setZenExitSignal] = useState(0)
+  // 「从关到开」那一次才重置伴随栏；否则标题每敲一个字都会调用 onZenChange
+  // 并把用户刚收起的伴随栏重新展开。
+  const zenOpenRef = useRef(false)
 
   // 脏判据修正（issue 12 D1）：所有离开路径都要读「当前」值，而 setState 是异步的，
   // 因此同时写入 ref，避免用陈旧闭包值误弹「放弃修改」确认框。
@@ -48,6 +52,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
 
   const resetZenState = useCallback(() => {
     setZen({ isOpen: false, title: '' })
+    // 这两条离开路径直接卸载画布，不会下发 isOpen:false，所以开合跟踪要在这里显式归零，
+    // 否则下次展开专注时伴随栏不会按「新会话」的约定重新展开。
+    zenOpenRef.current = false
     updateCanvasDirty(false)
   }, [updateCanvasDirty])
 
@@ -94,10 +101,11 @@ export function WorkbenchShell({ session, onLogout }: Props) {
     resetZenState()
   }
 
-  // FocusCanvasContainer 上报 Zen 展开状态与（就地编辑中的）工作项实时标题
+  // FocusCanvasContainer 上报专注展开状态与（就地编辑中的）工作项实时标题
   const handleZenChange = useCallback(({ isOpen, title }: ZenTopbarState) => {
+    if (isOpen && !zenOpenRef.current) setIsCompanionOpen(true)
+    zenOpenRef.current = isOpen
     setZen({ isOpen, title })
-    if (isOpen) setIsCompanionOpen(true)
   }, [])
 
   // 面包屑中间级 / 顶栏返回按钮 = 从 Zen 回到画布。
@@ -155,13 +163,13 @@ export function WorkbenchShell({ session, onLogout }: Props) {
     </>
   )
 
-  const isZen = stage === 'expanded' && zen.isOpen
-  // 画布 / 方案编辑器都在壳内展开（侧栏常驻）；只有 Zen 接管整屏（04g）
+  const isFocusOpen = stage === 'expanded' && zen.isOpen
+  // 画布 / 方案编辑器 / 展开专注都在壳内展开（侧栏常驻），页面里只有两种外壳形态（04k）
   const isWorkspaceOpen = stage === 'expanded'
-  const shellMode: AppShellMode = stage === 'hub' ? 'hub' : isZen ? 'zen' : 'workspace'
+  const shellMode: AppShellMode = stage === 'hub' ? 'hub' : 'workspace'
 
-  // 面包屑只服务 Zen 的整屏接管：经历内容 / <分组名> / <工作项标题>；末级不可点且实时更新。
-  const zenBreadcrumbTrail: FocusBreadcrumbLevel[] = activeExperience
+  // 专注页头（内容区自带）的面包屑：经历内容 / <分组名> / <工作项标题>；末级不可点且实时更新。
+  const focusTrail: FocusBreadcrumbLevel[] = activeExperience
     ? [
         { label: '经历内容', onPress: handleExitFocus },
         { label: activeExperience.name, onPress: handleBackToCanvas },
@@ -169,23 +177,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       ]
     : [{ label: '经历内容' }]
 
-  // 三级面包屑：经历内容 / <分组名> / <工作项标题>；末级不可点且随大标题实时更新。
-  // 简历方案编辑器复用同一套外壳：简历方案 / <方案名>。
-  const breadcrumbTrail: FocusBreadcrumbLevel[] = activePlan
-    ? [{ label: '简历方案', onPress: handleExitPlan }, { label: activePlan.name }]
-    : activeExperience
-      ? [
-          { label: '经历内容', onPress: handleExitFocus },
-          {
-            label: activeExperience.name,
-            onPress: isZen ? handleBackToCanvas : undefined
-          },
-          ...(isZen ? [{ label: zen.title.trim() || '未命名工作项' }] : [])
-        ]
-      : [{ label: '经历内容' }]
-
-
-  const focusActions = isZen ? (
+  const focusActions = isFocusOpen ? (
     <>
       <span className="focus-esc-hint">
         <Kbd>Esc</Kbd>
@@ -214,11 +206,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={toggleSidebar}
         mode={shellMode}
-        breadcrumbTrail={zenBreadcrumbTrail}
-        focusActions={focusActions}
-        backLabel={isZen ? '返回画布' : '返回经历内容'}
-        onExitFocus={handleExitFocus}
-        saveStatus={saveStatus}
+        isFocusOpen={isFocusOpen}
       >
         <motion.div
           key={
@@ -238,11 +226,23 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           {view === 'experiences' && (
             isWorkspaceOpen && activeExperience ? (
               <>
-                <WorkAreaHeader
-                  backLabel="返回经历内容"
-                  onBack={handleExitFocus}
-                  saveStatus={saveStatus}
-                />
+                {/* 展开专注时页头换成专注页头（面包屑 + 保存态 + 场景动作），
+                    与画布页头是「二选一」而不是叠加——一屏只有一条页头（04k） */}
+                {isFocusOpen ? (
+                  <FocusTopbar
+                    trail={focusTrail}
+                    backLabel="返回画布"
+                    onBack={handleBackToCanvas}
+                    saveStatus={saveStatus}
+                    actions={focusActions}
+                  />
+                ) : (
+                  <WorkAreaHeader
+                    backLabel="返回经历内容"
+                    onBack={handleExitFocus}
+                    saveStatus={saveStatus}
+                  />
+                )}
                 <FocusCanvasContainer
                   session={session}
                   group={activeExperience}

@@ -8,7 +8,7 @@ import { pasteMarkdown } from './test/pasteMarkdown'
 vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn(), deleteWorkContent: vi.fn(), resumeHighlights: vi.fn(), createResumeHighlight: vi.fn(), updateResumeHighlight: vi.fn(), copyResumeHighlight: vi.fn(), archiveResumeHighlight: vi.fn(), restoreResumeHighlight: vi.fn(), deleteResumeHighlight: vi.fn(), resumePlans: vi.fn(), createResumePlan: vi.fn(), resumePlan: vi.fn(), updateResumePlan: vi.fn(), archiveResumePlan: vi.fn(), restoreResumePlan: vi.fn(), deleteResumePlan: vi.fn(), addPlanBlock: vi.fn(), updatePlanBlock: vi.fn(), removePlanBlock: vi.fn(), reorderPlanBlocks: vi.fn(), addPlanItem: vi.fn(), updatePlanItem: vi.fn(), removePlanItem: vi.fn(), reorderPlanItems: vi.fn(), planCandidates: vi.fn(), planDocument: vi.fn(), planArchives: vi.fn(), restorePlanArchive: vi.fn(), forkResumePlan: vi.fn() }, isReferenceBlocked: (error: { status?: number } | undefined) => Boolean(error?.status === 409) }))
 const mocked = vi.mocked(api)
 
-beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]); mocked.resumeHighlights.mockResolvedValue([]); mocked.resumePlans.mockResolvedValue([]) })
+beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); vi.spyOn(window, 'scrollTo').mockImplementation(() => {}); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]); mocked.resumeHighlights.mockResolvedValue([]); mocked.resumePlans.mockResolvedValue([]) })
 afterEach(cleanup)
 
 describe('认证后的工作台', () => {
@@ -184,6 +184,56 @@ describe('认证后的工作台', () => {
     expect(within(sidebar).getByRole('button', { name: '经历内容' })).toBeInTheDocument()
     expect(within(sidebar).queryByText('经历内容')).not.toBeInTheDocument()
     expect(within(sidebar).getByRole('button', { name: '展开侧栏' })).toBeInTheDocument()
+  })
+
+  it('展开专注只在内容区展开：左侧导航常驻、一屏只有一条页头、面包屑随大标题实时更新（04k）', async () => {
+    const group = { id: 10, user_id: 1, name: '平台项目', type: 'project' as const, organization: null, start_date: null, end_date: null, description: null, archived: false, created_at: '', updated_at: '' }
+    const item = { id: 20, experience_group_id: 10, title: '第一项', detailed_record: '第一项记录', technical_materials: null, result_data: null, supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
+    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'focus-region@example.com' } })
+    mocked.experienceGroups.mockResolvedValue([group])
+    mocked.workContents.mockResolvedValue([item])
+    mocked.updateWorkContent.mockResolvedValue({ ...item, title: '第一项（改）' })
+
+    render(<App />)
+    fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'focus-region@example.com' } })
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: '登录' }))
+
+    await waitFor(() => expect(screen.getByText('平台项目')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('平台项目'))
+    await waitFor(() => expect(screen.getByRole('heading', { level: 3, name: '第一项' })).toBeInTheDocument())
+
+    // 画布页头
+    expect(screen.getByRole('button', { name: '返回经历内容' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: '展开专注模式' }))
+    const zenRegion = await screen.findByRole('region', { name: /专注写作区: 第一项/ })
+
+    // 关键断言：专注不覆盖左侧栏（04k），且页头换成了专注页头而不是叠加两条
+    expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '返回经历内容' })).not.toBeInTheDocument()
+    const breadcrumb = screen.getByRole('navigation', { name: '面包屑导航' })
+    expect(within(breadcrumb).getByText('平台项目')).toBeInTheDocument()
+    expect(within(breadcrumb).getByText('第一项')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '返回画布' })).toBeInTheDocument()
+
+    // 就地编辑大标题 → 页头末级实时更新（ADR 004 §2.3）
+    fireEvent.change(within(zenRegion).getByLabelText('工作项大标题'), { target: { value: '第一项（改）' } })
+    await waitFor(() => expect(within(breadcrumb).getByText('第一项（改）')).toBeInTheDocument())
+
+    // 收起伴随栏后继续打字：伴随栏不应被自动重新展开（04k 顺带修正的缺陷）
+    fireEvent.click(screen.getByRole('button', { name: '收起伴随栏' }))
+    await waitFor(() => expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument())
+    fireEvent.change(within(zenRegion).getByLabelText('工作项大标题'), { target: { value: '第一项（再改）' } })
+    expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument()
+
+    // Esc 退出专注：回到画布页头，左侧导航始终在
+    fireEvent.keyDown(window, { key: 'Escape' })
+    await waitFor(() => expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument())
+    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: '返回经历内容' })).toBeInTheDocument()
+    expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
   })
 
   it('以折叠态启动：localStorage 已记录时直接渲染图标态（04h）', async () => {
