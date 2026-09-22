@@ -4,6 +4,15 @@
 日期：2026-09-09  
 职责：描述用户如何操作产品，不定义后端实现。
 
+> **时效性说明（2026-09-22 补注）**：本文是 2026-09-09 的交互基线草案，**部分内容已被后续 ADR 取代**，阅读时以 ADR 为准：
+>
+> - §1 信息架构里的「工作区」层已作废（账号即唯一工作空间），见 [ADR 002](docs/adr/002-retire-workspaces-flatten-to-user.md)；
+> - §2–§4 的页面形态已改为「侧栏外壳 + 经历管理 Hub + 沉浸长画布」双场景架构，见 [ADR 001](docs/adr/001-ui-redesign-workbench-and-focus-canvas.md)、[ADR 006](docs/adr/006-workspace-expands-in-shell.md)；
+> - 简历亮点已独立成表（不再是 `supplementary_notes` 的历史版本），方案留档已拆为 `revision` / `export` 两类，见 [ADR 005](docs/adr/005-resume-plan-reference-model-and-archive-boundary.md)；
+> - 领域用词以 [CONTEXT.md](CONTEXT.md) 为准（「简历描述」现已统一称「简历亮点」）。
+>
+> §6（预览与导出历史）与 §7–§8（全局交互状态、视觉方向）仍为现行方向。
+
 ## 0. 版本安排
 
 当前版本以可运行原型为目标，优先保证核心业务流程可完成，不要求一次性实现本文描述的最终体验形态。当前版本只处理影响查看、编辑、保存和基本操作的阻塞性布局或控件问题。

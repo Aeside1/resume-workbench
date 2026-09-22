@@ -2,7 +2,7 @@
 
 文档状态：需求讨论稿，持续通过真实使用场景澄清。除明确标注“已确认”的内容外，字段、优先级与验收指标均为待讨论建议。
 
-领域术语见 [CONTEXT.md](CONTEXT.md)。系统实现见 [简历工作台-ARCHITECTURE.md](简历工作台-ARCHITECTURE.md)，页面交互见 [简历工作台-UI-UX.md](简历工作台-UI-UX.md)。
+领域术语见 [CONTEXT.md](CONTEXT.md)。系统实现见 [ARCHITECTURE.md](ARCHITECTURE.md)，页面交互见 [UI-UX.md](UI-UX.md)（部分章节已被 ADR 取代，见文首时效性说明）。
 
 ## 1. 文档目的
 

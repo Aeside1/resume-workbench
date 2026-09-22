@@ -3,7 +3,7 @@
 - **状态（Status）**：Accepted（已确认）
 - **日期（Date）**：2026-09-12
 - **决策者（Deciders）**：用户 & AI Pair
-- **关联文档**：[CONTEXT.md](../../CONTEXT.md)、[简历工作台-UI-UX.md](../../简历工作台-UI-UX.md)、[.scratch/resume-workbench/spec.md](../../.scratch/resume-workbench/spec.md)
+- **关联文档**：[CONTEXT.md](../../CONTEXT.md)、[UI-UX.md](../../UI-UX.md)、[.scratch/resume-workbench/spec.md](../../.scratch/resume-workbench/spec.md)
 
 ---
 
@@ -65,14 +65,18 @@
 
 ## 3. 设计原型效果图（Design Assets）
 
-本决策沉淀的最终高保真设计效果图已归档于 `docs/designs/`：
+本决策沉淀的最终高保真设计效果图曾归档于 `docs/designs/`，共 12 张：
 
 1. **场景 1：全局工作台（经历管理 Hub）**
-   - 文件：[`docs/designs/workbench_hub_chinese.jpg`](../designs/workbench_hub_chinese.jpg)
+   - 文件：`docs/designs/workbench_hub_chinese.jpg`
    - 展现左侧侧边栏工作区切换与主区经历分组卡片流，统一采用 HeroUI 纯净浅色风格。
 2. **场景 2：沉浸式经历编写长画布（伴随大纲 TOC 终稿）**
-   - 文件：[`docs/designs/deep_canvas_with_outline.jpg`](../designs/deep_canvas_with_outline.jpg)
+   - 文件：`docs/designs/deep_canvas_with_outline.jpg`
    - 配色与视觉严格贴合场景 1（纯白洁净顶栏、柔和浅灰背景、统一 1px 细微边框与高对比文字），展现无侧栏极简顶栏、居中宽幅经历长画布、工作记录原材料排版、简历描述多版本 Tab 交互，以及右侧解决宽屏空旷感的伴随大纲（TOC Mini-map）。
+
+> **已移除（2026-09-22）**：以上效果图已从工作区删除，原因是 HeroUI 迁移（[ADR 003](003-adopt-heroui-native-visuals-and-single-token-theming.md)）重做了视觉层，这批图不再能代表当前界面，留在仓库里会误导读者；同时它们占约 4.9 MB。
+> **取回方式**：图片仍留在 git 历史里，用 `git show <sha>:docs/designs/<文件名>` 即可导出（`<sha>` 为移除前的任一次提交，例如 `29d1fd4`），也可用 `git log --diff-filter=A -- docs/designs` 定位。
+> 其余 10 张（`container_dashboard_actual.png`、`container_hub_actual.png`、`card_density_comparison.jpg`、`deep_canvas_chinese.jpg`、`deep_work_canvas_light.jpg`、`focus_canvas_light.jpg`、`focus_drawer_dark.jpg`、`workbench_drawer_view.jpg`、`workbench_three_column_dark.jpg`、`workbench_three_column_light.jpg`）属同批探索稿，一并移除。
 
 ## 4. 后续实施任务切片（Implementation Roadmap）
 
