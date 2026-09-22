@@ -74,172 +74,56 @@ describe('AppShell 侧边栏', () => {
   })
 })
 
-describe('AppShell 形态切换（04g：只有展开专注接管整屏）', () => {
-  it('默认处于 hub 形态：侧栏可见且不渲染顶栏', () => {
-    render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
+describe('AppShell 形态切换（04k：专注也在内容区展开）', () => {
+  it('默认处于 hub 形态：侧栏可见', () => {
+    const { container } = render(<AppShell session={mockSession} onLogout={vi.fn()}><div>主内容</div></AppShell>)
 
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--hub')
   })
 
-  it('workspace 形态保留侧边栏、不渲染顶栏（分组画布与简历方案编辑器都在壳内展开）', () => {
-    render(
+  it('workspace 形态保留侧边栏（分组画布与简历方案编辑器都在壳内展开）', () => {
+    const { container } = render(
       <AppShell session={mockSession} onLogout={vi.fn()} mode="workspace">
         <div>主内容</div>
       </AppShell>
     )
 
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
-    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--workspace')
+    expect(container.querySelector('.app-main')).toHaveClass('app-main--workspace')
   })
 
-  it('只有 zen 形态隐藏侧边栏并交由面包屑顶栏接管', () => {
-    const { rerender } = render(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="workspace"
-        breadcrumbTrail={[{ label: '经历内容', onPress: vi.fn() }, { label: '蚂蚁集团' }]}
-      >
+  it('专注形态（isFocusOpen）不隐藏侧边栏，只把内容区锁成整屏高度（04k）', () => {
+    const { container } = render(
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="workspace" isFocusOpen>
         <div>主内容</div>
       </AppShell>
     )
 
-    // workspace 下即便传了面包屑也不渲染顶栏，侧栏仍在
+    // 关键断言：专注不再覆盖左侧栏（04k 口径）
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
+    expect(container.querySelector('.app-shell')).toHaveClass('app-shell--focus')
+    expect(container.querySelector('.app-main')).toHaveClass('app-main--focus')
+  })
+
+  it('外壳不再渲染任何页头：面包屑与保存态都由内容区页头（FocusTopbar）承担', () => {
+    const { rerender } = render(
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="workspace">
+        <div>主内容</div>
+      </AppShell>
+    )
+
     expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
 
     rerender(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="zen"
-        breadcrumbTrail={[{ label: '经历内容', onPress: vi.fn() }, { label: '蚂蚁集团' }]}
-      >
+      <AppShell session={mockSession} onLogout={vi.fn()} mode="workspace" isFocusOpen>
         <div>主内容</div>
       </AppShell>
     )
 
-    expect(screen.queryByRole('complementary', { name: '主导航' })).not.toBeInTheDocument()
-    const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
-    expect(breadcrumbNav).toBeInTheDocument()
-    // 中间级改用 HeroUI Breadcrumbs（框架 Link），因此角色由 button 变为 link
-    expect(within(breadcrumbNav).getByRole('link', { name: '经历内容' })).toBeInTheDocument()
-    expect(within(breadcrumbNav).getByText('蚂蚁集团')).toBeInTheDocument()
-  })
-
-  it('zen 形态顶栏的返回按钮触发 onExitFocus', () => {
-    const handleExitFocus = vi.fn()
-    render(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="zen"
-        breadcrumbTrail={[
-          { label: '经历内容', onPress: handleExitFocus },
-          { label: '测试经历' }
-        ]}
-        onExitFocus={handleExitFocus}
-      >
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    fireEvent.click(screen.getByRole('button', { name: '返回经历内容' }))
-
-    expect(handleExitFocus).toHaveBeenCalledOnce()
-  })
-
-  it('zen 形态渲染三级面包屑，末级不可点且中间级与返回按钮都指向回画布', () => {
-    const handleExitFocus = vi.fn()
-    const handleBackToCanvas = vi.fn()
-    render(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="zen"
-        breadcrumbTrail={[
-          { label: '经历内容', onPress: handleExitFocus },
-          { label: '蚂蚁集团', onPress: handleBackToCanvas },
-          { label: '重构渲染引擎' }
-        ]}
-        onExitFocus={handleExitFocus}
-        backLabel="返回画布"
-        focusActions={<button type="button">收起伴随栏</button>}
-      >
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    expect(screen.getByRole('button', { name: '返回画布' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: '收起伴随栏' })).toBeInTheDocument()
-
-    const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
-    const items = within(breadcrumbNav).getAllByRole('listitem')
-    expect(items).toHaveLength(3)
-    expect(items.map((item) => item.textContent)).toEqual([
-      '经历内容',
-      '蚂蚁集团',
-      '重构渲染引擎'
-    ])
-
-    // 第 1 级退出整个专注模式，第 2 级回画布，第 3 级是当前位置（不可点）
-    expect(within(items[0]).getByRole('link')).toBeInTheDocument()
-    expect(within(items[1]).getByRole('link')).toBeInTheDocument()
-    // 第 3 级是当前位置：虽仍渲染为框架 Link，但已标记 aria-current="page"，
-    // 点击不会触发任何去向（onPress 已在 AppShell 侧按“末级不可点”过滤）。
-    expect(within(items[2]).getByRole('link')).toHaveAttribute('aria-current', 'page')
-
-    fireEvent.click(within(items[1]).getByRole('link'))
-    expect(handleBackToCanvas).toHaveBeenCalledOnce()
-  })
-
-  it('面包屑各级按位置（而非文案）绑定去向：重名标题不会导致点错层级', () => {
-    const handleExitFocus = vi.fn()
-    const handleBackToCanvas = vi.fn()
-    render(
-      <AppShell
-        session={mockSession}
-        onLogout={vi.fn()}
-        mode="zen"
-        breadcrumbTrail={[
-          { label: '同名分组', onPress: handleExitFocus },
-          { label: '同名分组', onPress: handleBackToCanvas },
-          { label: '当前工作项' }
-        ]}
-        onExitFocus={handleExitFocus}
-      >
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    const breadcrumbNav = screen.getByRole('navigation', { name: '面包屑导航' })
-    const links = within(breadcrumbNav).getAllByRole('link', { name: '同名分组' })
-    expect(links).toHaveLength(2)
-
-    fireEvent.click(links[1])
-    expect(handleBackToCanvas).toHaveBeenCalledOnce()
-    expect(handleExitFocus).not.toHaveBeenCalled()
-  })
-
-  it('zen 形态顶栏显示保存状态微指示器', () => {
-    const { rerender } = render(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="zen" saveStatus="saving">
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('保存中...')
-
-    rerender(
-      <AppShell session={mockSession} onLogout={vi.fn()} mode="zen" saveStatus="saved">
-        <div>主内容</div>
-      </AppShell>
-    )
-
-    // 成功态的前置勾号已改用 HeroUI SuccessIcon（AGENTS.md 规则 4：禁止以纯文本字符充当图标），
-    // 因此断言只校验文案本身。
-    expect(screen.getByRole('status', { name: '保存状态' })).toHaveTextContent('所有修改已保存')
+    expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('status', { name: '保存状态' })).not.toBeInTheDocument()
   })
 })
 

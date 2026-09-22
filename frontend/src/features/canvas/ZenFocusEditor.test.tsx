@@ -170,6 +170,35 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
     }, { timeout: 2000 })
   })
 
+  it('卸载时兵底 flush：未到 800ms 防抖就离开（面包屑第 1 级 / 侧栏导航）也不会丢掉最后一笔输入', async () => {
+    const handleSaveContent = vi.fn().mockResolvedValue(undefined)
+
+    const { unmount } = render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        session={session}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项大标题'), {
+      target: { value: '刚敲下就走人的标题' }
+    })
+
+    // 不等防抖，直接卸载（外壳离开画布 / 切模块时写作区就是这样被卸载的）
+    expect(handleSaveContent).not.toHaveBeenCalled()
+    unmount()
+
+    await waitFor(() => {
+      expect(handleSaveContent).toHaveBeenCalledWith(
+        expect.objectContaining({ title: '刚敲下就走人的标题' }),
+        101
+      )
+    })
+  })
+
   it('修改自由 Markdown 正文并在 800ms 防抖后自动保存', async () => {
     const handleSaveContent = vi.fn().mockResolvedValue(undefined)
 

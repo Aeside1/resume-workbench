@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
-import { Button, Chip, IconChevronLeft, SuccessIcon } from '@heroui/react'
+import { Button, IconChevronLeft } from '@heroui/react'
 import type { SaveStatus } from './useTransientSaveStatus'
+import { SaveStatusChip } from './SaveStatusChip'
 
 export type WorkAreaHeaderProps = {
   /** 返回上一级的可访问名，同时作为按钮文字（如「返回经历内容」） */
@@ -42,18 +43,7 @@ export function WorkAreaHeader({
           </div>
         )}
 
-        {saveStatus && saveStatus !== 'idle' && (
-          <Chip
-            role="status"
-            aria-label="保存状态"
-            size="sm"
-            variant="soft"
-            color={saveStatus === 'saved' ? 'default' : 'warning'}
-          >
-            {saveStatus === 'saved' && <SuccessIcon />}
-            <Chip.Label>{saveStatus === 'saving' ? '保存中...' : '所有修改已保存'}</Chip.Label>
-          </Chip>
-        )}
+        <SaveStatusChip saveStatus={saveStatus} />
       </div>
 
       {actions && <div className="work-area-actions">{actions}</div>}
