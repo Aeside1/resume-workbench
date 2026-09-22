@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo, useCallback } from 'react'
 import { Card, ScrollShadow, Surface } from '@heroui/react'
 import { FileText, PanelRight, PanelRightClose } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { EASE_OUT_SMOOTH } from '../motion'
 import type { WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
@@ -258,7 +259,7 @@ export function ZenFocusEditor({
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: 380, opacity: 1 }}
               exit={{ width: 0, opacity: 0 }}
-              transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ duration: 0.28, ease: EASE_OUT_SMOOTH }}
             >
               <Card variant="secondary" className="zen-companion-card">
                 <Card.Header className="zen-companion-header">

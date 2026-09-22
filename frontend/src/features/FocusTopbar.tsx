@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react'
 import { Breadcrumbs, Button, IconChevronLeft } from '@heroui/react'
+import { motion } from 'framer-motion'
 import type { SaveStatus } from './useTransientSaveStatus'
 import { SaveStatusChip } from './SaveStatusChip'
+import { useFocusEnterMotion } from './useFocusEnterMotion'
 
 /**
  * 页头面包屑的一级（ADR 004 §2.2）。
@@ -28,10 +30,14 @@ type Props = {
  * 简历方案编辑器一样由内容区自带页头），但排版契约不变：
  * 面包屑组可收缩、末级单行省略、中间的保存态 Chip 永不被顶掉（ADR 004 §2.3），
  * 且各级按**位置**（而非文案）绑定去向（工作项标题可能重名）。
+ *
+ * 页头与写作区用同一份入场参数（ `useFocusEnterMotion`）一起入场（04l）。
  */
 export function FocusTopbar({ trail, backLabel, onBack, saveStatus, actions }: Props) {
+  const focusEnterMotion = useFocusEnterMotion()
+
   return (
-    <nav role="navigation" aria-label="面包屑导航" className="focus-topbar">
+    <motion.nav role="navigation" aria-label="面包屑导航" className="focus-topbar" {...focusEnterMotion}>
       <div className="focus-breadcrumb-group">
         {onBack && (
           <Button isIconOnly variant="ghost" aria-label={backLabel} onPress={onBack}>
@@ -67,6 +73,6 @@ export function FocusTopbar({ trail, backLabel, onBack, saveStatus, actions }: P
       <div className="focus-actions-right" aria-hidden={actions ? undefined : 'true'}>
         {actions}
       </div>
-    </nav>
+    </motion.nav>
   )
 }
