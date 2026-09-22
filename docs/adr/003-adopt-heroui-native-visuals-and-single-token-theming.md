@@ -3,7 +3,7 @@
 - **状态（Status）**：Accepted（已确认）
 - **日期（Date）**：2026-09-19
 - **决策者（Deciders）**：用户 & AI Pair
-- **关联文档**：[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)、[ADR 002](002-retire-workspaces-flatten-to-user.md)、[CONTEXT.md](../../CONTEXT.md)、[.scratch/hero-ui-migration/spec.md](../../.scratch/hero-ui-migration/spec.md)
+- **关联文档**：[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)、[ADR 002](002-retire-workspaces-flatten-to-user.md)、[CONTEXT.md](../CONTEXT.md)
 
 ---
 
@@ -77,8 +77,8 @@ ADR 001 第 2.3 节早已明确设计系统决策：**"严格遵循 HeroUI 设�
 
    > **后续修正（2026-09-14，切片 04 设计评审）**：本条的**范围被限定为「经历资产页的简历亮点提炼抽屉」**。切片 04 的简历方案编辑器采用了另一种形态：右侧「历史版本」面板是**可收起的非模态侧栏**（不遮主工作面），因为它需要边看编排边操作。这不推翻本条，而是由 [ADR 005](005-resume-plan-reference-model-and-archive-boundary.md) §2.5 为方案编辑器**新增**一条并存约定：两个面板各自服务不同场景。
 
-   > **术语修正（2026-09-14）**：本条中的「简历描述抽屉」按 [CONTEXT.md](../../CONTEXT.md) 的正式名现称 **「简历亮点提炼」抽屉**（卡片单位由「版本」改称「简历亮点」）。本条保留当时用语以便追溯。
+   > **术语修正（2026-09-14）**：本条中的「简历描述抽屉」按 [CONTEXT.md](../CONTEXT.md) 的正式名现称 **「简历亮点提炼」抽屉**（卡片单位由「版本」改称「简历亮点」）。本条保留当时用语以便追溯。
 
 ## 7. 落地状态（2026-09-14，issue 16 最终验收与合入）
 
-本 ADR 的决策已全部实现并**合入 `main`**：`experiment/heroui-migration` 以 fast-forward 合入（`8c5c120 → e85bf5f`，30 个提交）。最终验收（关卡数字、逐页两色结论、spec 6 条 AC 逐条对照含例外）见 [`.scratch/hero-ui-migration/issues/16-*.md`](../../.scratch/hero-ui-migration/issues/16-final-acceptance-and-merge.md) 的 `## Answer`；两个已知例外按 §6 登记延续（AC3 的 `--accent`、AC6 的 `!important` 现状为 36 处均在 `typography.css`）。
+本 ADR 的决策已全部实现并**合入 `main`**：`experiment/heroui-migration` 以 fast-forward 合入（30 个提交）。最终验收（关卡数字、逐页两色结论、spec 6 条 AC 逐条对照含例外）记录在内部迁移线 issue 16 的 `## Answer`（本地 issue tracker，不入版本库）；两个已知例外按 §6 登记延续（AC3 的 `--accent`、AC6 的 `!important` 现状为 36 处均在 `typography.css`）。

@@ -4,10 +4,10 @@ backend/__pycache__/
 backend/app/__pycache__/
 backend/tests/__pycache__/
 backend/.pytest_cache/
+.pytest_cache/
 frontend/node_modules/
 frontend/dist/
-.scratch/*.png
-.scratch/chrome-*/
-.scratch/live-editor-artifacts/
-.scratch/data-backups/
+# 本地 issue tracker / 开发过程记录，不入版本库（详见 AGENTS.md）
+.scratch/
+# 并行工作区（worktree）的隔离配置与本地证据
 .worktrees/

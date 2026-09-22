@@ -3,7 +3,7 @@
 - **状态（Status）**：Accepted（已确认）
 - **日期（Date）**：2026-09-14
 - **决策者（Deciders）**：用户 & AI Pair
-- **关联文档**：[CONTEXT.md](../../CONTEXT.md)、[ADR 002](002-retire-workspaces-flatten-to-user.md)、[ADR 003](003-adopt-heroui-native-visuals-and-single-token-theming.md)、[ADR 004](004-zen-focus-shell-as-in-flow-region.md)、[.scratch/resume-workbench/spec.md](../../.scratch/resume-workbench/spec.md)、[.scratch/resume-workbench/issues/04-resume-plan-references.md](../../.scratch/resume-workbench/issues/04-resume-plan-references.md)
+- **关联文档**：[CONTEXT.md](../CONTEXT.md)、[ADR 002](002-retire-workspaces-flatten-to-user.md)、[ADR 003](003-adopt-heroui-native-visuals-and-single-token-theming.md)、[ADR 004](004-zen-focus-shell-as-in-flow-region.md)
 
 ---
 

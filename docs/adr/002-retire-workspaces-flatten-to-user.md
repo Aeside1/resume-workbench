@@ -3,7 +3,7 @@
 - **状态（Status）**：Accepted（已确认）
 - **日期（Date）**：2026-09-12
 - **决策者（Deciders）**：用户 & AI Pair
-- **关联文档**：[CONTEXT.md](../../CONTEXT.md)、[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)
+- **关联文档**：[CONTEXT.md](../CONTEXT.md)、[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)
 ---
 
 ## 1. 背景与问题陈述（Context）

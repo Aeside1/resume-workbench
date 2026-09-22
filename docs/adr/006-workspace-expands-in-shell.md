@@ -3,7 +3,7 @@
 - **状态（Status）**：Accepted（已确认）
 - **日期（Date）**：2026-09-15
 - **决策者（Deciders）**：用户 & AI Pair
-- **关联文档**：[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)、[ADR 004](004-zen-focus-shell-as-in-flow-region.md)、[CONTEXT.md](../../CONTEXT.md)、[.scratch/resume-workbench/issues/04g-shell-and-editor-layout.md](../../.scratch/resume-workbench/issues/04g-shell-and-editor-layout.md)
+- **关联文档**：[ADR 001](001-ui-redesign-workbench-and-focus-canvas.md)、[ADR 004](004-zen-focus-shell-as-in-flow-region.md)、[CONTEXT.md](../CONTEXT.md)
 
 ---
 

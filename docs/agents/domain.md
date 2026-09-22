@@ -2,7 +2,7 @@
 
 ## 开始探索前
 
-- 读取仓库根目录的 `CONTEXT.md`。
+- 读取 `docs/CONTEXT.md`。
 - 读取 `docs/adr/` 下与当前工作相关的 ADR。
 - 使用 `CONTEXT.md` 中定义的领域术语。
 
@@ -12,9 +12,14 @@
 
 ```text
 /
-├── CONTEXT.md
-├── docs/adr/
-└── src/
+├── docs/
+│   ├── PRD.md
+│   ├── ARCHITECTURE.md
+│   ├── CONTEXT.md
+│   ├── adr/
+│   └── agents/
+├── backend/
+└── frontend/
 ```
 
 ## 术语使用

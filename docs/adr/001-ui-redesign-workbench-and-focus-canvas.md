@@ -3,7 +3,7 @@
 - **状态（Status）**：Accepted（已确认）
 - **日期（Date）**：2026-09-12
 - **决策者（Deciders）**：用户 & AI Pair
-- **关联文档**：[CONTEXT.md](../../CONTEXT.md)、[UI-UX.md](../../UI-UX.md)、[.scratch/resume-workbench/spec.md](../../.scratch/resume-workbench/spec.md)
+- **关联文档**：[CONTEXT.md](../CONTEXT.md)、[PRD.md](../PRD.md)、[ARCHITECTURE.md](../ARCHITECTURE.md)
 
 ---
 
@@ -61,7 +61,7 @@
 
 ### 2.4 后续扩展特性的处理原则
 
-- **自由记录（灵感与速记暂存）**：确认作为后置特性，当前阶段不引入正式代码。已在 issue tracker 中落盘记录为 [.scratch/resume-workbench/issues/06-scratchpad-free-notes.md](../../.scratch/resume-workbench/issues/06-scratchpad-free-notes.md)，状态为 `needs-triage`，留待后续专题评审。
+- **自由记录（灵感与速记暂存）**：确认作为后置特性，当前阶段不引入正式代码，已登记为待评审需求（内部 issue tracker，不入版本库）。
 
 ## 3. 设计原型效果图（Design Assets）
 
@@ -75,7 +75,7 @@
    - 配色与视觉严格贴合场景 1（纯白洁净顶栏、柔和浅灰背景、统一 1px 细微边框与高对比文字），展现无侧栏极简顶栏、居中宽幅经历长画布、工作记录原材料排版、简历描述多版本 Tab 交互，以及右侧解决宽屏空旷感的伴随大纲（TOC Mini-map）。
 
 > **已移除（2026-09-22）**：以上效果图已从工作区删除，原因是 HeroUI 迁移（[ADR 003](003-adopt-heroui-native-visuals-and-single-token-theming.md)）重做了视觉层，这批图不再能代表当前界面，留在仓库里会误导读者；同时它们占约 4.9 MB。
-> **取回方式**：图片仍留在 git 历史里，用 `git show <sha>:docs/designs/<文件名>` 即可导出（`<sha>` 为移除前的任一次提交，例如 `29d1fd4`），也可用 `git log --diff-filter=A -- docs/designs` 定位。
+> **取回方式**：图片仍在 git 历史里。**本仓库在首次公开发布前重写过一次历史（删除了 `.scratch/`），因此旧文档/旧 clone 里记载的提交号一律不可用**；请自己定位：`git log --diff-filter=A -- docs/designs` 找到引入提交，再 `git show <sha>:docs/designs/<文件名>` 导出。
 > 其余 10 张（`container_dashboard_actual.png`、`container_hub_actual.png`、`card_density_comparison.jpg`、`deep_canvas_chinese.jpg`、`deep_work_canvas_light.jpg`、`focus_canvas_light.jpg`、`focus_drawer_dark.jpg`、`workbench_drawer_view.jpg`、`workbench_three_column_dark.jpg`、`workbench_three_column_light.jpg`）属同批探索稿，一并移除。
 
 ## 4. 后续实施任务切片（Implementation Roadmap）

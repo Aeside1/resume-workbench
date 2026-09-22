@@ -4,7 +4,7 @@
 
 ### Issue tracker
 
-本仓库使用 `.scratch/` 下的本地 Markdown 文件管理需求规格和开发任务。详见 `docs/agents/issue-tracker.md`。
+本仓库使用 `.scratch/` 下的本地 Markdown 文件管理需求规格和开发任务。**`.scratch/` 不入版本库**（已在 `.gitignore` 中），定位等同 GitHub 的 issue / PR：只服务本地开发过程，不随代码发布。详见 `docs/agents/issue-tracker.md`。
 
 ### Triage labels
 
@@ -12,7 +12,7 @@
 
 ### Domain docs
 
-本仓库使用单上下文领域文档结构：根目录维护 `CONTEXT.md`，ADR 文件维护在 `docs/adr/`。详见 `docs/agents/domain.md`。
+本仓库使用单上下文领域文档结构：领域文档维护在 `docs/`（`CONTEXT.md` 为术语唯一来源），ADR 文件维护在 `docs/adr/`。详见 `docs/agents/domain.md`。
 
 ## 前端组件与样式规范（HeroUI / React Aria）
 
