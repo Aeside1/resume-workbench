@@ -1,19 +1,11 @@
 import '@testing-library/jest-dom/vitest'
 import { afterEach } from 'vitest'
+import { stubMatchMedia } from './matchMedia'
 
-// jsdom 未实现 matchMedia，而 HeroUI 的 useTheme 依赖它读取系统配色偏好。
-// 这里提供一个可被单个测试覆盖的默认实现（默认解算为浅色）。
+// jsdom 未实现 matchMedia，而 HeroUI 的 useTheme、以及本仓的「减少动态效果」偏好都依赖它。
+// 默认解算为浅色 / 不减少动态效果；需要驱动的用例用 src/test/matchMedia.ts 的替身覆盖。
 if (!window.matchMedia) {
-  window.matchMedia = ((query: string) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addEventListener: () => {},
-    removeEventListener: () => {},
-    addListener: () => {},
-    removeListener: () => {},
-    dispatchEvent: () => false
-  })) as unknown as typeof window.matchMedia
+  stubMatchMedia(false)
 }
 
 // jsdom 未实现 ResizeObserver，而 HeroUI 的 ScrollShadow（Tabs.ListContainer 会用到）
@@ -35,6 +27,13 @@ if (!('ResizeObserver' in globalThis)) {
 // （HeroUI 的 Tabs.Indicator 用它做选中态平滑位移）会读取 element.getAnimations()。
 if (!Element.prototype.getAnimations) {
   Element.prototype.getAnimations = () => []
+}
+
+// jsdom 未实现 scrollIntoView，而「退出专注后回到原卡片位置」依赖一次 50ms 后的
+// scrollIntoView（FocusCanvasContainer）；不补这一步，定时器抛出的是卸载后的
+// 未捕获 TypeError（vitest 会记为 unhandled error）。
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {}
 }
 
 // 主题状态会写到 <html> 上，测试之间需要复位，避免相互污染。

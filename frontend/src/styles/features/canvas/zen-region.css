@@ -10,12 +10,17 @@
    承载；此处只保留布局骨架，色值一律读语义变量。
    ========================================================================== */
 
-/* 1. 区域根节点（底色与前景色由 HeroUI Surface 提供） */
-.zen-focus-region {
+/* 1. 区域根节点（底色与前景色由 HeroUI Surface 提供）；
+   入场动画包裹层（04l，只改 transform/opacity）与它共用同一套填充骨架 */
+.zen-focus-region,
+.zen-region-enter {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+.zen-focus-region {
   overflow: hidden;
 }
 

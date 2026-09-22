@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { motion } from 'framer-motion'
 import { api, isReferenceBlocked, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { useToast } from '../../components/ui/Toast'
@@ -8,6 +9,7 @@ import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
 import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 import { ZenFocusEditor } from './ZenFocusEditor'
 import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
+import { useFocusEnterMotion } from '../useFocusEnterMotion'
 import type { ContentDraft } from './WorkContentBlock'
 
 type Props = {
@@ -49,6 +51,8 @@ export function FocusCanvasContainer({
   /** 删除被阻断（被简历方案引用）时的模态提示；内联红字在删除路径上看不到，故改弹窗（04j） */
   const [blockedDelete, setBlockedDelete] = useState<{ title: string; message: string } | null>(null)
   const toast = useToast()
+  /** 展开专注的入场动画（与内容区页头共用一份参数，04l） */
+  const focusEnterMotion = useFocusEnterMotion()
 
   useEffect(() => {
     setCurrentGroup(group)
@@ -326,17 +330,19 @@ export function FocusCanvasContainer({
     >
       {toast.ToastPortal}
       {zenWorkContent ? (
-        /* Zen 展开时区域内替画布（ADR 004 §2.1） */
-        <ZenFocusEditor
-          isOpen={true}
-          workContent={zenWorkContent}
-          onClose={handleCloseZenMode}
-          onSaveContent={handleSaveContent}
-          session={session}
-          isCompanionOpen={isCompanionOpen}
-          onTitleChange={handleZenTitleChange}
-          exitSignal={zenExitSignal}
-        />
+        /* Zen 展开时区域内替画布（ADR 004 §2.1）；入场只播一次，退出保持瞬时（04l） */
+        <motion.div className="zen-region-enter" {...focusEnterMotion}>
+          <ZenFocusEditor
+            isOpen={true}
+            workContent={zenWorkContent}
+            onClose={handleCloseZenMode}
+            onSaveContent={handleSaveContent}
+            session={session}
+            isCompanionOpen={isCompanionOpen}
+            onTitleChange={handleZenTitleChange}
+            exitSignal={zenExitSignal}
+          />
+        </motion.div>
       ) : (
         <div className="focus-canvas-layout">
           <main className="focus-canvas-main-col">

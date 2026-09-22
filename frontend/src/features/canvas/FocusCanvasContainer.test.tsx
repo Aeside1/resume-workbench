@@ -583,6 +583,8 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     // 验证专注写作区展开（区域角色），且画布被区域内替而非叠加
     const zenRegion = await screen.findByRole('region', { name: /专注写作区: 重构可视化拖拽画布核心渲染引擎/ })
     expect(zenRegion).toBeInTheDocument()
+    // 入场动画包裹层（04l）：页头与写作区共用同一份参数，展开时播一次
+    expect(zenRegion.closest('.zen-region-enter')).not.toBeNull()
     expect(screen.queryByText('经历大纲')).not.toBeInTheDocument()
     // 区域形态下 Zen 里不再有模态层（旧断言找的是 role="dialog" 的全屏工作台）
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

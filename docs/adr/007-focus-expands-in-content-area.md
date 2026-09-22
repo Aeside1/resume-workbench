@@ -46,6 +46,14 @@ ADR 004 把 Zen 从「自研全屏浮层」改成「AppShell 内容区里的一�
 
 ADR 004 §2.4 的「命令下行（`exitSignal`）而非直接卸载」仍适用于 Esc、页头返回按钮、面包屑中间级三条（先 flush 再关）。但侧栏常驻后，**面包屑第 1 级「经历内容」**与**侧栏模块导航**是直接卸载写作区的路径，它们不同「先 flush 再关」链路：因此写作区自身的卸载清理由「只清防抖定时器」改为**先 `flushSave()` 再卸载**（04k，`ZenFocusEditor` 的 `flushSaveRef`）。这样「所有离开路径都落盘」才是真的成立，而不只是三条命令行下行。
 
+### 2.6 展开专注的入场动画（04l）
+
+点「展开专注」时，内容区页头（`FocusTopbar`）与写作区用**同一份参数**一起入场（`useFocusEnterMotion`：0.22s、`cubic-bezier(0.16, 1, 0.3, 1)`、自下方 10px 升起，只改 transform/opacity），不再硬切。
+
+- **只做入场**：退出要「先 flush 保存再关 + 恢复原卡片滚动位置」（§2.5），让写作区为动画多挂 200ms 会和这两件事抢时间，因此退出保持瞬时；
+- **减少动态效果**：`prefers-reduced-motion: reduce` 下不播动画，直接落位。这里直接读媒体查询并用 `useSyncExternalStore` 订阅，而不是用 framer 的 `useReducedMotion`——后者只在**调用组件首次渲染**时读一次，而 `FocusCanvasContainer` 是长驻组件（展开专注前后都在），系统偏好中途改变后它会一直用旧值（真实浏览器复测抳到过这个差异）；
+- 全局统一开关（`MotionConfig`，可一并覆盖伴随栏滑入、视图切换等其它动效）是另一个决策，不在 04l 范围内。
+
 ## 3. 决策影响（Consequences）
 
 **正面：**
