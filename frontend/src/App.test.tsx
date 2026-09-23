@@ -228,12 +228,25 @@ describe('认证后的工作台', () => {
     fireEvent.change(within(zenRegion).getByLabelText('工作项大标题'), { target: { value: '第一项（再改）' } })
     expect(screen.queryByLabelText('伴随提炼栏')).not.toBeInTheDocument()
 
-    // Esc 退出专注：回到画布页头，左侧导航始终在
+    // Esc 退出专注：先播退场动画，动完才提交（04m），所以此时写作区与专注页头都还在
     fireEvent.keyDown(window, { key: 'Escape' })
+    expect(screen.getByRole('region', { name: /专注写作区/ })).toBeInTheDocument()
+    expect(screen.getByRole('navigation', { name: '面包屑导航' })).toBeInTheDocument()
+
+    // 动画结束后才回到画布页头，且左侧导航始终在
     await waitFor(() => expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument())
     expect(screen.queryByRole('navigation', { name: '面包屑导航' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: '返回经历内容' })).toBeInTheDocument()
     expect(screen.getByRole('complementary', { name: '主导航' })).toBeInTheDocument()
+
+    // 再从画布展开一次，验证「面包屑第 1 级离开画布」这条路**不走**退场动画（04m）：
+    // 整块工作台视图被换掉，动画交给外壳的视图切换，所以写作区是同步消失的
+    fireEvent.click(screen.getByRole('button', { name: '展开专注模式' }))
+    await screen.findByRole('region', { name: /专注写作区/ })
+    fireEvent.click(within(screen.getByRole('navigation', { name: '面包屑导航' })).getByRole('link', { name: '经历内容' }))
+
+    expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
+    await waitFor(() => expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument())
   })
 
   it('以折叠态启动：localStorage 已记录时直接渲染图标态（04h）', async () => {

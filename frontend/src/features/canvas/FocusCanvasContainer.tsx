@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { api, isReferenceBlocked, type ExperienceGroup, type WorkContent } from '../../api'
 import type { Session } from '../../session'
@@ -9,7 +9,9 @@ import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
 import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 import { ZenFocusEditor } from './ZenFocusEditor'
 import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
-import { useFocusEnterMotion } from '../useFocusEnterMotion'
+import { useFocusMotion } from '../useFocusMotion'
+import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
+import { CONTENT_SETTLE_FROM, CONTENT_SETTLE_TO, CONTENT_SETTLE_TRANSITION, INSTANT_TRANSITION } from '../motion'
 import type { ContentDraft } from './WorkContentBlock'
 
 type Props = {
@@ -24,6 +26,8 @@ type Props = {
   isCompanionOpen?: boolean
   /** 外壳发起的「返回画布」命令；+1 递增，由 Zen 自己执行（先 flush 再关闭） */
   zenExitSignal?: number
+  /** 退出动画开始（外壳据此同步播放页头退场）；直接离开画布的路径不会触发（04m） */
+  onZenCloseStart?: () => void
 }
 
 /** 顶栏在 Zen 展开时需要的两项语境：是否展开、当前工作项实时标题 */
@@ -37,7 +41,8 @@ export function FocusCanvasContainer({
   onUpdateGroup,
   onZenChange,
   isCompanionOpen,
-  zenExitSignal
+  zenExitSignal,
+  onZenCloseStart
 }: Props) {
   const [currentGroup, setCurrentGroup] = useState<ExperienceGroup>(group)
   const [contents, setContents] = useState<WorkContent[]>([])
@@ -51,8 +56,16 @@ export function FocusCanvasContainer({
   /** 删除被阻断（被简历方案引用）时的模态提示；内联红字在删除路径上看不到，故改弹窗（04j） */
   const [blockedDelete, setBlockedDelete] = useState<{ title: string; message: string } | null>(null)
   const toast = useToast()
-  /** 展开专注的入场动画（与内容区页头共用一份参数，04l） */
-  const focusEnterMotion = useFocusEnterMotion()
+  const shouldReduceMotion = usePrefersReducedMotion()
+  /** 正在播退场动画（动完才真正提交关闭，04m） */
+  const [isZenClosing, setIsZenClosing] = useState(false)
+  /** 刚才是「从专注退场回来」，画布这一帧才需要落位动画（从列表进画布由外壳的视图切换承担） */
+  const [isCanvasReturning, setIsCanvasReturning] = useState(false)
+  // 关闭是「有事要做」的幂等守卫，而 setState 是异步的：动画期间的重复请求（Esc 连按、
+  // Esc 后又点返回按钮）会在重渲染前就再进来，因此同时写 ref（与 issue 12 D1 同一手法）。
+  const isZenClosingRef = useRef(false)
+  /** 专注页（内容区页头 + 写作区共用一份参数）的入场 / 退场（04l / 04m） */
+  const zenFocusMotion = useFocusMotion(isZenClosing ? 'exit' : 'enter')
 
   useEffect(() => {
     setCurrentGroup(group)
@@ -61,6 +74,8 @@ export function FocusCanvasContainer({
   const containerRef = useRef<HTMLDivElement>(null)
   // Zen 展开时画布被区域内替（卸载 → 重挂），退出后需把视窗恢复到原卡片位置
   const zenReturnScrollRef = useRef(0)
+  /** 提交关闭时记下刚关闭的工作项，交给下面的 layout effect 恢复视窗（04m） */
+  const pendingZenReturnRef = useRef<number | null>(null)
 
   /**
    * 顶栏保存态 Chip。归零口径（含单一归零定时器、卸载清理）全部落在
@@ -254,23 +269,51 @@ export function FocusCanvasContainer({
   }
 
   /**
-   * 关闭 Zen 并回到画布。
-   * 画布是「卸载 → 重挂」，仅靠 scrollY 恢复不足以处理布局高度变化，
-   * 因此恢复滚动位置后再把目标卡片滚入视野（block: 'nearest' 只在必要时移动）。
+   * 提交关闭：卸载写作区、页头换回画布页头、解锁视口。
+   * 有退场动画时由动画结束回调调它，降级（减少动态效果）时同步调（04m）。
+   */
+  const commitCloseZenMode = useCallback(() => {
+    pendingZenReturnRef.current = zenModeWorkContentId
+    isZenClosingRef.current = false
+    setZenModeWorkContentId(null)
+    setIsZenClosing(false)
+    setIsCanvasReturning(true)
+    onZenChange?.({ isOpen: false, title: '' })
+  }, [zenModeWorkContentId, onZenChange])
+
+  /**
+   * 关闭 Zen（由 Zen 自己 flush 完再调）。
+   * 有动画时先播 0.16s 退场，动画结束才提交；系统开了「减少动态效果」时既不播也不等，
+   * 直接同步提交。
    */
   const handleCloseZenMode = useCallback(() => {
-    const lastId = zenModeWorkContentId
-    const restoreScroll = zenReturnScrollRef.current
-    setZenModeWorkContentId(null)
-    onZenChange?.({ isOpen: false, title: '' })
-    if (lastId !== null) {
-      setTimeout(() => {
-        window.scrollTo({ top: restoreScroll })
-        const el = document.getElementById(`work-content-${lastId}`)
-        el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
-      }, 50)
+    if (isZenClosingRef.current) return
+    if (shouldReduceMotion) {
+      commitCloseZenMode()
+      return
     }
-  }, [zenModeWorkContentId, onZenChange])
+    isZenClosingRef.current = true
+    setIsZenClosing(true)
+    onZenCloseStart?.()
+  }, [shouldReduceMotion, commitCloseZenMode, onZenCloseStart])
+
+  /**
+   * 退出后把视窗恢复回原卡片位置。
+   * 画布是「卸载 → 重挂」，仅靠 scrollY 恢复不足以处理布局高度变化，因此恢复滚动位置后
+   * 再把目标卡片滚入视野（block: 'nearest' 只在必要时移动）。
+   * 放在 layout effect（而不是原来的 50ms 定时器）里：提交那一帧画布还是 opacity: 0，
+   * 位置跳变不可见，也不会与退场动画抢时间（04m）。
+   */
+  useLayoutEffect(() => {
+    const lastId = pendingZenReturnRef.current
+    if (zenModeWorkContentId !== null || lastId === null) return
+    pendingZenReturnRef.current = null
+    window.scrollTo({ top: zenReturnScrollRef.current })
+    document
+      .getElementById(`work-content-${lastId}`)
+      // 降级时也不该播滑动动画（与「减少动态效果」口径保持一致）
+      ?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth', block: 'nearest' })
+  }, [zenModeWorkContentId, shouldReduceMotion])
 
   const handleReorderContents = async (newContents: WorkContent[]) => {
     setContents(newContents)
@@ -323,6 +366,18 @@ export function FocusCanvasContainer({
     [contents, zenModeWorkContentId]
   )
 
+  /**
+   * 兜底：退场动画期间写作区可能先一步消失（列表刷新后找不到这条工作项），
+   * 那样 `onAnimationComplete` 永远不会触发，关闭守卫会永久卡住——下次展开走退场分支、
+   * Esc 也失效。这里在写作区已不存在时把守卫与关闭态放掉（04m）。
+   */
+  useEffect(() => {
+    if (zenWorkContent !== null || !isZenClosingRef.current) return
+    isZenClosingRef.current = false
+    setIsZenClosing(false)
+    onZenChange?.({ isOpen: false, title: '' })
+  }, [zenWorkContent, onZenChange])
+
   return (
     <div
       className={`focus-canvas-wrapper${zenWorkContent ? ' focus-canvas-wrapper--zen' : ''}`}
@@ -330,8 +385,19 @@ export function FocusCanvasContainer({
     >
       {toast.ToastPortal}
       {zenWorkContent ? (
-        /* Zen 展开时区域内替画布（ADR 004 §2.1）；入场只播一次，退出保持瞬时（04l） */
-        <motion.div className="zen-region-enter" {...focusEnterMotion}>
+        /* Zen 展开时区域内替画布（ADR 004 §2.1）。入场 / 退场共用一套参数（04l / 04m）；
+           退场是「动完才提交」，所以这里接动画结束回调。
+           key 必须写：两个分支都是 motion.div，没有 key 时 React 会把同一个 DOM 节点
+           复用到新分支上（元素类型相同、位置相同），而 framer 的 initial 只在「首次挂载」
+           的视觉元素上应用——于是入场动画会被静默跳过（04m 真实浏览器实测踩到过）。 */
+        <motion.div
+          key="zen-region"
+          className="zen-region-enter"
+          {...zenFocusMotion}
+          onAnimationComplete={() => {
+            if (isZenClosing) commitCloseZenMode()
+          }}
+        >
           <ZenFocusEditor
             isOpen={true}
             workContent={zenWorkContent}
@@ -344,7 +410,16 @@ export function FocusCanvasContainer({
           />
         </motion.div>
       ) : (
-        <div className="focus-canvas-layout">
+        /* 画布落位（04m）：**只**在「刚从专注退场回来」这一帧播，避免与外壳的视图切换动画叠加 */
+        <motion.div
+          key="canvas-swap"
+          className="focus-canvas-swap"
+          initial={shouldReduceMotion || !isCanvasReturning ? false : CONTENT_SETTLE_FROM}
+          animate={CONTENT_SETTLE_TO}
+          transition={shouldReduceMotion ? INSTANT_TRANSITION : CONTENT_SETTLE_TRANSITION}
+          onAnimationComplete={() => setIsCanvasReturning(false)}
+        >
+          <div className="focus-canvas-layout">
           <main className="focus-canvas-main-col">
             {error && <p className="error" role="alert">{error}</p>}
 
@@ -394,6 +469,7 @@ export function FocusCanvasContainer({
             />
           </aside>
         </div>
+        </motion.div>
       )}
 
       <ResumeDescriptionDrawer
