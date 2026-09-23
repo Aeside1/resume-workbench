@@ -5,14 +5,21 @@
    此处只保留布局骨架与语义变量色值。
    ========================================================================== */
 
-.focus-canvas-wrapper {
+.focus-canvas-wrapper,
+.focus-canvas-swap {
   width: 100%;
-  min-height: calc(100vh - 56px);
-  background: var(--background);
-  padding: 32px 24px 80px;
   display: flex;
   justify-content: center;
 }
+
+.focus-canvas-wrapper {
+  min-height: calc(100vh - 56px);
+  background: var(--background);
+  padding: 32px 24px 80px;
+}
+
+/* 画布落位包裹层（04m）：与 .focus-canvas-wrapper 共用上面的居中骨架，
+   只额外提供 transform/opacity 的落位动画（专注退场后画布重新入场时） */
 
 .focus-canvas-layout {
   display: flex;

@@ -4,8 +4,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { FocusCanvasContainer } from './FocusCanvasContainer'
 import { api, ApiError, type ExperienceGroup, type ResumeHighlight, type WorkContent } from '../../api'
 import type { Session } from '../../session'
+import { restoreMatchMedia, stubMatchMedia } from '../../test/matchMedia'
 
 afterEach(cleanup)
+afterEach(restoreMatchMedia)
 
 describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试', () => {
   const mockSession: Session = {
@@ -690,6 +692,88 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
 
     // 关键断言：Zen 展开后脏标记仍为 false（否则离开画布会弹不成立的「放弃修改」确认框）
     expect(handleDirtyChange).not.toHaveBeenCalledWith(true)
+  })
+
+  it('退出专注：先落盘、退场动画动完才提交，期间重复请求不重入（04m）', async () => {
+    const handleZenChange = vi.fn()
+    const handleZenCloseStart = vi.fn()
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onZenChange={handleZenChange}
+        onZenCloseStart={handleZenCloseStart}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    const card101 = document.getElementById('work-content-101')!
+    // 画布落位层：两个分支都是 motion.div，必须在换内容时换成新节点，
+    // 否则 framer 的 initial 会被跳过、入场动画静默消失（04m 真实浏览器实测踩到过）
+    const canvasSwapNode = document.querySelector('.focus-canvas-swap')
+    expect(canvasSwapNode).not.toBeNull()
+    fireEvent.click(within(card101).getByRole('button', { name: '展开专注模式' }))
+    const zenRegion = await screen.findByRole('region', { name: /专注写作区: 重构可视化拖拽画布核心渲染引擎/ })
+    const zenWrapper = zenRegion.closest('.zen-region-enter')
+    expect(zenWrapper).not.toBeNull()
+    expect(zenWrapper).not.toBe(canvasSwapNode)
+    fireEvent.change(within(zenRegion).getByLabelText('工作项大标题'), {
+      target: { value: '退出前的最后一笔' }
+    })
+    handleZenChange.mockClear()
+
+    // 连按三次 Esc：只有第一次能开始关闭
+    fireEvent.keyDown(window, { key: 'Escape' })
+    fireEvent.keyDown(window, { key: 'Escape' })
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    // 先落盘：退场动画还没结束，待存草稿已经发出去了
+    expect(api.updateWorkContent).toHaveBeenCalledWith(
+      mockSession.token,
+      101,
+      expect.objectContaining({ title: '退出前的最后一笔' })
+    )
+    // 退场开始上报一次（外壳据此把页头一起淡出），但关闭尚未提交
+    expect(handleZenCloseStart).toHaveBeenCalledTimes(1)
+    expect(handleZenChange).not.toHaveBeenCalledWith({ isOpen: false, title: '' })
+    expect(screen.getByRole('region', { name: /专注写作区/ })).toBeInTheDocument()
+
+    // 动画结束后才提交关闭，并回到画布（`.focus-canvas-swap` 是画布落位层；
+    // 它到底有没有真的播动画由真实浏览器探针负责逐帧取证）
+    await waitFor(() => expect(handleZenChange).toHaveBeenLastCalledWith({ isOpen: false, title: '' }))
+    await waitFor(() => expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument())
+    const canvasSwapNodeAfterExit = document.querySelector('.focus-canvas-swap')
+    expect(canvasSwapNodeAfterExit).not.toBeNull()
+    expect(canvasSwapNodeAfterExit).not.toBe(zenWrapper)
+    expect(handleZenCloseStart).toHaveBeenCalledTimes(1)
+  })
+
+  it('系统开启「减少动态效果」时退出既不播也不延迟：Esc 后同步提交关闭（04m）', async () => {
+    stubMatchMedia(true)
+    const handleZenChange = vi.fn()
+    const handleZenCloseStart = vi.fn()
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onZenChange={handleZenChange}
+        onZenCloseStart={handleZenCloseStart}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    const card101 = document.getElementById('work-content-101')!
+    fireEvent.click(within(card101).getByRole('button', { name: '展开专注模式' }))
+    await screen.findByRole('region', { name: /专注写作区/ })
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    // 降级 = 不播动画、也不等：关闭在同一个事件里就提交了（不经过 onZenCloseStart 这一段）
+    expect(handleZenCloseStart).not.toHaveBeenCalled()
+    expect(handleZenChange).toHaveBeenLastCalledWith({ isOpen: false, title: '' })
+    expect(screen.queryByRole('region', { name: /专注写作区/ })).not.toBeInTheDocument()
   })
 
   it('标题双击不再进入专注模式（交互已退役）；「展开专注」按钮进入后按 Escape 退出返回（issue 14）', async () => {

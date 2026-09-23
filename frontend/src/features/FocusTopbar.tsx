@@ -3,7 +3,7 @@ import { Breadcrumbs, Button, IconChevronLeft } from '@heroui/react'
 import { motion } from 'framer-motion'
 import type { SaveStatus } from './useTransientSaveStatus'
 import { SaveStatusChip } from './SaveStatusChip'
-import { useFocusEnterMotion } from './useFocusEnterMotion'
+import { useFocusMotion } from './useFocusMotion'
 
 /**
  * 页头面包屑的一级（ADR 004 §2.2）。
@@ -21,6 +21,8 @@ type Props = {
   saveStatus?: SaveStatus
   /** 右侧动作插槽：专注态放 Esc 提示与伴随栏开关 */
   actions?: ReactNode
+  /** 正在退场（关闭动画中）：页头与写作区一起淡出（04m） */
+  isExiting?: boolean
 }
 
 /**
@@ -31,13 +33,13 @@ type Props = {
  * 面包屑组可收缩、末级单行省略、中间的保存态 Chip 永不被顶掉（ADR 004 §2.3），
  * 且各级按**位置**（而非文案）绑定去向（工作项标题可能重名）。
  *
- * 页头与写作区用同一份入场参数（ `useFocusEnterMotion`）一起入场（04l）。
+ * 页头与写作区用同一份动效参数（`useFocusMotion`）一起入场 / 一起退场（04l / 04m）。
  */
-export function FocusTopbar({ trail, backLabel, onBack, saveStatus, actions }: Props) {
-  const focusEnterMotion = useFocusEnterMotion()
+export function FocusTopbar({ trail, backLabel, onBack, saveStatus, actions, isExiting = false }: Props) {
+  const focusMotion = useFocusMotion(isExiting ? 'exit' : 'enter')
 
   return (
-    <motion.nav role="navigation" aria-label="面包屑导航" className="focus-topbar" {...focusEnterMotion}>
+    <motion.nav role="navigation" aria-label="面包屑导航" className="focus-topbar" {...focusMotion}>
       <div className="focus-breadcrumb-group">
         {onBack && (
           <Button isIconOnly variant="ghost" aria-label={backLabel} onPress={onBack}>

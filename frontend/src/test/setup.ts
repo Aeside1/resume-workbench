@@ -29,9 +29,9 @@ if (!Element.prototype.getAnimations) {
   Element.prototype.getAnimations = () => []
 }
 
-// jsdom 未实现 scrollIntoView，而「退出专注后回到原卡片位置」依赖一次 50ms 后的
-// scrollIntoView（FocusCanvasContainer）；不补这一步，定时器抛出的是卸载后的
-// 未捕获 TypeError（vitest 会记为 unhandled error）。
+// jsdom 未实现 scrollIntoView，而「退出专注后回到原卡片位置」依赖一次
+// scrollIntoView（FocusCanvasContainer 在关闭提交那一帧的 layout effect 里调）；
+// 不补这一步，jsdom 会抛出未捕获的 TypeError（vitest 会记为 unhandled error）。
 if (!Element.prototype.scrollIntoView) {
   Element.prototype.scrollIntoView = () => {}
 }

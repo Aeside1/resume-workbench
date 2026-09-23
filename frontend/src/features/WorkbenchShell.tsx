@@ -12,6 +12,7 @@ import { PlanEditor } from './plans/PlanEditor'
 import { PlanHubPanel } from './plans/PlanHubPanel'
 import { FocusCanvasContainer, type ZenTopbarState } from './canvas/FocusCanvasContainer'
 import type { SaveStatus } from './useTransientSaveStatus'
+import { CONTENT_SETTLE_FROM, CONTENT_SETTLE_TO, CONTENT_SETTLE_TRANSITION } from './motion'
 import { ToastProvider } from '../components/ui/Toast'
 
 type Props = { session: Session; onLogout: () => void }
@@ -38,6 +39,8 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   const [zen, setZen] = useState<ZenTopbarState>({ isOpen: false, title: '' })
   const [isCompanionOpen, setIsCompanionOpen] = useState(true)
   const [zenExitSignal, setZenExitSignal] = useState(0)
+  // 退出动画进行中（04m）：页头跟着写作区一起淡出，动画结束由容器提交关闭
+  const [isFocusExiting, setIsFocusExiting] = useState(false)
   // 「从关到开」那一次才重置伴随栏；否则标题每敲一个字都会调用 onZenChange
   // 并把用户刚收起的伴随栏重新展开。
   const zenOpenRef = useRef(false)
@@ -52,6 +55,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
 
   const resetZenState = useCallback(() => {
     setZen({ isOpen: false, title: '' })
+    setIsFocusExiting(false)
     // 这两条离开路径直接卸载画布，不会下发 isOpen:false，所以开合跟踪要在这里显式归零，
     // 否则下次展开专注时伴随栏不会按「新会话」的约定重新展开。
     zenOpenRef.current = false
@@ -104,9 +108,14 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   // FocusCanvasContainer 上报专注展开状态与（就地编辑中的）工作项实时标题
   const handleZenChange = useCallback(({ isOpen, title }: ZenTopbarState) => {
     if (isOpen && !zenOpenRef.current) setIsCompanionOpen(true)
+    if (!isOpen) setIsFocusExiting(false)
     zenOpenRef.current = isOpen
     setZen({ isOpen, title })
   }, [])
+
+  // 退出动画开始（容器上报）：页头与写作区一起淡出（04m）。
+  // 直接离开画布的路径（面包屑第 1 级 / 侧栏导航）不触发它——那块交给外壳自己的视图切换动画。
+  const handleZenCloseStart = useCallback(() => setIsFocusExiting(true), [])
 
   // 面包屑中间级 / 顶栏返回按钮 = 从 Zen 回到画布。
   // 关闭命令下发给 Zen 自身（与 Esc 同一条 handleExit 路径，先 flush 再关），
@@ -218,9 +227,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
                 ? `plan-${activePlan.id}`
                 : view
           }
-          initial={{ opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.18, ease: 'easeOut' }}
+          initial={CONTENT_SETTLE_FROM}
+          animate={CONTENT_SETTLE_TO}
+          transition={CONTENT_SETTLE_TRANSITION}
           className="workbench-view-container"
         >
           {view === 'experiences' && (
@@ -235,6 +244,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
                     onBack={handleBackToCanvas}
                     saveStatus={saveStatus}
                     actions={focusActions}
+                    isExiting={isFocusExiting}
                   />
                 ) : (
                   <WorkAreaHeader
@@ -252,6 +262,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
                   onZenChange={handleZenChange}
                   isCompanionOpen={isCompanionOpen}
                   zenExitSignal={zenExitSignal}
+                  onZenCloseStart={handleZenCloseStart}
                 />
               </>
             ) : (
