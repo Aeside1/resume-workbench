@@ -6,12 +6,12 @@ import { api, AuthResponse } from '../api'
 type Props = { onAuthenticated: (response: AuthResponse) => void }
 
 /**
- * 左侧介绍区的「使用路径」。
+ * 左栏介绍区的「使用路径」。
  *
  * 四步沿用 `docs/CONTEXT.md` 的领域术语（经历分组 → 具体工作内容 → 简历亮点 → 简历方案）：
  * 未注册用户落地时先看到这条链路，才知道这个工具沉淀的是「内容」而不是排版模板。
  */
-const workflow = [
+const introSteps = [
   {
     icon: FolderKanban,
     title: '建立经历分组',
@@ -25,7 +25,7 @@ const workflow = [
   {
     icon: Sparkles,
     title: '维护多条简历亮点',
-    detail: '同一项工作保留不同写法：技术细节、结果强调、极简各一条。'
+    detail: '同一项工作可保留多条写法：技术细节、结果强调、极简表达。'
   },
   {
     icon: FileText,
@@ -62,11 +62,11 @@ export function AuthPage({ onAuthenticated }: Props) {
       <div className="auth-layout">
         <section className="auth-intro" aria-labelledby="auth-intro-title">
           <div className="auth-brand">
-            <span className="auth-brand-mark" aria-hidden="true">
+            <span className="auth-icon-tile" aria-hidden="true">
               <NotebookPen size={20} />
             </span>
             <span className="auth-brand-name">简历工作台</span>
-            <Chip className="auth-brand-chip" size="sm" variant="soft" color="default">
+            <Chip size="sm" variant="soft" color="default">
               <Chip.Label>v0.1 预览版</Chip.Label>
             </Chip>
           </div>
@@ -84,21 +84,21 @@ export function AuthPage({ onAuthenticated }: Props) {
             </p>
           </div>
 
-          <div className="auth-flow-panel">
+          <Card className="auth-flow-panel">
             <h2 className="auth-flow-title">你会这样用它</h2>
             <ol className="auth-flow">
-              {workflow.map((step, index) => {
+              {introSteps.map((step, index) => {
                 const Icon = step.icon
                 return (
                   <li className="auth-flow-step" key={step.title}>
-                    <span className="auth-flow-badge" aria-hidden="true">
+                    <span className="auth-icon-tile" aria-hidden="true">
                       <Icon size={18} />
                     </span>
                     <div className="auth-flow-text">
                       <span className="auth-flow-step-title">{step.title}</span>
                       <span className="auth-flow-step-detail">{step.detail}</span>
                     </div>
-                    {index < workflow.length - 1 && (
+                    {index < introSteps.length - 1 && (
                       <span className="auth-flow-link" aria-hidden="true">
                         <ChevronDown size={14} />
                       </span>
@@ -107,11 +107,11 @@ export function AuthPage({ onAuthenticated }: Props) {
                 )
               })}
             </ol>
-          </div>
+          </Card>
 
           <p className="auth-intro-note">
             <ShieldCheck className="auth-intro-note-icon" size={16} aria-hidden="true" />
-            <span>账号即工作空间：经历资产与简历方案仅你可见。</span>
+            <span>账号即工作台：经历资产与简历方案仅你可见。</span>
           </p>
         </section>
 
@@ -152,7 +152,6 @@ export function AuthPage({ onAuthenticated }: Props) {
             </Card.Content>
             <Card.Footer>
               <Button
-                className="link"
                 variant="ghost"
                 onPress={() => {
                   setMode(isLogin ? 'register' : 'login')

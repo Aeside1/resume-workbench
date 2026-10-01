@@ -2,8 +2,8 @@
    Auth Page（登录 / 注册页）
 
    双栏落地页：左栏介绍系统与「使用路径」，右栏是登录 / 注册表单。
-   卡片、输入框、按钮、Chip 的外观一律由 HeroUI 承载，此处只负责版式骨架、
-   响应式收敛与语义变量色值（禁止硬编码色值，见 styles.css 主题区块）。
+   卡片、Chip、输入框、按钮一律由 HeroUI 承载（ADR 003 §2.2），此处只负责
+   版式骨架、响应式收敛与语义变量色值（禁止硬编码色值，见 styles.css 主题区块）。
    ========================================================================== */
 
 .auth-page {
@@ -33,21 +33,22 @@
   border-right: 1px solid var(--border);
 }
 
-.auth-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.auth-brand-mark {
+/* 品牌标识与流程步骤的图标底座共用一套外观（仓库既有同类：EmptyStateCard 的图标底座） */
+.auth-icon-tile {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 36px;
   height: 36px;
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-lg);
   background: var(--accent-soft);
   color: var(--accent-soft-foreground);
+}
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .auth-brand-name {
@@ -86,14 +87,9 @@
   text-wrap: pretty;
 }
 
+/* 面板本身是 HeroUI Card，这里只做内部纵向节奏（间距属于布局骨架，ADR 003 §2.2） */
 .auth-flow-panel {
-  display: flex;
-  flex-direction: column;
   gap: 18px;
-  padding: 22px 24px 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-2xl);
-  background: var(--surface);
 }
 
 .auth-flow-title {
@@ -119,17 +115,6 @@
   grid-template-columns: 36px minmax(0, 1fr);
   gap: 14px;
   align-items: start;
-}
-
-.auth-flow-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-lg);
-  background: var(--accent-soft);
-  color: var(--accent-soft-foreground);
 }
 
 .auth-flow-text {
@@ -211,11 +196,11 @@
 }
 
 /* --------------------------------------------------------------------------
-   窄视口：单列堆叠，介绍区收敛为「品牌 + 定位语 + 步骤词条行」，
+   窄视口：单列堆叠，介绍区收敛为「品牌 + 定位语 + 步骤词条」，
    避免把登录表单推到首屏之外太远。
    -------------------------------------------------------------------------- */
 
-@media (max-width: 900px) {
+@media (max-width: 960px) {
   .auth-layout {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -237,19 +222,11 @@
     line-height: 1.7;
   }
 
-  /* 面板退成透明容器，四步改为横向词条 */
-  .auth-flow-panel {
-    gap: 12px;
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    background: none;
-  }
-
+  /* 四步改为横向换行排布：隐去逐条说明与连接符，只留「图标 + 步骤名」 */
   .auth-flow {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px 18px;
   }
 
   .auth-flow-step {
@@ -257,16 +234,11 @@
     display: flex;
     gap: 8px;
     align-items: center;
-    padding: 6px 12px 6px 6px;
-    border: 1px solid var(--border);
-    border-radius: 999px;
-    background: var(--surface);
   }
 
-  .auth-flow-badge {
+  .auth-flow .auth-icon-tile {
     width: 28px;
     height: 28px;
-    border-radius: 999px;
   }
 
   .auth-flow-text {

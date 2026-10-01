@@ -26,7 +26,7 @@ describe('AuthPage 双栏认证页', () => {
     }
 
     // 账号隔离口径取代了已废弃的「工作区 / 导出快照」描述
-    expect(screen.getByText(/账号即工作空间/)).toBeInTheDocument()
+    expect(screen.getByText(/经历资产与简历方案仅你可见/)).toBeInTheDocument()
     expect(screen.queryByText(/工作区/)).not.toBeInTheDocument()
     expect(screen.queryByText(/导出快照/)).not.toBeInTheDocument()
   })
