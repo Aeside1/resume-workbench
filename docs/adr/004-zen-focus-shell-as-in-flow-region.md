@@ -9,7 +9,7 @@
 
 ## 1. 背景与问题陈述（Context）
 
-Zen 专注写作（`ZenFocusEditor`）原本的形态是**应用自研的全视口覆盖层**：`.scratch/scratchpad-and-zen-canvas/spec.md` 明确要求「挂载于顶层全屏层（Fixed Overlay，`z-index: 100`，`100vw * 100vh`）」，并由 Zen 自带一条顶栏（返回按钮、面包屑、保存指示器）。
+Zen 专注写作（`ZenFocusEditor`）原本的形态是**应用自研的全视口覆盖层**：当时的规格（现为 [#2](https://github.com/Aeside1/resume-workbench/issues/2)）明确要求「挂载于顶层全屏层（Fixed Overlay，`z-index: 100`，`100vw * 100vh`）」，并由 Zen 自带一条顶栏（返回按钮、面包屑、保存指示器）。
 
 HeroUI 迁移（ADR 003）之后，这个自研壳暴露出两个问题：
 
@@ -72,7 +72,7 @@ HeroUI 迁移（ADR 003）之后，这个自研壳暴露出两个问题：
 
 ## 4. 与既有决策的关系
 
-- **取代**：`.scratch/scratchpad-and-zen-canvas/spec.md` §1「全屏专注写作工作台（`ZenFocusEditor`）」中的外壳条款——「挂载于顶层全屏层（Fixed Overlay，`z-index: 100`，`100vw * 100vh`）」「顶部由轻量 Topbar 组成」。该 spec 关于**内容**的部分（双栏对照、右侧可折叠伴随面板、Escape 退出、800ms 防抖保存）全部继续有效。
+- **取代**：[#2](https://github.com/Aeside1/resume-workbench/issues/2) §1「全屏专注写作工作台（`ZenFocusEditor`）」中的外壳条款——「挂载于顶层全屏层（Fixed Overlay，`z-index: 100`，`100vw * 100vh`）」「顶部由轻量 Topbar 组成」。该 spec 关于**内容**的部分（双栏对照、右侧可折叠伴随面板、Escape 退出、800ms 防抖保存）全部继续有效。
 - **执行**：ADR 003 §2.2（视觉实体 HeroUI 化、布局骨架保留语义容器）与 §2.3（颜色只在语义 Token 定义一次）。
 - **不推翻**：ADR 001 的双场景架构。Zen 仍是场景 2（专注画布）内部的一个子态，只是不再是一个独立的全视口场景。
 - **冲突声明（按 `docs/agents/domain.md`）**：本案的冲突对象是**规格文件**而非既有 ADR——ADR 001 §2.1 场景 2 从未描述 Zen 的外壳形态（它描述的是画布顶栏）。因此本次以**新增 ADR 004** 的方式记录，并在 ADR 001 §2.1 处加一行指针；被取代的 spec 条款不动原文，以本 ADR 为准。
@@ -88,7 +88,7 @@ HeroUI 迁移（ADR 003）之后，这个自研壳暴露出两个问题：
 
 ## 6. 落地与遗留
 
-- **落地状态（2026-09-14）**：已按本 ADR 落地在 `feat/zen-shell-region-expand`（worktree `.worktrees/zen-region-expand`，独立栈 5177/8004/5436），落地清单与逐条证据见 `.scratch/hero-ui-migration/issues/12-zen-shell-region-expand.md` 的 `## Answer`。
+- **落地状态（2026-09-14）**：已按本 ADR 落地在 `feat/zen-shell-region-expand`（worktree `.worktrees/zen-region-expand`，独立栈 5177/8004/5436），落地清单与逐条证据见内部迁移线 issue 12 的 `## Answer`（本地 issue tracker，已归档、不入版本库）。
   - `ZenFocusEditor` 的 `group` prop 与 `AppShell` 的 `breadcrumb?: string` 兜底入口均已删除；区域骨架收敛为 `styles/features/canvas/zen-region.css`（原 `zen-editor.css` 删除）。
   - 退出前的脏判据已按 §2.4 修正为「先 flush 再离开」+ 只反映真正的未保存编辑（「Zen 展开」不再等于 dirty），脏标记改存 ref。
   - 落地期在排查保存态 Chip 可见性时另修掉一个既有缺陷：`FocusCanvasContainer` 每次保存成功都挂一个 `setTimeout(2500)` 把保存态归零，连续保存时会用陈旧定时器提前清掉新一轮的 `保存中`——已改为单一 `setSaveStatus` 助手重置同一个定时器（§2.2 的「顶栏 Chip 全程可见」随之成立）。

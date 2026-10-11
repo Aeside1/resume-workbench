@@ -4,7 +4,7 @@ import path from 'node:path'
 import puppeteer from 'puppeteer-core'
 
 const baseUrl = process.env.EDITOR_BASE_URL || 'http://localhost:5173'
-const artifacts = path.resolve(process.env.EDITOR_ARTIFACTS || '../.scratch/live-editor-artifacts')
+const artifacts = path.resolve(process.env.EDITOR_ARTIFACTS || '../.worktrees/live-editor-artifacts')
 await mkdir(artifacts, { recursive: true })
 const browser = await puppeteer.launch({
   executablePath: process.env.EDGE_PATH || 'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',
