@@ -82,7 +82,7 @@ ADR 004 §2.4 的「命令下行（`exitSignal`）而非直接卸载」仍适用
 
 ## 5. 证据（Primary sources）
 
-落地门票：`.scratch/resume-workbench/issues/04k-focus-expands-in-workspace.md`（本地 issue tracker，不入版本库）。
+落地门票：「专注模式改为内容区展开」（04k，本地 issue tracker 已归档，不入版本库）。
 
 - **真实浏览器探针**：`.worktrees/probes-04k/01-focus-layout-probe.mjs`（本地证据目录，不入版本库），真实指针点击 + 真实 API 造资产，同一脚本在改动前后各跑一次（`before-*` / `after-*`）：
 
