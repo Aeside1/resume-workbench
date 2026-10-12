@@ -9,6 +9,7 @@ import { ResumeDescriptionDrawer } from './ResumeDescriptionDrawer'
 import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 import { ZenFocusEditor } from './ZenFocusEditor'
 import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
+import { aggregateSaveStatus } from '../saveStatusAggregate'
 import { useFocusMotion } from '../useFocusMotion'
 import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
 import { CONTENT_SETTLE_FROM, CONTENT_SETTLE_TO, CONTENT_SETTLE_TRANSITION, INSTANT_TRANSITION } from '../motion'
@@ -87,6 +88,39 @@ export function FocusCanvasContainer({
   )
   const applySaveStatus = useTransientSaveStatus(publishSaveStatus)
 
+  /** 顶栏保存态按来源汇总：卡片重挂载 / Zen detached queue 不能互相清掉状态 */
+  const saveStatusBySourceRef = useRef(new Map<string, SaveStatus>())
+  const publishAggregatedSaveStatus = useCallback(() => {
+    // 优先级见 aggregateSaveStatus：任何一处没落盘，顶栏就不许说没事
+    applySaveStatus(aggregateSaveStatus([...saveStatusBySourceRef.current.values()]))
+  }, [applySaveStatus])
+  const reportSaveStatus = useCallback((source: string, status: SaveStatus) => {
+    if (status === 'idle') {
+      // 来源归零就移出汇总表：否则一个已完成来源的 stale saved 会压住别处的 saving/unsaved
+      saveStatusBySourceRef.current.delete(source)
+    } else {
+      saveStatusBySourceRef.current.set(source, status)
+    }
+    publishAggregatedSaveStatus()
+  }, [publishAggregatedSaveStatus])
+  const reportContainerSaveStatus = useCallback((status: SaveStatus) => {
+    reportSaveStatus('container', status)
+  }, [reportSaveStatus])
+
+  // 卡片被删掉后它的来源记要一并撤掉：否则最后一笔失败留下的 unsaved 会永久挂在顶栏。
+  // （Zen 按 'zen' 上报，不在这里，因为退出专注时写作区本就会卸载、队列仍在跑）
+  useEffect(() => {
+    const alive = new Set(contents.map((item) => `card:${item.id}`))
+    let removedAny = false
+    for (const source of [...saveStatusBySourceRef.current.keys()]) {
+      if (source.startsWith('card:') && !alive.has(source)) {
+        saveStatusBySourceRef.current.delete(source)
+        removedAny = true
+      }
+    }
+    if (removedAny) publishAggregatedSaveStatus()
+  }, [contents, publishAggregatedSaveStatus])
+
   // 脏判据（issue 12 D1）：只反映「可能有未保存修改」的就地编辑/新建态。
   // Zen 展开本身不算脏——退出 Zen 走的是先 flush 再关的路径；
   // 若把「Zen 展开」也算脏，完全没输入内容时离开也会弹不成立的「放弃修改」确认框。
@@ -152,7 +186,13 @@ export function FocusCanvasContainer({
   const handleSaveContent = async (draft: ContentDraft, targetId: number | null) => {
     if (!draft.title.trim()) return
 
-    applySaveStatus('saving')
+    // 更新现有内容时，保存态由编辑端（卡片 / Zen 的保存队列）上抛：只有它知道
+    // 「在途窗口里又敲进去的那截」是否也落了盘。容器若在这里抢先宣告「已保存」，
+    // 顶栏就会和卡片徽章说两句话，而那正是 issue #8 要干掉的那个谎。
+    // 新建那条路径没有编辑端承接状态，仍由容器发布。
+    const isUpdating = targetId !== null
+    if (!isUpdating) reportContainerSaveStatus('saving')
+
     const payload = {
       ...draft,
       title: draft.title.trim(),
@@ -175,25 +215,30 @@ export function FocusCanvasContainer({
         setContents((items) => [...items, created])
         setIsCreatingNew(false)
         setActiveNavId(`work-content-${created.id}`)
+        reportContainerSaveStatus('saved')
       }
-
-      applySaveStatus('saved')
     } catch (e) {
       setError((e as Error).message)
-      applySaveStatus('idle')
+      // 更新路径由编辑端的保存队列发布 unsaved；新建路径没有编辑端承接状态，由容器补发。
+      if (!isUpdating) {
+        reportContainerSaveStatus('unsaved')
+      } else {
+        // 让保存队列知道本次落盘失败，避免把 catch 过的错误当成成功。
+        throw e
+      }
     }
   }
 
   const handleUpdateOverview = async (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => {
-    applySaveStatus('saving')
+    reportContainerSaveStatus('saving')
     try {
       const updated = await api.updateExperienceGroup(session.token, currentGroup.id, payload)
       setCurrentGroup(updated)
       onUpdateGroup?.(updated)
-      applySaveStatus('saved')
+      reportContainerSaveStatus('saved')
     } catch (e) {
       setError((e as Error).message)
-      applySaveStatus('idle')
+      reportContainerSaveStatus('idle')
       throw e
     }
   }
@@ -403,6 +448,7 @@ export function FocusCanvasContainer({
             workContent={zenWorkContent}
             onClose={handleCloseZenMode}
             onSaveContent={handleSaveContent}
+            onSaveStatusChange={(status) => reportSaveStatus('zen', status)}
             session={session}
             isCompanionOpen={isCompanionOpen}
             onTitleChange={handleZenTitleChange}
@@ -431,6 +477,9 @@ export function FocusCanvasContainer({
               onStartEdit={handleStartEdit}
               onCancelEdit={handleCancelEdit}
               onSaveContent={handleSaveContent}
+              onSaveStatusChange={(workContentId, status) =>
+                reportSaveStatus(`card:${workContentId}`, status)
+              }
               onMoveContent={handleMoveContent}
               onReorderContent={handleReorderContent}
               onReorderContents={handleReorderContents}

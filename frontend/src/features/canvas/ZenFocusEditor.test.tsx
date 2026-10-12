@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { ZenFocusEditor } from './ZenFocusEditor'
+import type { ContentDraft } from './WorkContentBlock'
 import { api, type WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { pasteMarkdown } from '../../test/pasteMarkdown'
@@ -199,6 +200,35 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
     })
   })
 
+  it('卸载后在途保存失败仍把 unsaved 上抛给外壳', async () => {
+    let rejectSave: (error: Error) => void = () => {}
+    const handleSaveStatusChange = vi.fn()
+    const handleSaveContent = vi.fn(
+      () => new Promise<void>((_resolve, reject) => { rejectSave = reject })
+    )
+
+    const { unmount } = render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        onSaveStatusChange={handleSaveStatusChange}
+        session={session}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项大标题'), {
+      target: { value: '卸载后失败的标题' }
+    })
+    await waitFor(() => expect(handleSaveContent).toHaveBeenCalledTimes(1), { timeout: 2500 })
+
+    unmount()
+    rejectSave(new Error('网络断了'))
+
+    await waitFor(() => expect(handleSaveStatusChange).toHaveBeenCalledWith('unsaved'))
+  })
+
   it('修改自由 Markdown 正文并在 800ms 防抖后自动保存', async () => {
     const handleSaveContent = vi.fn().mockResolvedValue(undefined)
 
@@ -347,6 +377,148 @@ describe('ZenFocusEditor 专注写作区组件测试（ADR 004：非模态区域
       101
     )
     expect(handleClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('慢网下第一笔在途时输入的内容不会丢：停手后自己补发第二笔（与画布卡片共用同一份保存队列）', async () => {
+    const landed: string[] = []
+    const handleSaveContent = vi.fn(
+      (draft: ContentDraft) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            landed.push(draft.title)
+            resolve()
+          }, 1000)
+        })
+    )
+
+    render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        session={session}
+      />
+    )
+
+    const titleInput = screen.getByLabelText('工作项大标题')
+
+    // 输入 E1 → 停手 800ms → 第一笔发出（往返 1s，仍在途）
+    fireEvent.change(titleInput, { target: { value: 'E1' } })
+    await waitFor(() => expect(handleSaveContent).toHaveBeenCalledTimes(1), { timeout: 2500 })
+    expect(landed).toEqual([])
+
+    // 第一笔还在路上时继续输入 E2，然后彻底停手
+    fireEvent.change(titleInput, { target: { value: 'E1E2' } })
+    await waitFor(() => expect(handleSaveContent).toHaveBeenCalledTimes(2), { timeout: 4000 })
+    expect(handleSaveContent).toHaveBeenLastCalledWith(
+      expect.objectContaining({ title: 'E1E2' }),
+      101
+    )
+
+    await waitFor(() => expect(landed).toEqual(['E1', 'E1E2']), { timeout: 4000 })
+
+    // 补发只有一笔，不会滚成第三笔
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    expect(handleSaveContent).toHaveBeenCalledTimes(2)
+  })
+
+  it('慢网正文编辑也会在尾段补发后落库完整内容（Zen 与画布卡片同口径，issue #8）', async () => {
+    const landed: string[] = []
+    const handleSaveContent = vi.fn(
+      (draft: ContentDraft) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            landed.push(draft.detailed_record)
+            resolve()
+          }, 1000)
+        })
+    )
+
+    render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        session={session}
+      />
+    )
+
+    const editor = screen.getByLabelText('草稿正文')
+    pasteMarkdown(editor, 'Zen 正文 E1')
+    await waitFor(() => expect(handleSaveContent).toHaveBeenCalledTimes(1), { timeout: 2500 })
+
+    pasteMarkdown(editor, 'Zen 正文 E2')
+    await waitFor(() => expect(handleSaveContent).toHaveBeenCalledTimes(2), { timeout: 4000 })
+    await waitFor(() => expect(landed).toHaveLength(2), { timeout: 4000 })
+
+    expect(landed[1]).toContain('Zen 正文 E1')
+    expect(landed[1]).toContain('Zen 正文 E2')
+    expect(screen.getByLabelText('草稿正文')).toHaveTextContent('Zen 正文 E2')
+  })
+
+  it('保存失败时把 unsaved 上抛给外壳，顶栏 Chip 不再归零冒充一切正常（issue #8）', async () => {
+    const handleSaveStatusChange = vi.fn()
+    const handleSaveContent = vi.fn().mockRejectedValue(new Error('网络断了'))
+
+    render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        onSaveStatusChange={handleSaveStatusChange}
+        session={session}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项大标题'), {
+      target: { value: '存不上去的标题' }
+    })
+
+    await waitFor(() => expect(handleSaveStatusChange).toHaveBeenCalledWith('unsaved'), {
+      timeout: 2500
+    })
+    expect(handleSaveStatusChange).not.toHaveBeenCalledWith('saved')
+  })
+
+  it('父级把保存成功的 item 回写成新对象时，不把写作区里更新的输入冲掉（issue #13 在 Zen 侧的同构缺口）', async () => {
+    const resolvers: Array<() => void> = []
+    const handleSaveContent = vi.fn(
+      () => new Promise<void>((resolve) => { resolvers.push(resolve) })
+    )
+
+    const { rerender } = render(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={mockWorkContent}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        session={session}
+      />
+    )
+
+    const titleInput = screen.getByLabelText('工作项大标题')
+    fireEvent.change(titleInput, { target: { value: 'E1' } })
+    await waitFor(() => expect(handleSaveContent).toHaveBeenCalledTimes(1), { timeout: 2500 })
+
+    // 第一笔在途时又敲了字
+    fireEvent.change(titleInput, { target: { value: 'E1E2' } })
+
+    // 第一笔落地，父级以新对象回写同一张卡片（内容是第一笔那份）
+    resolvers[0]()
+    rerender(
+      <ZenFocusEditor
+        isOpen={true}
+        workContent={{ ...mockWorkContent, title: 'E1' }}
+        onClose={vi.fn()}
+        onSaveContent={handleSaveContent}
+        session={session}
+      />
+    )
+
+    expect(screen.getByLabelText('工作项大标题')).toHaveValue('E1E2')
   })
 
   it('isOpen 为 false 时不渲染任何内容', () => {

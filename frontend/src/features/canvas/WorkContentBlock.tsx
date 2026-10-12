@@ -5,6 +5,7 @@ import type { WorkContent } from '../../api'
 import { MilkdownView, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 import { WorkContentFormFields } from './WorkContentFormFields'
 import { useTransientSaveStatus, type SaveStatus } from '../useTransientSaveStatus'
+import { useSaveQueue } from '../useSaveQueue'
 import { ConfirmDeleteWorkContentModal } from './ConfirmDeleteWorkContentModal'
 import {
   parseSupplementaryNotes,
@@ -29,6 +30,8 @@ export type WorkContentBlockProps = {
   onStartEdit: () => void
   onCancelEdit: () => void
   onSave: (draft: ContentDraft) => Promise<void> | void
+  /** 把本卡片的保存态上抛给容器（顶栏 Chip 与卡片徽章共用同一套口径） */
+  onSaveStatusChange?: (status: SaveStatus) => void
   onMove?: (direction: -1 | 1) => void
   onDelete?: () => void
   onArchive?: () => void
@@ -102,6 +105,35 @@ export function buildInitialDraft(
   }
 }
 
+/**
+ * 草稿签名：只看「会被存下去的字段」，与落盘 payload 对齐。
+ * 卡片与 Zen 共用一份，避免两处各写一遍再各自漂移。
+ */
+export function getContentSignature(draft: ContentDraft): string {
+  return `${draft.title.trim()}|||${draft.detailed_record}`
+}
+
+/**
+ * 两个编辑入口都发送完整工作内容，不能各自拼一份 payload。
+ * supplementary_notes 保留服务端已有的亮点修订记录，只替换当前自由备注。
+ */
+export function toContentPayload(
+  draft: ContentDraft,
+  existingSupplementaryNotes?: string | null
+): ContentDraft {
+  const currentNotes = parseSupplementaryNotes(existingSupplementaryNotes)
+  return {
+    title: draft.title.trim(),
+    detailed_record: draft.detailed_record,
+    technical_materials: '',
+    result_data: '',
+    supplementary_notes: serializeSupplementaryNotes(
+      draft.supplementary_notes ?? '',
+      currentNotes.versions
+    )
+  }
+}
+
 export function WorkContentBlock({
   item,
   index,
@@ -109,6 +141,7 @@ export function WorkContentBlock({
   onStartEdit,
   onCancelEdit,
   onSave,
+  onSaveStatusChange,
   onDelete,
   onArchive,
   onOpenDrawer,
@@ -137,10 +170,27 @@ export function WorkContentBlock({
   const draftRef = useRef(draft)
   draftRef.current = draft
 
-  const getSignature = (d: ContentDraft) => `${d.title.trim()}|||${d.detailed_record}`
-  const lastSavedSignatureRef = useRef<string>(getSignature(buildInitialDraft(item, parsedData.note)))
-
   const applySaveStatus = useTransientSaveStatus(setSaveStatus)
+
+  /**
+   * 落盘走保存队列（issue #8）：在途时不丢弃后续草稿，回来补发一笔；
+   * 保存态跟着「内容有没有落盘」走，而不是「请求走到哪一步」。
+   */
+  const { request: requestSave, flush: flushSave, resetBaseline, status: queueStatus } =
+    useSaveQueue<ContentDraft>({
+      getSignature: getContentSignature,
+      isSavable: (value) => !!value.title.trim(),
+      onStatusChange: onSaveStatusChange,
+      persist: (value) => onSave(
+        toContentPayload(value, item.supplementary_notes)
+      )
+    })
+
+  // 卡片徽章（本地）与顶栏 Chip（上抛给容器）跟着同一个队列状态走，同屏两处口径不会打架
+  useEffect(() => {
+    applySaveStatus(queueStatus)
+  }, [queueStatus, applySaveStatus])
+
   /** 上一次见到的卡片 id：用来把「换绑到另一张卡片」从「父级回写同一张卡片」里区分出来 */
   const lastSeenItemIdRef = useRef(item.id)
 
@@ -155,64 +205,26 @@ export function WorkContentBlock({
     // 退出时重建会把刚敲的内容（保存尚未回写）退回旧 item，失败时直接丢失。
     const isOtherCard = lastSeenItemIdRef.current !== item.id
     lastSeenItemIdRef.current = item.id
+    // 队列还在排水或已经失败时，item 多半只是父级把上一笔结果回写过来的旧值。
+    // 此时重建 draft / baseline 会抹掉待发槽位，甚至让旧值与新值来回震荡（issue #8）。
+    // 队列回到 idle / saved 后再同步；换绑也沿用同一保护，避免把旧卡内容写进新卡。
+    // queueStatus 必须进依赖：否则“等队列回到位再同步”永远不会发生。
+    if (!isOtherCard && queueStatus !== 'idle' && queueStatus !== 'saved') return
     if (isEditing && !isOtherCard) return
     const parsed = parseSupplementaryNotes(item.supplementary_notes)
     const initial = buildInitialDraft(item, parsed.note)
     setDraft(initial)
-    lastSavedSignatureRef.current = getSignature(initial)
-    applySaveStatus('idle')
-  }, [item, applySaveStatus])
+    // 外部路径带回的就是「已落盘」的那份：同时刷新已落盘签名与待发槽位
+    resetBaseline(initial)
+  }, [item, resetBaseline, queueStatus])
 
-  const isSavingRef = useRef(false)
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const performSave = async (currentDraft: ContentDraft) => {
-    if (!currentDraft.title.trim()) return
-    const signature = getSignature(currentDraft)
-    if (signature === lastSavedSignatureRef.current || isSavingRef.current) return
-
-    isSavingRef.current = true
-    lastSavedSignatureRef.current = signature
-    applySaveStatus('saving')
-    const serializedNotes = serializeSupplementaryNotes(
-      currentDraft.supplementary_notes ?? '',
-      parsedData.versions
-    )
-    try {
-      await onSave({
-        title: currentDraft.title.trim(),
-        detailed_record: currentDraft.detailed_record,
-        technical_materials: '',
-        result_data: '',
-        supplementary_notes: serializedNotes
-      })
-      applySaveStatus('saved')
-    } catch {
-      // 失败后允许重试
-      lastSavedSignatureRef.current = ''
-      applySaveStatus('idle')
-    } finally {
-      isSavingRef.current = false
-    }
-  }
-
-  // 输入停顿 800ms 自动保存
+  // 输入停顿 800ms 自动保存（防抖与「在途补发」都归保存队列，这里只把最新草稿交出去）
   useEffect(() => {
     if (!isEditing) return
-    if (!draft.title.trim()) return
-    const signature = getSignature(draft)
-    if (signature === lastSavedSignatureRef.current) return
+    requestSave(draft)
+  }, [draft, isEditing, requestSave])
 
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    debounceTimerRef.current = setTimeout(() => {
-      performSave(draft)
-    }, 800)
-    return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    }
-  }, [draft, isEditing])
-
-  // 点击卡片外部或按 Esc 键时自动保存未保存变更，并平滑收起编辑态
+  // 点击卡片外部或按 Esc 键时把最新草稿交给队列（不等结果），并平滑收起编辑态
   useEffect(() => {
     if (!isEditing) return
 
@@ -227,16 +239,14 @@ export function WorkContentBlock({
         )
         if (isModal) return
 
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-        performSave(draftRef.current)
+        flushSave(draftRef.current)
         onCancelEdit()
       }
     }
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-        performSave(draftRef.current)
+        flushSave(draftRef.current)
         onCancelEdit()
       }
     }
@@ -247,12 +257,11 @@ export function WorkContentBlock({
       document.removeEventListener('mousedown', handlePointerDownOutside)
       document.removeEventListener('keydown', handleKeyDown)
     }
-  }, [isEditing, onCancelEdit])
+  }, [isEditing, onCancelEdit, flushSave])
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    await performSave(draft)
+    flushSave(draft)
     onCancelEdit()
   }
 
@@ -287,6 +296,11 @@ export function WorkContentBlock({
                 <Chip size="sm" color="success" variant="soft" role="status">
                   <Check size={12} aria-hidden="true" />
                   <Chip.Label>已自动保存</Chip.Label>
+                </Chip>
+              )}
+              {saveStatus === 'unsaved' && (
+                <Chip size="sm" color="warning" variant="soft" role="status">
+                  <Chip.Label>还有未保存内容</Chip.Label>
                 </Chip>
               )}
             </div>

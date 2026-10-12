@@ -9,8 +9,8 @@ type Props = {
  * 场景级保存态微指示器（内容区页头共用）。
  *
  * 归零口径由 `useTransientSaveStatus` 统一承担（保存成功后 2.5s 回落 `idle`），
- * 这里只负责「保存中... / 所有修改已保存」两种可见文案、状态角色与图标；
- * `idle` 时不渲染任何东西。
+ * 这里只负责三种可见文案、状态角色与图标；`idle` 时不渲染任何东西。
+ * `unsaved` 不归零：内容还没落盘就不该把提示收回去（issue #8）。
  */
 export function SaveStatusChip({ saveStatus }: Props) {
   if (!saveStatus || saveStatus === 'idle') return null
@@ -24,7 +24,13 @@ export function SaveStatusChip({ saveStatus }: Props) {
       color={saveStatus === 'saved' ? 'default' : 'warning'}
     >
       {saveStatus === 'saved' && <SuccessIcon />}
-      <Chip.Label>{saveStatus === 'saving' ? '保存中...' : '所有修改已保存'}</Chip.Label>
+      <Chip.Label>
+        {saveStatus === 'saving'
+          ? '保存中...'
+          : saveStatus === 'unsaved'
+            ? '还有未保存内容'
+            : '所有修改已保存'}
+      </Chip.Label>
     </Chip>
   )
 }
