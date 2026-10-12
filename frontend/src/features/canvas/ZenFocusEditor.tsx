@@ -7,15 +7,16 @@ import { usePrefersReducedMotion } from '../usePrefersReducedMotion'
 import type { WorkContent } from '../../api'
 import type { Session } from '../../session'
 import { MilkdownEditor } from '../../components/ui/MilkdownView'
-import {
-  parseSupplementaryNotes,
-  serializeSupplementaryNotes
-} from './supplementaryNotes'
+import { parseSupplementaryNotes } from './supplementaryNotes'
 import { ResumeHighlightsFeed } from './ResumeHighlightsFeed'
 import {
   buildInitialDraft,
+  getContentSignature,
+  toContentPayload,
   type ContentDraft
 } from './WorkContentBlock'
+import { useSaveQueue } from '../useSaveQueue'
+import type { SaveStatus } from '../useTransientSaveStatus'
 
 export type ZenFocusEditorProps = {
   isOpen: boolean
@@ -28,6 +29,8 @@ export type ZenFocusEditorProps = {
   isCompanionOpen?: boolean
   /** 就地编辑大标题时把实时标题上抛给顶栏面包屑末级 */
   onTitleChange?: (title: string) => void
+  /** 把写作区的保存态上抛给外壳（顶栏 Chip 跟的是「内容有没有落盘」，issue #8） */
+  onSaveStatusChange?: (status: SaveStatus) => void
   /** 外壳（顶栏返回按钮 / 面包屑中间级）发起的关闭命令，+1 递增 */
   exitSignal?: number
 }
@@ -48,6 +51,7 @@ export function ZenFocusEditor({
   session,
   isCompanionOpen,
   onTitleChange,
+  onSaveStatusChange,
   exitSignal
 }: ZenFocusEditorProps) {
   const parsedData = useMemo(
@@ -73,12 +77,25 @@ export function ZenFocusEditor({
   const draftRef = useRef(draft)
   draftRef.current = draft
 
-  const getSignature = (d: ContentDraft) => `${d.title.trim()}|||${d.detailed_record}`
-  const lastSavedSignatureRef = useRef<string>(
-    workContent ? getSignature(buildInitialDraft(workContent, parsedData?.note)) : ''
-  )
-  const isSavingRef = useRef(false)
-  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /**
+   * 落盘走保存队列（issue #8）：与画布卡片同一份实现——在途时不丢弃后续草稿，
+   * 回来补发一笔；防抖与卸载兜底也都在队列里。
+   */
+  const { request: requestSave, flush: flushSave, resetBaseline, status: queueStatus } =
+    useSaveQueue<ContentDraft>({
+      getSignature: getContentSignature,
+      isSavable: (value) => !!value.title.trim(),
+      onStatusChange: onSaveStatusChange,
+      persist: (value) => {
+        if (!workContent) return
+        return onSaveContent(
+          toContentPayload(value, workContent.supplementary_notes),
+          workContent.id
+        )
+      }
+    })
+
+  // 顶栏保存态跟着队列走（内容有没有落盘），不再由容器的请求生命周期单方面宣告
 
   const handleTitleChange = (val: string) => {
     setDraft((prev) => {
@@ -97,71 +114,34 @@ export function ZenFocusEditor({
     })
   }
 
+  /**
+   * 上一次见到的内容 id：把「换绑到另一条工作内容」从「父级回写同一条」里区分出来。
+   * 与画布卡片（issue 13）同一口径：写作期间本地草稿才是唯一真源，
+   * 父级保存成功后以新对象回写同一条内容时不重建草稿、也不重置已落盘基准——
+   * 否则会把在途窗口里敲进去的字冲掉（那截正是 issue #8 要保住的东西）。
+   */
+  const lastSeenWorkContentIdRef = useRef<number | null>(null)
+
   useEffect(() => {
     if (!workContent) return
+    const isOtherContent = lastSeenWorkContentIdRef.current !== workContent.id
+    lastSeenWorkContentIdRef.current = workContent.id
+    if (!isOtherContent) return
     const parsed = parseSupplementaryNotes(workContent.supplementary_notes)
     const initial = buildInitialDraft(workContent, parsed.note)
     setDraft(initial)
-    lastSavedSignatureRef.current = getSignature(initial)
-  }, [workContent])
+    resetBaseline(initial)
+  }, [workContent, resetBaseline])
 
-  const performSave = useCallback(async (currentDraft: ContentDraft) => {
-    if (!workContent || !currentDraft.title.trim()) return
-    const signature = getSignature(currentDraft)
-    if (signature === lastSavedSignatureRef.current || isSavingRef.current) return
-
-    isSavingRef.current = true
-    lastSavedSignatureRef.current = signature
-
-    const currentNotes = parseSupplementaryNotes(workContent.supplementary_notes)
-    const serializedNotes = serializeSupplementaryNotes(
-      currentDraft.supplementary_notes ?? '',
-      currentNotes.versions
-    )
-
-    try {
-      await onSaveContent({
-        title: currentDraft.title.trim(),
-        detailed_record: currentDraft.detailed_record,
-        technical_materials: '',
-        result_data: '',
-        supplementary_notes: serializedNotes
-      }, workContent.id)
-    } catch {
-      lastSavedSignatureRef.current = ''
-    } finally {
-      isSavingRef.current = false
-    }
-  }, [workContent, onSaveContent])
-
-  const flushSave = useCallback(() => {
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current)
-      debounceTimerRef.current = null
-    }
-    performSave(draftRef.current)
-  }, [performSave])
-
-  // 输入停顿 800ms 自动保存
+  // 输入停顿 800ms 自动保存（防抖与「在途补发」都归保存队列，这里只把最新草稿交出去）
   useEffect(() => {
     if (!isOpen || !workContent) return
-    if (!draft.title.trim()) return
-    const signature = getSignature(draft)
-    if (signature === lastSavedSignatureRef.current) return
+    requestSave(draft)
+  }, [draft, isOpen, workContent, requestSave])
 
-    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    debounceTimerRef.current = setTimeout(() => {
-      performSave(draft)
-    }, 800)
-
-    return () => {
-      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current)
-    }
-  }, [draft, isOpen, workContent, performSave])
-
-  // 退出路径统一走这里：先 flush 保存，再关闭（ADR 004 §2.4）
+  // 退出路径统一走这里：先把最新草稿交给队列（不等结果），再关闭（ADR 004 §2.4）
   const handleExit = useCallback(() => {
-    flushSave()
+    flushSave(draftRef.current)
     onClose()
   }, [flushSave, onClose])
 
@@ -193,17 +173,6 @@ export function ZenFocusEditor({
     handledExitSignalRef.current = exitSignal
     handleExit()
   }, [exitSignal, handleExit])
-
-  // 卸载时的兵底：未到 800ms 防抖就离开（面包屑第 1 级「经历内容」、侧栏模块导航）
-  // 会把写作区直接卸载，此时必须先把待保存的草稿 flush 出去，而不是只清定时器——
-  // 否则最后 800ms 内敲的字会被静默丢掉（ADR 004 §2.4「所有离开路径都要落盘」）。
-  const flushSaveRef = useRef(flushSave)
-  flushSaveRef.current = flushSave
-  useEffect(() => {
-    return () => {
-      flushSaveRef.current()
-    }
-  }, [])
 
   if (!isOpen || !workContent) return null
 

@@ -6,6 +6,7 @@ import type { ExperienceGroup, WorkContent } from '../../api'
 import { ExperienceOverviewSection } from './ExperienceOverviewSection'
 import { WorkContentBlock, ContentDraft } from './WorkContentBlock'
 import { WorkContentFormFields } from './WorkContentFormFields'
+import type { SaveStatus } from '../useTransientSaveStatus'
 
 export type FocusCanvasDocumentProps = {
   group: ExperienceGroup
@@ -15,6 +16,8 @@ export type FocusCanvasDocumentProps = {
   onStartEdit: (item: WorkContent) => void
   onCancelEdit: () => void
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
+  /** 就地编辑的保存态上抛（由卡片的保存队列发布，与顶栏 Chip 同口径，issue #8） */
+  onSaveStatusChange?: (workContentId: number, status: SaveStatus) => void
   onMoveContent?: (index: number, direction: -1 | 1) => void
   onReorderContent?: (sourceIndex: number, targetIndex: number) => void
   onReorderContents?: (newContents: WorkContent[]) => void
@@ -44,6 +47,7 @@ export function FocusCanvasDocument({
   onStartEdit,
   onCancelEdit,
   onSaveContent,
+  onSaveStatusChange,
   onMoveContent,
   onReorderContent,
   onReorderContents,
@@ -148,6 +152,7 @@ export function FocusCanvasDocument({
                 onStartEdit={onStartEdit}
                 onCancelEdit={onCancelEdit}
                 onSaveContent={onSaveContent}
+                onSaveStatusChange={onSaveStatusChange}
                 onMoveContent={onMoveContent}
                 onDeleteContent={onDeleteContent}
                 onArchiveContent={onArchiveContent}
@@ -223,6 +228,7 @@ function FocusWorkContentItem({
   onStartEdit,
   onCancelEdit,
   onSaveContent,
+  onSaveStatusChange,
   onMoveContent,
   onDeleteContent,
   onArchiveContent,
@@ -244,6 +250,7 @@ function FocusWorkContentItem({
   onStartEdit: (item: WorkContent) => void
   onCancelEdit: () => void
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
+  onSaveStatusChange?: (workContentId: number, status: SaveStatus) => void
   onMoveContent?: (index: number, direction: -1 | 1) => void
   onDeleteContent: (item: WorkContent) => void
   onArchiveContent?: (item: WorkContent) => void
@@ -279,6 +286,9 @@ function FocusWorkContentItem({
         onStartEdit={() => onStartEdit(item)}
         onCancelEdit={onCancelEdit}
         onSave={(draft) => onSaveContent(draft, item.id)}
+        onSaveStatusChange={
+          onSaveStatusChange ? (status) => onSaveStatusChange(item.id, status) : undefined
+        }
         onMove={(direction) => onMoveContent?.(index, direction)}
         onDelete={() => onDeleteContent(item)}
         onArchive={() => onArchiveContent?.(item)}

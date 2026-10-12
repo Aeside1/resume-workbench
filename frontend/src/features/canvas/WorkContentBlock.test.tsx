@@ -1,7 +1,7 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { WorkContentBlock, getCombinedDetailedRecord } from './WorkContentBlock'
+import { WorkContentBlock, getCombinedDetailedRecord, type ContentDraft } from './WorkContentBlock'
 import type { WorkContent } from '../../api'
 import { pasteMarkdown } from '../../test/pasteMarkdown'
 
@@ -304,9 +304,11 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
   })
 
   it('保存成功、父级以新对象回写 item 后，卡片内联徽章仍停在「已自动保存」而不被重置（issue 13 回归）', async () => {
-    let resolveSave: () => void = () => {}
+    // issue #8 之后，在途窗口里敲进去的那截会自己补发第二笔，
+    // 因此「已自动保存」要等两笔都落地才亮——中途不得冒充内容已经全部落盘。
+    const resolvers: Array<() => void> = []
     const handleSave = vi.fn(
-      () => new Promise<void>((resolve) => { resolveSave = resolve })
+      () => new Promise<void>((resolve) => { resolvers.push(resolve) })
     )
 
     const baseProps = {
@@ -330,20 +332,25 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       timeout: 3000
     })
 
-    // 在途期间继续敲字（此内容并不在本次请求里）
+    // 在途期间继续敲字（此内容并不在本次请求里，但会作为第二笔补发出去）
     fireEvent.change(screen.getByLabelText('工作项标题'), {
       target: { value: '优化画布渲染管线（在途追加）' }
     })
 
-    resolveSave()
-    await waitFor(() => expect(screen.getByText('已自动保存')).toBeInTheDocument())
+    resolvers[0]()
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(2))
+    // 第一笔落地的瞬间仍有内容欠着：界面不得说「已自动保存」
+    expect(screen.queryByText('已自动保存')).not.toBeInTheDocument()
 
-    // 父级保存成功的回写：同一 id 的新 item 对象，内容为「本次请求发出去的那份」，
+    // 父级保存成功的回写：同一 id 的新 item 对象，内容为「第一笔发出去的那份」，
     // 而不是用户随后敲进去的那份——草稿必须以本地为准，不被回写覆盖。
     rerender(<WorkContentBlock {...baseProps} item={{ ...mockWorkItem, title: '优化画布渲染管线' }} />)
 
-    expect(screen.getByText('已自动保存')).toBeInTheDocument()
     expect(screen.getByLabelText('工作项标题')).toHaveValue('优化画布渲染管线（在途追加）')
+
+    // 补发的第二笔落地后才亮「已自动保存」，且不被父级回写重置
+    resolvers[1]()
+    await waitFor(() => expect(screen.getByText('已自动保存')).toBeInTheDocument())
   })
 
   it('外部路径改内容后进入编辑态，草稿呈现外部最新值而非挂载时的旧值（issue 13 防回归）', () => {
@@ -396,6 +403,208 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
 
     expect(screen.getByLabelText('工作项标题')).toHaveValue('另一张卡片的标题')
     expect(screen.getByLabelText('草稿正文')).toHaveTextContent('另一张卡片的正文')
+  })
+
+  /**
+   * 慢网：每次落盘固定耗时 `latencyMs`（大于 800ms 防抖），
+   * 并把真正落到「服务端」的那份标题记在 `server` 上，供「落库值 == 输入值」对照。
+   */
+  function createSlowSave(latencyMs: number) {
+    const server: { title: string; landed: string[] } = { title: '', landed: [] }
+    let firstSettled = false
+    const onSave = vi.fn(
+      (draft: ContentDraft) =>
+        new Promise<void>((resolve) => {
+          setTimeout(() => {
+            server.title = draft.title
+            server.landed.push(draft.title)
+            firstSettled = true
+            resolve()
+          }, latencyMs)
+        })
+    )
+    return {
+      server,
+      onSave,
+      hasFirstSettled: () => firstSettled
+    }
+  }
+
+  it('慢网下第一笔在途时输入的内容不会丢：停手后自己补发第二笔，落库值与输入框一致（issue #8 回归）', async () => {
+    const { server, onSave } = createSlowSave(1000)
+
+    render(
+      <WorkContentBlock
+        item={mockWorkItem}
+        index={0}
+        isEditing={true}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={onSave}
+      />
+    )
+
+    const titleInput = screen.getByLabelText('工作项标题')
+
+    // 输入 E1 → 停手 800ms → 第一笔发出（往返 1s，仍在途）
+    fireEvent.change(titleInput, { target: { value: 'E1' } })
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1), { timeout: 2500 })
+    expect(server.title).toBe('')
+
+    // 第一笔还在路上时继续输入 E2
+    fireEvent.change(titleInput, { target: { value: 'E1E2' } })
+
+    // 彻底停手（不点任何地方、不按 Esc、不离开）：第二笔应当自己补发
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2), { timeout: 4000 })
+    expect(onSave).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'E1E2' }))
+
+    await waitFor(() => expect(server.title).toBe('E1E2'), { timeout: 4000 })
+    expect(screen.getByLabelText('工作项标题')).toHaveValue('E1E2')
+
+    // 补发只有一笔，不会滚成第三笔
+    await new Promise((resolve) => setTimeout(resolve, 700))
+    expect(onSave).toHaveBeenCalledTimes(2)
+  })
+
+  it('第一笔在途时又敲了字，徽章不会先亮「已自动保存」（内容没落盘就不宣称已保存，issue #8）', async () => {
+    const { onSave, hasFirstSettled } = createSlowSave(1000)
+
+    render(
+      <WorkContentBlock
+        item={mockWorkItem}
+        index={0}
+        isEditing={true}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={onSave}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: 'E1' } })
+    await waitFor(() => expect(screen.getByText('保存中...')).toBeInTheDocument(), { timeout: 2500 })
+
+    // 在途窗口里又敲了字
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: 'E1E2' } })
+
+    // 第一笔刚落地的瞬间：还有内容欠着，界面不能宣称「已自动保存」
+    await waitFor(() => expect(hasFirstSettled()).toBe(true), { timeout: 4000 })
+    expect(onSave).toHaveBeenCalledTimes(2)
+    expect(screen.queryByText('已自动保存')).not.toBeInTheDocument()
+    expect(screen.getByText('保存中...')).toBeInTheDocument()
+
+    // 第二笔也落地之后，才显示已保存
+    expect(await screen.findByText('已自动保存', {}, { timeout: 4000 })).toBeInTheDocument()
+  })
+
+  it('点外部收起编辑态后，父级回写第一笔结果也不会顶掉待发草稿（不来回震荡，issue #8）', async () => {
+    const pending: Array<{ title: string; resolve: () => void }> = []
+    const handleSave = vi.fn(
+      (draft: ContentDraft) => new Promise<void>((resolve) => {
+        pending.push({ title: draft.title, resolve })
+      })
+    )
+    const handleCancel = vi.fn()
+    const baseProps = {
+      item: mockWorkItem,
+      index: 0,
+      isEditing: true,
+      onStartEdit: vi.fn(),
+      onCancelEdit: handleCancel,
+      onSave: handleSave
+    }
+
+    const { rerender } = render(<WorkContentBlock {...baseProps} />)
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: 'E1' } })
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(1), { timeout: 2500 })
+
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: 'E1E2' } })
+    fireEvent.mouseDown(document.body)
+    expect(handleCancel).toHaveBeenCalledTimes(1)
+
+    // 第一笔回写旧值时，编辑态已经收起；待发的 E1E2 仍必须保留。
+    pending[0].resolve()
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(2))
+    rerender(
+      <WorkContentBlock
+        {...baseProps}
+        isEditing={false}
+        item={{ ...mockWorkItem, title: 'E1' }}
+      />
+    )
+
+    expect(handleSave).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'E1E2' }))
+    pending[1].resolve()
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(2))
+
+    // 第二笔回写后不应再次把旧值放回队列。
+    rerender(
+      <WorkContentBlock
+        {...baseProps}
+        isEditing={false}
+        item={{ ...mockWorkItem, title: 'E1E2' }}
+      />
+    )
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    expect(handleSave).toHaveBeenCalledTimes(2)
+  })
+
+  it('慢网正文编辑也不会丢尾段：Milkdown 正文的最新内容最终落库（issue #8）', async () => {
+    const landed: string[] = []
+    const onSave = vi.fn(
+      (draft: ContentDraft) => new Promise<void>((resolve) => {
+        setTimeout(() => {
+          landed.push(draft.detailed_record)
+          resolve()
+        }, 1000)
+      })
+    )
+
+    render(
+      <WorkContentBlock
+        item={mockWorkItem}
+        index={0}
+        isEditing={true}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={onSave}
+      />
+    )
+
+    const editor = screen.getByLabelText('草稿正文')
+    pasteMarkdown(editor, '正文 E1')
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1), { timeout: 2500 })
+
+    pasteMarkdown(editor, '正文 E2')
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(2), { timeout: 4000 })
+    await waitFor(() => expect(landed).toHaveLength(2), { timeout: 4000 })
+
+    const finalPayload = landed[1]
+    expect(finalPayload).toContain('正文 E1')
+    expect(finalPayload).toContain('正文 E2')
+    expect(screen.getByLabelText('草稿正文')).toHaveTextContent('正文 E2')
+  })
+
+  it('保存失败时卡片显示「还有未保存内容」，不再归零冒充一切正常（issue #8）', async () => {
+    const onSave = vi.fn().mockRejectedValue(new Error('网络断了'))
+
+    render(
+      <WorkContentBlock
+        item={mockWorkItem}
+        index={0}
+        isEditing={true}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={onSave}
+      />
+    )
+
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '存不上去的标题' } })
+
+    expect(
+      await screen.findByText('还有未保存内容', {}, { timeout: 2500 })
+    ).toBeInTheDocument()
+    await waitFor(() => expect(onSave).toHaveBeenCalledTimes(1))
+    expect(screen.queryByText('已自动保存')).not.toBeInTheDocument()
   })
 })
 

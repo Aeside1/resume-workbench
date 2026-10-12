@@ -228,6 +228,58 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     expect(screen.queryByLabelText('工作项标题')).not.toBeInTheDocument()
   })
 
+  it('更新工作内容失败时，保存队列收到失败并把顶栏状态留在 unsaved', async () => {
+    const handleSaveStatusChange = vi.fn()
+    vi.spyOn(api, 'updateWorkContent').mockRejectedValue(new Error('网络断了'))
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onSaveStatusChange={handleSaveStatusChange}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    fireEvent.click(screen.getAllByRole('button', { name: '编辑' })[0])
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '保存失败的标题' } })
+
+    await waitFor(() => expect(api.updateWorkContent).toHaveBeenCalledTimes(1), { timeout: 2500 })
+    await waitFor(() => expect(handleSaveStatusChange).toHaveBeenCalledWith('unsaved'))
+    expect(handleSaveStatusChange).not.toHaveBeenCalledWith('saved')
+  })
+
+  it('被删掉卡片留下的失败态不会永久挂在顶栏（来源表随 contents 清理）', async () => {
+    const handleSaveStatusChange = vi.fn()
+    vi.spyOn(api, 'updateWorkContent').mockRejectedValue(new Error('网络断了'))
+    const deleteSpy = vi.spyOn(api, 'deleteWorkContent').mockResolvedValue(undefined as any)
+
+    render(
+      <FocusCanvasContainer
+        session={mockSession}
+        group={mockGroup}
+        onSaveStatusChange={handleSaveStatusChange}
+      />
+    )
+
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    fireEvent.click(screen.getAllByRole('button', { name: '编辑' })[0])
+    fireEvent.change(screen.getByLabelText('工作项标题'), { target: { value: '存不上去的标题' } })
+    await waitFor(() => expect(api.updateWorkContent).toHaveBeenCalledTimes(1), { timeout: 2500 })
+    await waitFor(() => expect(handleSaveStatusChange).toHaveBeenCalledWith('unsaved'))
+
+    // 先退出编辑态（编辑态下没有删除按钮），再删掉这张卡片
+    fireEvent.mouseDown(document.body)
+    await waitFor(() => expect(screen.queryByLabelText('工作项标题')).not.toBeInTheDocument())
+    handleSaveStatusChange.mockClear()
+    fireEvent.click(screen.getAllByRole('button', { name: '删除' })[0])
+    fireEvent.click(await screen.findByRole('button', { name: '确认删除' }))
+    await waitFor(() => expect(deleteSpy).toHaveBeenCalled())
+
+    // 卡片已经不存在了，那笔失败的 unsaved 不该继续挂在顶栏
+    await waitFor(() => expect(handleSaveStatusChange).toHaveBeenCalledWith('idle'))
+  })
+
   it('输入内容触发自动保存后，卡片保持沉浸编辑状态而不被强制关闭', async () => {
     render(
       <FocusCanvasContainer

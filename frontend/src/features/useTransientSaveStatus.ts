@@ -1,12 +1,19 @@
 import { useCallback, useEffect, useRef } from 'react'
 
 /**
- * 保存态三态。同一个语义服务两处反馈：
+ * 保存态四态。同一个语义服务两处反馈：
  * - 场景级：顶栏那条 Chip（`AppShell` 的 `focus-status-center`，ADR 004 §2.2）；
  * - 卡片级：画布就地编辑表单头部的内联徽章（`WorkContentBlock`，issue 13）。
  * 两者作用域不同（这张卡片存了没 / 这个场景存了没），因此共用同一套口径与停留时长。
+ *
+ * 四态描述的是**内容**有没有落盘，而不是**请求**走到哪一步（issue #8）：
+ * - `idle`：没有待保存内容；
+ * - `saving`：有请求在途；
+ * - `saved`：最新内容已全部落盘（停留 {@link SAVED_STATUS_VISIBLE_MS} 后回落 `idle`）；
+ * - `unsaved`：还有内容没落盘（在途时又敲了字，或保存失败）。**这个态不自动回落**——
+ *   内容差一截就不该把提示收回去。
  */
-export type SaveStatus = 'idle' | 'saving' | 'saved'
+export type SaveStatus = 'idle' | 'saving' | 'saved' | 'unsaved'
 
 /** 「已保存」反馈的停留时长——顶栏 Chip 与卡片内联徽章同口径，避免同屏两处反馈时间线打架 */
 export const SAVED_STATUS_VISIBLE_MS = 2500
