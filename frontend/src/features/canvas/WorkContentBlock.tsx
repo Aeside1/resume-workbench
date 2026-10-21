@@ -39,8 +39,8 @@ export type WorkContentBlockProps = {
   onOpenZenMode?: () => void
   isActive?: boolean
   /**
-   * 拖拽只走 framer-motion（带 handle 指针拖动），不再有原生 HTML5 拖放的中间态样式（issue #9）。
-   * 键盘等价路径：手柄聚焦后上下方向键移动一格（PRD NFR-05），与拖拽共用同一个 reorder 出口。
+   * 排序走 framer-motion 的指针拖拽（只有这个手柄能发起拖动），
+   * 键盘等价路径是 ArrowUp / ArrowDown 移动一格（PRD NFR-05）；两者共用同一个 reorder 出口。
    */
   onDragHandlePointerDown?: (e: React.PointerEvent) => void
   onKeyboardReorder?: (direction: -1 | 1) => void
