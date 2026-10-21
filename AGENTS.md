@@ -14,6 +14,14 @@
 
 本仓库使用单上下文领域文档结构：领域文档维护在 `docs/`（`CONTEXT.md` 为术语唯一来源），ADR 文件维护在 `docs/adr/`。详见 `docs/agents/domain.md`。
 
+### Issue 交付流程
+
+认领并交付一张票的完整流程（读票与放行判断 → `gh` 认领 → fork branch + `git worktree` 隔离 → 独立 compose 栈与端口 → 全绿关卡 → 中文 commit → `code-review` → 回填 `## Answer` 并关闭 → 汇报与清理）见 `docs/agents/issue-delivery.md`。
+
+- Agent 侧强制版：`.pi/skills/issue-delivery/SKILL.md`（skills 自动加载，也可 `/skill:issue-delivery`）。
+- 一句话启动：pi 里 `/claim-issue <编号或 URL>`（模板 `.pi/prompts/claim-issue.md`）。
+- 硬约束：一个 issue 一条 fork 分支（`<type>/<n>-<slug>`）一个 worktree（`.worktrees/issue<n>-<slug>`）；不动主工作区检出、容器与端口；关卡必须真跑；交付前必过 `code-review`。
+
 ## 前端组件与样式规范（HeroUI / React Aria）
 
 为防止 HeroUI / React Aria 组件在生产环境或弹窗内渲染失效与交互异常，必须遵循以下规则：
