@@ -17,11 +17,14 @@ const isTestEnv = import.meta.env.MODE === 'test'
 
 export type ExperienceHubPanelProps = {
   session: Session
+  /** 游客态只读示例内容 */
+  readOnly?: boolean
   onSelectExperience: (group: ExperienceGroup) => void
 }
 
 export function ExperienceHubPanel({
   session,
+  readOnly = false,
   onSelectExperience
 }: ExperienceHubPanelProps) {
   const [groups, setGroups] = useState<ExperienceGroup[]>([])
@@ -214,13 +217,15 @@ export function ExperienceHubPanel({
             </Tabs.ListContainer>
           </Tabs>
 
-          <Button
-            variant="primary"
-            onPress={() => setIsCreateOpen(true)}
-          >
-            <Plus size={16} aria-hidden="true" />
-            新建经历分组
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="primary"
+              onPress={() => setIsCreateOpen(true)}
+            >
+              <Plus size={16} aria-hidden="true" />
+              新建经历分组
+            </Button>
+          )}
         </div>
       </div>
 
@@ -232,9 +237,13 @@ export function ExperienceHubPanel({
           activeTab === 'active' ? (
             <EmptyStateCard
               title="开始整理一段经历"
-              description="还没有在用经历分组，点击下方按钮或上方“+ 新建经历分组”开始沉淀你的实习或项目经历。"
-              actionLabel="新建经历分组"
-              onAction={() => setIsCreateOpen(true)}
+              description={
+                readOnly
+                  ? '登录后可以创建经历分组，沉淀你的实习或项目经历。'
+                  : '还没有在用经历分组，点击下方按钮或上方“+ 新建经历分组”开始沉淀你的实习或项目经历。'
+              }
+              actionLabel={readOnly ? undefined : '新建经历分组'}
+              onAction={readOnly ? undefined : () => setIsCreateOpen(true)}
               icon={<FilePlus2 size={32} aria-hidden="true" />}
             />
           ) : (
@@ -256,6 +265,7 @@ export function ExperienceHubPanel({
                 <ExperienceGroupCard
                   group={group}
                   workContentCount={counts[group.id] ?? 0}
+                  readOnly={readOnly}
                   onSelect={onSelectExperience}
                   onEdit={(target) => setGroupToEdit(target)}
                   onArchive={handleArchiveGroup}
@@ -279,6 +289,7 @@ export function ExperienceHubPanel({
                   <ExperienceGroupCard
                     group={group}
                     workContentCount={counts[group.id] ?? 0}
+                    readOnly={readOnly}
                     onSelect={onSelectExperience}
                     onEdit={(target) => setGroupToEdit(target)}
                     onArchive={handleArchiveGroup}

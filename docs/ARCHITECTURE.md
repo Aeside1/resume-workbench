@@ -101,7 +101,7 @@ lib/
 - `resume-descriptions` 负责简历描述选择、编辑、归档、恢复和回滚。
 - `resume-plans` 负责引用、排序、预览、导出入口和方案内导出历史。
 - 原型阶段允许使用 mock repository；接入 API 时替换数据适配层，不重写页面结构。
-- 数据访问层按 token 分派：已登录走 HTTP 后端，游客态走浏览器本地草稿后端（`frontend/src/guest/`），页面组件拿到的是同一套接口与同一个 `Session` 形状（[ADR 008](adr/008-guest-workbench-with-browser-local-drafts.md)）。
+- 数据访问层按 token 分派：已登录走 HTTP 后端，游客态走只读示例后端（`frontend/src/guest/`），页面组件拿到的是同一套接口与同一个 `Session` 形状（[ADR 008](adr/008-guest-workbench-read-only-samples.md)）。
 
 ## 6. 关键业务边界
 
@@ -109,7 +109,7 @@ lib/
 
 所有业务查询都直接以当前认证的登录用户（User）为上下文。系统按个人用户账号进行独立数据隔离，服务端同步校验资源归属。
 
-未登录访客不会碰到这条路径：游客工作台只读写浏览器本地草稿，不向业务接口发请求；服务端对无令牌的请求仍统一返回 401（[ADR 008](adr/008-guest-workbench-with-browser-local-drafts.md)）。
+未登录访客不会碰到这条路径：游客工作台只读前端内置示例，不写浏览器存储，也不向业务接口发请求；服务端对无令牌的请求仍统一返回 401（[ADR 008](adr/008-guest-workbench-read-only-samples.md)）。
 
 ### 6.2 简历描述与引用
 

@@ -8,6 +8,8 @@ export type ResumeDescriptionDrawerProps = {
   isOpen: boolean
   workContent: WorkContent | null
   session: Session
+  /** 游客态只读示例内容 */
+  readOnly?: boolean
   onClose: () => void
 }
 
@@ -24,6 +26,7 @@ export function ResumeDescriptionDrawer({
   isOpen,
   workContent,
   session,
+  readOnly = false,
   onClose
 }: ResumeDescriptionDrawerProps) {
   const isDrawerOpen = isOpen && workContent !== null
@@ -56,7 +59,7 @@ export function ResumeDescriptionDrawer({
             <Drawer.CloseTrigger aria-label="关闭抽屉" />
 
             <Drawer.Body className="resume-drawer-body">
-              {workContent && <ResumeHighlightsFeed workContent={workContent} session={session} />}
+              {workContent && <ResumeHighlightsFeed workContent={workContent} session={session} readOnly={readOnly} />}
             </Drawer.Body>
           </Drawer.Dialog>
         </Drawer.Content>

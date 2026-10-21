@@ -6,6 +6,8 @@ import type { ExperienceGroup } from '../../api'
 export type ExperienceGroupCardProps = {
   group: ExperienceGroup
   workContentCount?: number
+  /** 游客态只读：不渲染编辑 / 归档 / 删除 */
+  readOnly?: boolean
   onSelect: (group: ExperienceGroup) => void
   onEdit?: (group: ExperienceGroup) => void
   onArchive?: (group: ExperienceGroup) => void
@@ -16,6 +18,7 @@ export type ExperienceGroupCardProps = {
 export function ExperienceGroupCard({
   group,
   workContentCount = 0,
+  readOnly = false,
   onSelect,
   onEdit,
   onArchive,
@@ -32,7 +35,7 @@ export function ExperienceGroupCard({
     onSelect(group)
   }
 
-  // 卡片主体点击区与 Footer 已物理分离，操作按钮无需再阻断冒泡
+  // 卡片主体与 Footer 操作区物理分离，操作按钮不会误触跳转
   const handleEdit = () => onEdit?.(group)
   const handleArchive = () => onArchive?.(group)
   const handleRestore = () => onRestore?.(group)
@@ -95,7 +98,7 @@ export function ExperienceGroupCard({
         </div>
 
         <div className="group-card-actions">
-          {isArchived ? (
+          {!readOnly && (isArchived ? (
             <>
               <Button
                 size="sm"
@@ -137,7 +140,7 @@ export function ExperienceGroupCard({
                 归档经历分组
               </Button>
             </>
-          )}
+          ))}
         </div>
       </Card.Footer>
     </Card>

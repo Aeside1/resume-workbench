@@ -14,9 +14,9 @@ export type AppShellMode = 'hub' | 'workspace'
 
 type Props = {
   session: Session
-  /** 已登录态的退出登录；游客态不传 */
+  /** 已登录态退出登录；游客态不传 */
   onLogout?: () => void
-  /** 游客态的登录入口（ADR 008 §2.6）：底部按钮由「退出登录」换成「登录 / 注册」 */
+  /** 游客态的登录入口 */
   onRequestAuth?: () => void
   children: ReactNode
   mode?: AppShellMode
@@ -43,10 +43,10 @@ export function AppShell({
   onToggleSidebar
 }: Props) {
   const isGuest = isGuestSession(session)
-  // 侧边栏用户名片首字母；游客态没有邮箱，用「游」作为本地草稿的标识
+  // 游客态没有邮箱，用「游」作为名片标识
   const workspaceInitial = isGuest ? '游' : session.user.email.slice(0, 1).toUpperCase()
   const identityTitle = isGuest ? '游客工作台' : '个人职业工作台'
-  const identityDetail = isGuest ? '本地草稿 · 未登录' : session.user.email
+  const identityDetail = isGuest ? '未登录 · 示例只读' : session.user.email
 
   const shellLayoutClass = isFocusOpen
     ? 'app-shell--focus'
@@ -71,7 +71,7 @@ export function AppShell({
             <Card variant="secondary" className="sidebar-user-card">
               <Card.Content
                 className="sidebar-user-content"
-                title={isGuest ? '游客模式：数据只保存在这台浏览器' : session.user.email}
+                title={isGuest ? '游客模式：示例内容只读' : session.user.email}
               >
                 <Avatar size="sm" variant="soft" color="default">
                   <Avatar.Fallback>{workspaceInitial}</Avatar.Fallback>
@@ -109,7 +109,7 @@ export function AppShell({
         <div className="sidebar-footer">
           <ThemeToggle showLabel={!isSidebarCollapsed} />
           {isGuest ? (
-            /* 游客态：登录入口取代退出登录（ADR 008 §2.6） */
+            /* 游客态：登录入口取代退出登录 */
             <div className="sidebar-footer-item" title={isSidebarCollapsed ? '登录 / 注册' : undefined}>
               <Button
                 variant="ghost"

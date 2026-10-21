@@ -25,6 +25,8 @@ export type ContentDraft = {
 export type WorkContentBlockProps = {
   item: WorkContent
   index: number
+  /** 游客态只读示例内容 */
+  readOnly?: boolean
   totalCount?: number
   isEditing: boolean
   onStartEdit: () => void
@@ -137,6 +139,7 @@ export function toContentPayload(
 export function WorkContentBlock({
   item,
   index,
+  readOnly = false,
   isEditing,
   onStartEdit,
   onCancelEdit,
@@ -317,79 +320,87 @@ export function WorkContentBlock({
         <>
           <header className="work-content-card-header">
             <div className="work-content-title-meta">
-              <span
-                className="work-content-drag-handle"
-                draggable={!isEditing}
-                onDragStart={onDragStart}
-                onPointerDown={onDragHandlePointerDown}
-                style={{ touchAction: 'none' }}
-                title="按住拖拽调整排序"
-                aria-label="拖拽调整排序"
-                role="button"
-                tabIndex={0}
-              >
-                <GripVertical size={14} aria-hidden="true" />
-              </span>
+              {!readOnly && (
+                <span
+                  className="work-content-drag-handle"
+                  draggable={!isEditing}
+                  onDragStart={onDragStart}
+                  onPointerDown={onDragHandlePointerDown}
+                  style={{ touchAction: 'none' }}
+                  title="按住拖拽调整排序"
+                  aria-label="拖拽调整排序"
+                  role="button"
+                  tabIndex={0}
+                >
+                  <GripVertical size={14} aria-hidden="true" />
+                </span>
+              )}
               {item.archived && (
                 <Chip size="sm" color="warning" variant="soft">
                   <Chip.Label>已归档</Chip.Label>
                 </Chip>
               )}
               <h3 className="work-content-title">
-                <Tooltip>
-                  <Button
-                    size="lg"
-                    variant="ghost"
-                    onPress={onStartEdit}
-                  >
-                    {item.title}
-                  </Button>
-                  <Tooltip.Content>单击就地编辑</Tooltip.Content>
-                </Tooltip>
+                {readOnly ? (
+                  item.title
+                ) : (
+                  <Tooltip>
+                    <Button
+                      size="lg"
+                      variant="ghost"
+                      onPress={onStartEdit}
+                    >
+                      {item.title}
+                    </Button>
+                    <Tooltip.Content>单击就地编辑</Tooltip.Content>
+                  </Tooltip>
+                )}
               </h3>
             </div>
 
-            <div className="work-content-actions">
-              <Button
-                size="sm"
-                variant="ghost"
-                onPress={() => onOpenZenMode?.()}
-                aria-label="展开专注模式"
-              >
-                <Maximize2 size={13} aria-hidden="true" />
-                展开专注
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onPress={onStartEdit}
-              >
-                编辑
-              </Button>
-              <Button
-                size="sm"
-                variant="danger-soft"
-                onPress={() => setIsDeleteModalOpen(true)}
-              >
-                <Trash2 size={13} aria-hidden="true" />
-                删除
-              </Button>
-            </div>
+            {!readOnly && (
+              <div className="work-content-actions">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onPress={() => onOpenZenMode?.()}
+                  aria-label="展开专注模式"
+                >
+                  <Maximize2 size={13} aria-hidden="true" />
+                  展开专注
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onPress={onStartEdit}
+                >
+                  编辑
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger-soft"
+                  onPress={() => setIsDeleteModalOpen(true)}
+                >
+                  <Trash2 size={13} aria-hidden="true" />
+                  删除
+                </Button>
+              </div>
+            )}
 
           </header>
 
-          {/* 正文区域是卡片内唯一的"点击进入编辑"热区，头部操作区与底部按钮区各自独立 */}
+          {/* 正文区域是卡片内唯一的“点击进入编辑”热区 */}
           <div
             className="work-content-typography-body work-content-card-body"
             onClick={() => {
-              if (!isDragging) {
+              if (!readOnly && !isDragging) {
                 onStartEdit()
               }
             }}
           >
             <MilkdownView
               content={combinedContent}
-              placeholder="暂无工作内容记录，点击此处或“展开专注”开始沉淀..."
+              placeholder={readOnly ? '暂无工作内容记录' : '暂无工作内容记录，点击此处或“展开专注”开始沉淀...'}
             />
           </div>
 

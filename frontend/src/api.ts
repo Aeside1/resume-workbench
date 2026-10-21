@@ -57,14 +57,7 @@ async function request<T>(path: string, init: RequestInit = {}, token?: string):
   return response.status === 204 ? (undefined as T) : response.json()
 }
 
-/**
- * 工作台数据源：`api` 对外的方法（首个参数是 token）在内部按 token 分派到这里。
- *
- * - `httpBackend(token)`：已登录时打服务端接口，作用域由服务端从令牌解析；
- * - `guestBackend()`：未登录时读写浏览器本地草稿（ADR 008 §2.5）。
- *
- * 组件继续只拿 `session: Session`，不需要知道数据来自哪一侧。
- */
+/** 数据源：已登录走服务端，游客态走只读示例内容 */
 export type Backend = {
   me(): Promise<SessionUser>
   experienceGroups(includeArchived: boolean): Promise<ExperienceGroup[]>
@@ -161,18 +154,11 @@ function backendFor(token: string): Backend {
   return isGuestToken(token) ? guestBackend : httpBackend(token)
 }
 
-/**
- * 对外 API 门面：每个方法一行，只负责把 token 与参数分派给对应的数据源。
- *
- * 逐方法显式列出（而不是返回整个 backend 让调用方自己取）是有意的：现有工作面都用
- * `api.xxx(session.token, ...)` 的签名，保持它们零改动才能在游客态复用全部编辑能力。
- * 新增一个接口确实要同时补 Backend / httpBackend / 门面三处——这也是新增端点本身的代价。
- */
+/** 门面：按 token 分派到对应数据源，组件只拿 `session.token` 调用 */
 export const api = {
   register: (email: string, password: string) => request<AuthResponse>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
   login: (email: string, password: string) => request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
   logout: (token: string) =>
-    // 游客态没有服务端会话，不发请求（也绝不把本地令牌当令牌送出去）
     isGuestToken(token)
       ? Promise.resolve(undefined as void)
       : request<void>('/api/auth/logout', { method: 'POST' }, token),
