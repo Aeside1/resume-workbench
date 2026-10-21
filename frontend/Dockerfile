@@ -9,4 +9,6 @@ ENV VITE_API_URL=$VITE_API_URL
 RUN npm run build
 FROM nginx:1.27-alpine
 COPY --from=build /app/dist /usr/share/nginx/html
+# 静态分发 + 同源模式下的 /api/ 反代（两种部署模式共用同一个镜像，见文件内注释）
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
