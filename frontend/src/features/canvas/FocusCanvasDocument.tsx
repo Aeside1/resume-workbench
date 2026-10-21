@@ -8,6 +8,23 @@ import { WorkContentBlock, ContentDraft } from './WorkContentBlock'
 import { WorkContentFormFields } from './WorkContentFormFields'
 import type { SaveStatus } from '../useTransientSaveStatus'
 
+/**
+ * 键盘排序的位移：返回新顺序，越界返回 null。
+ * 拖拽与方向键最终都交出「一份完整的新顺序」，所以排序只有一个入口（onReorderContents）。
+ */
+function moveContentByOffset(
+  contents: WorkContent[],
+  index: number,
+  offset: -1 | 1
+): WorkContent[] | null {
+  const target = index + offset
+  if (target < 0 || target >= contents.length) return null
+  const next = [...contents]
+  const [moved] = next.splice(index, 1)
+  next.splice(target, 0, moved)
+  return next
+}
+
 export type FocusCanvasDocumentProps = {
   group: ExperienceGroup
   /** 游客态只读示例内容 */
@@ -21,9 +38,8 @@ export type FocusCanvasDocumentProps = {
   /** 就地编辑的保存态上抛（由卡片的保存队列发布，与顶栏 Chip 同口径，issue #8） */
   onSaveStatusChange?: (workContentId: number, status: SaveStatus) => void
   /**
-   * 唯一的排序入口：拖拽结束后把「新顺序」整份交出去。
-   * 不再有 index ↔ index 的 onReorderContent / onMoveContent——那是原生 HTML5 拖放与
-   * 上下移按钮时代的两条老路径，2026-10 已随本票删除（issue #9）。
+   * 唯一的排序入口：拖拽结束与方向键都交出「完整的新顺序」。
+   * 不再有 index ↔ index 的中间层，两套入口只会让「到底哪一套生效」不可证伪。
    */
   onReorderContents?: (newContents: WorkContent[]) => void
   onDeleteContent: (item: WorkContent) => void
@@ -79,6 +95,11 @@ export function FocusCanvasDocument({
     onCancelCreateNew()
   }
 
+  const handleKeyboardReorder = (index: number, offset: -1 | 1) => {
+    const next = moveContentByOffset(contents, index, offset)
+    if (next) onReorderContents?.(next)
+  }
+
   return (
     <div className="focus-canvas-document">
       <ExperienceOverviewSection group={group} onUpdate={readOnly ? undefined : onUpdateGroup} />
@@ -106,7 +127,6 @@ export function FocusCanvasDocument({
                 key={item.id}
                 item={item}
                 index={index}
-                totalCount={contents.length}
                 editingId={editingId}
                 onStartEdit={onStartEdit}
                 onCancelEdit={onCancelEdit}
@@ -117,6 +137,7 @@ export function FocusCanvasDocument({
                 activeDrawerWorkContentId={activeDrawerWorkContentId}
                 onOpenDrawer={onOpenDrawer}
                 onOpenZenMode={onOpenZenMode}
+                onKeyboardReorder={handleKeyboardReorder}
               />
             ))}
           </Reorder.Group>
@@ -173,7 +194,6 @@ export function FocusCanvasDocument({
 function FocusWorkContentItem({
   item,
   index,
-  totalCount,
   readOnly,
   editingId,
   onStartEdit,
@@ -184,11 +204,11 @@ function FocusWorkContentItem({
   onArchiveContent,
   activeDrawerWorkContentId,
   onOpenDrawer,
-  onOpenZenMode
+  onOpenZenMode,
+  onKeyboardReorder
 }: {
   item: WorkContent
   index: number
-  totalCount: number
   readOnly: boolean
   editingId: number | null
   onStartEdit: (item: WorkContent) => void
@@ -200,6 +220,7 @@ function FocusWorkContentItem({
   activeDrawerWorkContentId?: number | null
   onOpenDrawer?: (item: WorkContent) => void
   onOpenZenMode?: (item: WorkContent) => void
+  onKeyboardReorder: (index: number, offset: -1 | 1) => void
 }) {
   const dragControls = useDragControls()
   const isEditing = editingId === item.id
@@ -216,7 +237,6 @@ function FocusWorkContentItem({
       <WorkContentBlock
         item={item}
         index={index}
-        totalCount={totalCount}
         readOnly={readOnly}
         isEditing={isEditing}
         isActive={isActive}
@@ -235,6 +255,7 @@ function FocusWorkContentItem({
             dragControls.start(e)
           }
         }}
+        onKeyboardReorder={(direction) => onKeyboardReorder(index, direction)}
       />
     </Reorder.Item>
   )

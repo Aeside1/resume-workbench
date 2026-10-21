@@ -363,11 +363,7 @@ export function FocusCanvasContainer({
       ?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth', block: 'nearest' })
   }, [zenModeWorkContentId, shouldReduceMotion])
 
-  /**
-   * 排序的唯一入口（issue #9）：接收拖拽结束后的完整新顺序。
-   * 原本还有 index → index 的 handleReorderContent / handleMoveContent，那是给原生 HTML5
-   * 拖放与上下移按钮用的，两条老路径已删——保留两套入口只会让「拖动到底生效哪一套」不可证伪。
-   */
+  /** 排序的唯一入口：拖拽结束或方向键交出完整新顺序 */
   const handleReorderContents = async (newContents: WorkContent[]) => {
     setContents(newContents)
     try {
