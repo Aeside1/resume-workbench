@@ -44,7 +44,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
-        totalCount={3}
         isEditing={false}
         onStartEdit={vi.fn()}
         onCancelEdit={vi.fn()}
@@ -77,7 +76,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
-        totalCount={1}
         isEditing={false}
         onStartEdit={vi.fn()}
         onCancelEdit={vi.fn()}
@@ -105,7 +103,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
-        totalCount={2}
         isEditing={false}
         onStartEdit={handleStartEdit}
         onCancelEdit={vi.fn()}
@@ -158,7 +155,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
-        totalCount={1}
         isEditing={false}
         onStartEdit={handleStartEdit}
         onCancelEdit={vi.fn()}
@@ -190,7 +186,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
-        totalCount={1}
         isEditing={true}
         onStartEdit={vi.fn()}
         onCancelEdit={handleCancel}
@@ -250,7 +245,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={richMarkdownItem}
         index={0}
-        totalCount={1}
         isEditing={false}
         onStartEdit={vi.fn()}
         onCancelEdit={vi.fn()}
@@ -285,7 +279,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
       <WorkContentBlock
         item={mockWorkItem}
         index={0}
-        totalCount={1}
         isEditing={false}
         isActive={true}
         onStartEdit={vi.fn()}

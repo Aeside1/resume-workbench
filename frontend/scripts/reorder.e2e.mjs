@@ -8,7 +8,8 @@
  *   2. 排序请求带着完整新顺序落库（数据层）。
  * 任一条不成立即 FAIL —— 拖拽失效时本脚本会红，而不是像过去那样只断言「手柄存在」。
  *
- * 不传 EDITOR_BASE_URL 时自带给一台 vite dev server，保证固定关卡一条命令跑完。
+ * 不传 REORDER_BASE_URL 时自带给一台 vite dev server，保证固定关卡一条命令跑完。
+ * 环境变量：REORDER_BASE_URL / REORDER_PORT（默认 5273）/ REORDER_ARTIFACTS / EDGE_PATH。
  */
 import assert from 'node:assert/strict'
 import { mkdir, writeFile } from 'node:fs/promises'
@@ -19,7 +20,7 @@ const artifacts = path.resolve(process.env.REORDER_ARTIFACTS || '../.worktrees/r
 await mkdir(artifacts, { recursive: true })
 
 let devServer = null
-let baseUrl = process.env.EDITOR_BASE_URL
+let baseUrl = process.env.REORDER_BASE_URL
 if (!baseUrl) {
   const { createServer } = await import('vite')
   devServer = await createServer({
@@ -143,7 +144,9 @@ try {
       { timeout: 5000 }
     )
     assert.deepEqual(await cardIds(), ['work-content-21', 'work-content-20'])
-    assert.deepEqual(reorderRequests.at(-1), [21, 20], '排序请求必须带着完整的新顺序')
+    // 一次拖拽只该产生一笔排序请求，且必须带着完整的新顺序
+    assert.equal(reorderRequests.length, 1, '一次拖拽不该产生多笔排序请求')
+    assert.deepEqual(reorderRequests[0], [21, 20], '排序请求必须带着完整的新顺序')
     // 拖拽不该顺手把卡片带进编辑态（手柄与正文热区必须解耦）
     assert.equal(await page.$$eval('.work-content-edit-form', els => els.length), 0)
     await page.screenshot({ path: path.join(artifacts, 'reorder.png'), fullPage: true })

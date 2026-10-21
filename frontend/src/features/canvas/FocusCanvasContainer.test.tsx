@@ -883,4 +883,29 @@ describe('FocusCanvasContainer 沉浸长画布与双区大纲联动集成测试'
     })
     expect(screen.getByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })).toBeInTheDocument()
   })
+
+  it('键盘排序：手柄聚焦后按方向键移动卡片，与拖拽同一个出口落库（issue #9）', async () => {
+    const reorder = vi
+      .spyOn(api, 'reorderWorkContents')
+      .mockImplementation(async (_token, _groupId, ids) => {
+        const byId = new Map(mockContents.map((item) => [item.id, item]))
+        return ids.map((id) => byId.get(id)!)
+      })
+
+    render(<FocusCanvasContainer session={mockSession} group={mockGroup} />)
+    await screen.findByRole('heading', { level: 3, name: '重构可视化拖拽画布核心渲染引擎' })
+    const cardIds = () => [...document.querySelectorAll('.work-content-card')].map((el) => el.id)
+    expect(cardIds()).toEqual(['work-content-101', 'work-content-102'])
+
+    // 第二张卡片的手柄按上方向键：等同于把它拖到第一张前面
+    const handles = screen.getAllByLabelText('拖拽调整排序')
+    fireEvent.keyDown(handles[1], { key: 'ArrowUp' })
+
+    await waitFor(() => expect(reorder).toHaveBeenCalledWith('test-token', 10, [102, 101]))
+    expect(cardIds()).toEqual(['work-content-102', 'work-content-101'])
+
+    // 已在最前还按上方向键：越界不产生请求
+    fireEvent.keyDown(screen.getAllByLabelText('拖拽调整排序')[0], { key: 'ArrowUp' })
+    expect(reorder).toHaveBeenCalledTimes(1)
+  })
 })

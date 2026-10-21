@@ -209,7 +209,9 @@ npm run dev -- --port 5175
 GUEST_E2E_BASE_URL=http://localhost:5175 npm run test:guest:e2e
 ```
 
-**为什么拖拽必须走真浏览器**：卡片排序是 framer-motion 的指针拖拽（按住手柄才启动），jsdom 里没有真实布局与指针捕获，`getBoundingClientRect` 全为 0，拖出来的顺序是假的。因此「拖拽后顺序翻转 + 排序请求带完整新顺序落库」这两条断言只在 `scripts/reorder.e2e.mjs` 里，单测层面只保留「手柄存在、没有上下移按钮」这类静态约定。
+**为什么拖拽必须走真浏览器**：卡片排序是 framer-motion 的指针拖拽（按住手柄才启动），jsdom 里没有真实布局与指针捕获，`getBoundingClientRect` 全为 0，拖出来的顺序是假的。所以「拖后顺序翻转 + 排序请求带完整新顺序落库」只能由 `scripts/reorder.e2e.mjs` 断言；单测层面只能覆盖键盘等价路径（手柄聚焦后上下方向键，见 `FocusCanvasContainer.test.tsx`）。
+
+探针可调环境变量：`REORDER_BASE_URL`（不传则自起 dev server）、`REORDER_PORT`（默认 5273）、`REORDER_ARTIFACTS`、`EDGE_PATH`（默认 `C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`）。
 
 ## 项目结构
 
@@ -236,7 +238,8 @@ frontend/
     components/ui/                          HeroUI 之上的通用件（Toast、主题切换、Markdown 编辑器）
     styles/                                 按 base / layout / components / features 分层
     contracts/openapi-plan-paths.json       前后端契约快照（由后端测试生成并提交）
-  scripts/live-editor.e2e.mjs               真实浏览器端到端探针
+  scripts/live-editor.e2e.mjs               真实浏览器端到端探针（富文本编辑器）
+  scripts/reorder.e2e.mjs                  拖拽排序的证伪探针（自带 dev server）
 docs/
   PRD.md                                    产品需求
   ARCHITECTURE.md                           系统架构与前后端分工

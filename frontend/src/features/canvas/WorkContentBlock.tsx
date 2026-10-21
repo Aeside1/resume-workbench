@@ -27,7 +27,6 @@ export type WorkContentBlockProps = {
   index: number
   /** 游客态只读示例内容 */
   readOnly?: boolean
-  totalCount?: number
   isEditing: boolean
   onStartEdit: () => void
   onCancelEdit: () => void
@@ -39,8 +38,12 @@ export type WorkContentBlockProps = {
   onOpenDrawer?: () => void
   onOpenZenMode?: () => void
   isActive?: boolean
-  /** 拖拽只走 framer-motion（带 handle 指针拖动），不再有原生 HTML5 拖放的中间态样式（issue #9） */
+  /**
+   * 拖拽只走 framer-motion（带 handle 指针拖动），不再有原生 HTML5 拖放的中间态样式（issue #9）。
+   * 键盘等价路径：手柄聚焦后上下方向键移动一格（PRD NFR-05），与拖拽共用同一个 reorder 出口。
+   */
   onDragHandlePointerDown?: (e: React.PointerEvent) => void
+  onKeyboardReorder?: (direction: -1 | 1) => void
 }
 
 export {
@@ -143,7 +146,8 @@ export function WorkContentBlock({
   onOpenDrawer,
   onOpenZenMode,
   isActive = false,
-  onDragHandlePointerDown
+  onDragHandlePointerDown,
+  onKeyboardReorder
 }: WorkContentBlockProps) {
   const parsedData = useMemo(
     () => parseSupplementaryNotes(item.supplementary_notes),
