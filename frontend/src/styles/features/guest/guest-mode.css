@@ -62,7 +62,7 @@
   flex-wrap: wrap;
 }
 
-/* 侧栏身份名片在游客态显示两行短文案，不需要邮箱那样强的收缩限制 */
+/* 简历方案登录门禁：页头 + 一张说明卡片，与列表页保持同一套版式骨架 */
 .guest-plan-gate {
   display: flex;
   flex-direction: column;

@@ -10,6 +10,13 @@ import type { ExperienceGroup, ResumeHighlight, WorkContent } from '../api'
 
 export const GUEST_STORAGE_KEY = 'resume-guest-workspace'
 
+/**
+ * 本地草稿变更事件：任何写入都会广播一次，外壳据此实时刷新「有没有草稿」
+ * （例如游客刚在列表里新建了分组，横幅上的「清空本地草稿」应该立刻出现）。
+ * 同文档写入不会触发 `storage` 事件，所以自己发一个。
+ */
+export const GUEST_WORKSPACE_EVENT = 'resume-guest-workspace-changed'
+
 export type GuestWorkspace = {
   version: 1
   /** 下一个可分配的 id：分组 / 工作内容 / 亮点共用一段递增区间 */
@@ -76,12 +83,14 @@ export function writeGuestWorkspace(workspace: GuestWorkspace, storage?: Storage
   const store = safeStorage(storage)
   if (!store) return
   store.setItem(GUEST_STORAGE_KEY, JSON.stringify(workspace))
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(GUEST_WORKSPACE_EVENT))
 }
 
 export function clearGuestWorkspace(storage?: Storage): void {
   const store = safeStorage(storage)
   if (!store) return
   store.removeItem(GUEST_STORAGE_KEY)
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(GUEST_WORKSPACE_EVENT))
 }
 
 export function isGuestWorkspaceEmpty(storage?: Storage): boolean {
@@ -104,7 +113,6 @@ export function loadSampleWorkspace(storage?: Storage): GuestWorkspace {
 
   const project: ExperienceGroup = {
     id: id(),
-    user_id: 0,
     name: '示例项目：订单中台重构',
     type: 'project',
     organization: '示例科技',
@@ -117,7 +125,6 @@ export function loadSampleWorkspace(storage?: Storage): GuestWorkspace {
   }
   const internship: ExperienceGroup = {
     id: id(),
-    user_id: 0,
     name: '示例实习：内容平台前端实习',
     type: 'internship',
     organization: '示例内容平台',

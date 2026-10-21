@@ -1,5 +1,6 @@
 import { ApiError } from '../apiErrors'
 import type { Backend, ExperienceGroup, ResumeHighlight, WorkContent } from '../api'
+import { GUEST_SESSION } from '../session'
 import { readGuestWorkspace, writeGuestWorkspace } from './workspace'
 
 /**
@@ -66,7 +67,7 @@ function lockedPlan(..._args: never[]): Promise<never> {
 
 export function createGuestBackend(): Backend {
   return {
-    me: async () => ({ id: 0, email: '游客模式' }),
+    me: async () => GUEST_SESSION.user,
 
     experienceGroups: async (includeArchived) => {
       const workspace = readGuestWorkspace()
@@ -81,7 +82,6 @@ export function createGuestBackend(): Backend {
         const timestamp = nowIso()
         const group: ExperienceGroup = {
           id: workspace.nextId++,
-          user_id: 0,
           name: payload.name,
           type: payload.type,
           organization: payload.organization ?? null,

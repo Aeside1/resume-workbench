@@ -161,10 +161,21 @@ function backendFor(token: string): Backend {
   return isGuestToken(token) ? guestBackend : httpBackend(token)
 }
 
+/**
+ * 对外 API 门面：每个方法一行，只负责把 token 与参数分派给对应的数据源。
+ *
+ * 逐方法显式列出（而不是返回整个 backend 让调用方自己取）是有意的：现有工作面都用
+ * `api.xxx(session.token, ...)` 的签名，保持它们零改动才能在游客态复用全部编辑能力。
+ * 新增一个接口确实要同时补 Backend / httpBackend / 门面三处——这也是新增端点本身的代价。
+ */
 export const api = {
   register: (email: string, password: string) => request<AuthResponse>('/api/auth/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
   login: (email: string, password: string) => request<AuthResponse>('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
-  logout: (token: string) => request<void>('/api/auth/logout', { method: 'POST' }, token),
+  logout: (token: string) =>
+    // 游客态没有服务端会话，不发请求（也绝不把本地令牌当令牌送出去）
+    isGuestToken(token)
+      ? Promise.resolve(undefined as void)
+      : request<void>('/api/auth/logout', { method: 'POST' }, token),
   me: (token: string) => backendFor(token).me(),
   experienceGroups: (token: string, includeArchived = false) => backendFor(token).experienceGroups(includeArchived),
   createExperienceGroup: (token: string, payload: ExperienceGroupPayload) => backendFor(token).createExperienceGroup(payload),

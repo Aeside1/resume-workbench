@@ -191,7 +191,7 @@ npm run test        # vitest run（26 个测试文件 / 187 条用例）
 npm run build       # 生产构建
 ```
 
-当前基线（`v0.1.0`）：后端 **33 passed**，前端 **250 passed / 34 files**，`typecheck` 与 `build` 无错。
+当前基线（`v0.1.0`）：后端 **33 passed**，前端 **252 passed / 34 files**，`typecheck` 与 `build` 无错。
 
 **契约测试**：后端 `backend/tests/test_openapi_contract.py` 把方案与亮点相关路由固化为快照 `frontend/src/contracts/openapi-plan-paths.json`，前端 `src/api.contract.test.ts` 断言 `api.ts` 的每个调用都真实存在、且后端每条路由都被前端覆盖 —— 任何一侧单独改路径或字段都会红，而不是静默 404。
 

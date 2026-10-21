@@ -4,7 +4,7 @@ import { ArrowRight, FileText, LayoutGrid, Layers, PanelRight, PanelRightClose }
 import { motion } from 'framer-motion'
 import type { ExperienceGroup, ResumePlan } from '../api'
 import { isGuestSession, type Session } from '../session'
-import { clearGuestWorkspace, isGuestWorkspaceEmpty, loadSampleWorkspace } from '../guest/workspace'
+import { useGuestWorkspace } from '../guest/useGuestWorkspace'
 import { AppShell, type AppShellMode } from './AppShell'
 import { FocusTopbar, type FocusBreadcrumbLevel } from './FocusTopbar'
 import { GuestBanner } from './GuestBanner'
@@ -126,32 +126,16 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
   // 而不是由外壳直接卸载，否则会绕过 flush 保存（ADR 004 §2.4）。
   const handleBackToCanvas = useCallback(() => setZenExitSignal((n) => n + 1), [])
 
-  // 游客工作台的本地草稿（ADR 008）：示例内容与清空都只能从外壳发起，
-  // 改完数据后把经历内容面板整体重挂并退回列表，避免画布拿着已经消失的分组。
-  const [hasGuestDrafts, setHasGuestDrafts] = useState(() => !isGuestWorkspaceEmpty())
-  const [guestRevision, setGuestRevision] = useState(0)
-
-  const refreshGuestDrafts = useCallback(() => {
-    setHasGuestDrafts(!isGuestWorkspaceEmpty())
-    setGuestRevision((n) => n + 1)
+  // 游客工作台的本地草稿（ADR 008）：载入示例 / 清空后回到列表并重挂面板，
+  // 避免画布拿着已经消失的分组；「有没有草稿」由 useGuestWorkspace 实时跟踪。
+  const handleGuestDataReplaced = useCallback(() => {
     setView('experiences')
     setStage('hub')
     setActiveExperience(null)
     setActivePlan(null)
     resetZenState()
   }, [resetZenState])
-
-  const handleLoadSample = useCallback(() => {
-    if (hasGuestDrafts && !window.confirm('载入示例内容会覆盖当前的本地草稿，确定继续吗？')) return
-    loadSampleWorkspace()
-    refreshGuestDrafts()
-  }, [hasGuestDrafts, refreshGuestDrafts])
-
-  const handleClearGuestDrafts = useCallback(() => {
-    if (!window.confirm('清空这台浏览器里的本地草稿？该操作不可撤销。')) return
-    clearGuestWorkspace()
-    refreshGuestDrafts()
-  }, [refreshGuestDrafts])
+  const guestWorkspace = useGuestWorkspace(isGuest, handleGuestDataReplaced)
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((current) => {
@@ -251,10 +235,10 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
       >
         {isGuest && (
           <GuestBanner
-            hasLocalDrafts={hasGuestDrafts}
+            hasLocalDrafts={guestWorkspace.hasDrafts}
             onRequestAuth={onRequestAuth}
-            onLoadSample={handleLoadSample}
-            onClear={handleClearGuestDrafts}
+            onLoadSample={guestWorkspace.loadSample}
+            onClear={guestWorkspace.clear}
           />
         )}
         <motion.div
@@ -307,7 +291,7 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
               </>
             ) : (
               <ExperienceHubPanel
-                key={isGuest ? `guest-hub-${guestRevision}` : 'hub-experiences'}
+                key={isGuest ? `guest-hub-${guestWorkspace.revision}` : 'hub-experiences'}
                 session={session}
                 onSelectExperience={handleSelectExperience}
               />
