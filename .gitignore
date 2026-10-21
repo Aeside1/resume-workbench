@@ -7,6 +7,8 @@ backend/.pytest_cache/
 .pytest_cache/
 frontend/node_modules/
 frontend/dist/
+# 生产部署的本地密钥与镜像标签（配置模板与部署流程只在本机保留，见 .git/info/exclude）
+.env
 # 已废弃：本地 issue tracker 已迁移到 GitHub Issues（详见 AGENTS.md）。
 # 保留忽略规则，防止残留的临时文件误入版本库。
 .scratch/
