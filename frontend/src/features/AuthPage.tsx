@@ -3,7 +3,11 @@ import { Button, Card, Chip, Input, Label } from '@heroui/react'
 import { ChevronDown, FileText, FolderKanban, ListChecks, NotebookPen, ShieldCheck, Sparkles } from 'lucide-react'
 import { api, AuthResponse } from '../api'
 
-type Props = { onAuthenticated: (response: AuthResponse) => void }
+type Props = {
+  onAuthenticated: (response: AuthResponse) => void
+  /** 游客态进入认证页时给出的返回路径（ADR 008 §2.1） */
+  onContinueAsGuest?: () => void
+}
 
 /**
  * 左栏介绍区的「使用路径」。
@@ -34,7 +38,7 @@ const introSteps = [
   }
 ]
 
-export function AuthPage({ onAuthenticated }: Props) {
+export function AuthPage({ onAuthenticated, onContinueAsGuest }: Props) {
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -150,7 +154,7 @@ export function AuthPage({ onAuthenticated }: Props) {
                 </Button>
               </form>
             </Card.Content>
-            <Card.Footer>
+            <Card.Footer className="auth-card-footer">
               <Button
                 variant="ghost"
                 onPress={() => {
@@ -160,6 +164,11 @@ export function AuthPage({ onAuthenticated }: Props) {
               >
                 {isLogin ? '还没有账号？注册' : '已有账号？登录'}
               </Button>
+              {onContinueAsGuest && (
+                <Button variant="ghost" onPress={onContinueAsGuest}>
+                  先以游客身份继续
+                </Button>
+              )}
             </Card.Footer>
           </Card>
         </section>

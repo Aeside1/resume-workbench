@@ -61,4 +61,20 @@ describe('AuthPage 双栏认证页', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('邮箱或密码不正确')
     expect(screen.getByRole('heading', { name: '登录工作台' })).toBeInTheDocument()
   })
+
+  it('游客进入认证页时可以「先以游客身份继续」返回工作台', () => {
+    const onContinueAsGuest = vi.fn()
+    render(<AuthPage onAuthenticated={vi.fn()} onContinueAsGuest={onContinueAsGuest} />)
+
+    fireEvent.click(screen.getByRole('button', { name: '先以游客身份继续' }))
+
+    expect(onContinueAsGuest).toHaveBeenCalledOnce()
+  })
+
+  it('没有游客返回路径时不渲染返回按钮（不为已登录用户造多余出口）', () => {
+    render(<AuthPage onAuthenticated={vi.fn()} />)
+
+    expect(screen.queryByRole('button', { name: '先以游客身份继续' })).not.toBeInTheDocument()
+  })
 })
+

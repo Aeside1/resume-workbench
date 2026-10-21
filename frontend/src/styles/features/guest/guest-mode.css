@@ -1,0 +1,89 @@
+/* ==========================================================================
+   Guest Mode（未登录的游客工作台，ADR 008）
+
+   横幅与登录门禁都只负责版式骨架：卡片 / 按钮 / 文案颜色一律来自 HeroUI
+   组件与语义变量，不写死明暗色值（AGENTS.md 第 3/4 条）。
+   ========================================================================== */
+
+.guest-banner {
+  margin-bottom: 20px;
+}
+
+.guest-banner-content {
+  display: flex;
+  /* HeroUI 的 card__content 默认是 column；横幅横排要显式写 row，
+     否则 flex-basis 会落到高度轴，把卡片撑成一整块空白。 */
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.guest-banner-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--surface-secondary);
+  color: var(--muted);
+}
+
+.guest-banner-text {
+  flex: 1 1 260px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guest-banner-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.guest-banner-copy {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+.guest-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 侧栏身份名片在游客态显示两行短文案，不需要邮箱那样强的收缩限制 */
+.guest-plan-gate {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.guest-plan-gate-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--foreground);
+}
+
+.guest-plan-gate-description {
+  max-width: 62ch;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .guest-banner-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
