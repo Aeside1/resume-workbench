@@ -68,6 +68,14 @@ User
 
 **简历组合（简历方案）仍在开发中**：它已经能跑通「列表 → 编排 → 文稿 → 留档」的链路，但**整体结构与边界尚未定稿**，后续版本很可能对它做**破坏性重构**——数据模型、接口路径、概念命名都可能改。现阶段请当成预览，不要作为稳定依赖；对外承诺的能力以经历资产管理为准。
 
+### 未登录也能进：游客工作台（本地草稿）
+
+打开页面不再先要账号：没有登录时直接落到**游客工作台**，可以浏览工作台、试写经历分组 / 具体工作内容 / 简历亮点，也可以一键载入示例内容。
+
+- **数据只在这台浏览器**：游客态的一切读写都落在 `localStorage['resume-guest-workspace']`，不发任何业务请求；换设备、清站点数据即丢失，登录后也不会自动并入账号。
+- **简历方案需要登录**：组合、留档与文稿装配依赖账号（[ADR 008](docs/adr/008-guest-workbench-with-browser-local-drafts.md)），游客态在简历方案入口给登录引导。
+- **服务端口径不变**：没有令牌的接口请求依旧 401；游客态不是匿名账号，也没有服务端身份。
+
 ### 已可用：经历资产（核心）
 
 | 模块 | 能力 |
@@ -183,7 +191,7 @@ npm run test        # vitest run（26 个测试文件 / 187 条用例）
 npm run build       # 生产构建
 ```
 
-当前基线（`v0.1.0`）：后端 **33 passed**，前端 **187 passed / 26 files**，`typecheck` 与 `build` 无错。
+当前基线（`v0.1.0`）：后端 **33 passed**，前端 **250 passed / 34 files**，`typecheck` 与 `build` 无错。
 
 **契约测试**：后端 `backend/tests/test_openapi_contract.py` 把方案与亮点相关路由固化为快照 `frontend/src/contracts/openapi-plan-paths.json`，前端 `src/api.contract.test.ts` 断言 `api.ts` 的每个调用都真实存在、且后端每条路由都被前端覆盖 —— 任何一侧单独改路径或字段都会红，而不是静默 404。
 
@@ -191,7 +199,11 @@ npm run build       # 生产构建
 
 ```bash
 cd frontend
-npm run test:editor:e2e
+npm run test:editor:e2e   # 富文本编辑器（接口用请求拦截替身）
+
+# 游客工作台（ADR 008）：不需要后端，验证未登录可进入 / 本地草稿 / 简历方案门禁 / 不出网
+npm run dev -- --port 5175
+GUEST_E2E_BASE_URL=http://localhost:5175 npm run test:guest:e2e
 ```
 
 ## 项目结构
@@ -231,7 +243,7 @@ AGENTS.md                                   本仓库的协作约定
 
 ## API 概览
 
-所有业务接口都以**当前登录用户**为作用域，服务端解析归属，不接受客户端提交用户标识。
+所有业务接口都以**当前登录用户**为作用域，服务端解析归属，不接受客户端提交用户标识。未登录的游客工作台不调用这些接口：它在浏览器本地读写草稿（[ADR 008](docs/adr/008-guest-workbench-with-browser-local-drafts.md)），所以下面的路径对无令牌请求仍然一律 401。
 
 ```text
 认证          POST /api/auth/register | login | logout     GET /api/auth/me
@@ -285,6 +297,7 @@ AGENTS.md                                   本仓库的协作约定
 5. **单机部署假设**：按 100–1000 用户规模设计，编排为单台服务器 + Docker Compose，没有水平扩展与高可用设计。
 6. **依赖告警**：`npm audit` 仍有若干条中高危，全部落在开发工具链（vitest / vite / esbuild 等），不进运行时分包，属可单独处理的升级项。
 7. **刷新 / 关页的保存兜底未做**：`beforeunload` 之前无法保证异步请求完成，需要 `sendBeacon` 或本地草稿，尚待处理。（慢网下「请求在途时丢尾段」已由保存队列修复，见 `frontend/src/features/useSaveQueue.ts`。）
+8. **游客本地草稿不迁移**：未登录试写的内容只存在当前浏览器，登录后不会自动导入账号（去重与合并冲突需单独设计，见 [issue #13](https://github.com/Aeside1/resume-workbench/issues/13) 与 `docs/adr/008-guest-workbench-with-browser-local-drafts.md`）。
 
 ## 路线图
 

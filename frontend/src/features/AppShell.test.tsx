@@ -2,7 +2,7 @@ import '@testing-library/jest-dom/vitest'
 import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppShell } from './AppShell'
-import type { Session } from '../session'
+import { GUEST_SESSION, type Session } from '../session'
 
 const mockSession: Session = {
   token: 'test-token',
@@ -194,5 +194,38 @@ describe('AppShell 侧栏折叠（04h）', () => {
 
     expect(screen.queryByRole('button', { name: '收起侧栏' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '展开侧栏' })).not.toBeInTheDocument()
+  })
+})
+
+describe('AppShell 游客态（ADR 008）', () => {
+  it('游客身份名片与「登录 / 注册」入口取代退出登录', () => {
+    const onRequestAuth = vi.fn()
+    render(
+      <AppShell session={GUEST_SESSION} onRequestAuth={onRequestAuth}>
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(within(sidebar).getByText('游客工作台')).toBeInTheDocument()
+    expect(within(sidebar).getByText('本地草稿 · 未登录')).toBeInTheDocument()
+    expect(within(sidebar).queryByRole('button', { name: '退出登录' })).not.toBeInTheDocument()
+
+    fireEvent.click(within(sidebar).getByRole('button', { name: '登录 / 注册' }))
+    expect(onRequestAuth).toHaveBeenCalledOnce()
+  })
+
+  it('折叠态下游客仍能按可访问名找到登录入口（不依赖被藏的文本）', () => {
+    render(
+      <AppShell session={GUEST_SESSION} onRequestAuth={vi.fn()} isSidebarCollapsed onToggleSidebar={vi.fn()}>
+        <div>主内容</div>
+      </AppShell>
+    )
+
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(sidebar).toHaveClass('app-sidebar--collapsed')
+    expect(within(sidebar).queryByText('本地草稿 · 未登录')).not.toBeInTheDocument()
+    expect(within(sidebar).getByRole('button', { name: '登录 / 注册' })).toBeInTheDocument()
+    expect(within(sidebar).getByRole('switch', { name: '深色模式' })).toBeInTheDocument()
   })
 })

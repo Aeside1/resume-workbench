@@ -30,6 +30,9 @@
 @import "./styles/features/hub/experience-hub.css";
 @import "./styles/features/hub/experience-card.css";
 
+/* 4.2.1 未登录的游客工作台（横幅 + 简历方案登录门禁，ADR 008） */
+@import "./styles/features/guest/guest-mode.css";
+
 /* 4.3 Scene 2: Focus Canvas & Sub-features */
 @import "./styles/features/canvas/focus-canvas.css";
 @import "./styles/features/canvas/outline-navigator.css";

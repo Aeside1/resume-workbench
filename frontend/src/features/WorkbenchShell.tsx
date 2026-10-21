@@ -3,11 +3,14 @@ import { Button, Card, Kbd } from '@heroui/react'
 import { ArrowRight, FileText, LayoutGrid, Layers, PanelRight, PanelRightClose } from 'lucide-react'
 import { motion } from 'framer-motion'
 import type { ExperienceGroup, ResumePlan } from '../api'
-import type { Session } from '../session'
+import { isGuestSession, type Session } from '../session'
+import { clearGuestWorkspace, isGuestWorkspaceEmpty, loadSampleWorkspace } from '../guest/workspace'
 import { AppShell, type AppShellMode } from './AppShell'
 import { FocusTopbar, type FocusBreadcrumbLevel } from './FocusTopbar'
+import { GuestBanner } from './GuestBanner'
 import { WorkAreaHeader } from './WorkAreaHeader'
 import { ExperienceHubPanel } from './hub/ExperienceHubPanel'
+import { GuestPlanGate } from './plans/GuestPlanGate'
 import { PlanEditor } from './plans/PlanEditor'
 import { PlanHubPanel } from './plans/PlanHubPanel'
 import { FocusCanvasContainer, type ZenTopbarState } from './canvas/FocusCanvasContainer'
@@ -15,7 +18,7 @@ import type { SaveStatus } from './useTransientSaveStatus'
 import { CONTENT_SETTLE_FROM, CONTENT_SETTLE_TO, CONTENT_SETTLE_TRANSITION } from './motion'
 import { ToastProvider } from '../components/ui/Toast'
 
-type Props = { session: Session; onLogout: () => void }
+type Props = { session: Session; onLogout?: () => void; onRequestAuth?: () => void }
 type View = 'dashboard' | 'experiences' | 'plans'
 /** 侧栏折叠状态的持久化键（04h） */
 const SIDEBAR_COLLAPSED_KEY = 'resume-sidebar-collapsed'
@@ -23,7 +26,8 @@ const SIDEBAR_COLLAPSED_KEY = 'resume-sidebar-collapsed'
 /** 内容区是否展开了某个对象（分组画布 / 简历方案编辑器）；外壳形态由它推导（04g） */
 type WorkbenchStage = 'hub' | 'expanded'
 
-export function WorkbenchShell({ session, onLogout }: Props) {
+export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
+  const isGuest = isGuestSession(session)
   const [view, setView] = useState<View>('experiences')
   const [stage, setStage] = useState<WorkbenchStage>('hub')
   // 侧栏折叠：刷新后保持（04h）
@@ -122,6 +126,33 @@ export function WorkbenchShell({ session, onLogout }: Props) {
   // 而不是由外壳直接卸载，否则会绕过 flush 保存（ADR 004 §2.4）。
   const handleBackToCanvas = useCallback(() => setZenExitSignal((n) => n + 1), [])
 
+  // 游客工作台的本地草稿（ADR 008）：示例内容与清空都只能从外壳发起，
+  // 改完数据后把经历内容面板整体重挂并退回列表，避免画布拿着已经消失的分组。
+  const [hasGuestDrafts, setHasGuestDrafts] = useState(() => !isGuestWorkspaceEmpty())
+  const [guestRevision, setGuestRevision] = useState(0)
+
+  const refreshGuestDrafts = useCallback(() => {
+    setHasGuestDrafts(!isGuestWorkspaceEmpty())
+    setGuestRevision((n) => n + 1)
+    setView('experiences')
+    setStage('hub')
+    setActiveExperience(null)
+    setActivePlan(null)
+    resetZenState()
+  }, [resetZenState])
+
+  const handleLoadSample = useCallback(() => {
+    if (hasGuestDrafts && !window.confirm('载入示例内容会覆盖当前的本地草稿，确定继续吗？')) return
+    loadSampleWorkspace()
+    refreshGuestDrafts()
+  }, [hasGuestDrafts, refreshGuestDrafts])
+
+  const handleClearGuestDrafts = useCallback(() => {
+    if (!window.confirm('清空这台浏览器里的本地草稿？该操作不可撤销。')) return
+    clearGuestWorkspace()
+    refreshGuestDrafts()
+  }, [refreshGuestDrafts])
+
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((current) => {
       const next = !current
@@ -211,12 +242,21 @@ export function WorkbenchShell({ session, onLogout }: Props) {
       <AppShell
         session={session}
         onLogout={onLogout}
+        onRequestAuth={onRequestAuth}
         navigationButtons={navigationButtons}
         isSidebarCollapsed={isSidebarCollapsed}
         onToggleSidebar={toggleSidebar}
         mode={shellMode}
         isFocusOpen={isFocusOpen}
       >
+        {isGuest && (
+          <GuestBanner
+            hasLocalDrafts={hasGuestDrafts}
+            onRequestAuth={onRequestAuth}
+            onLoadSample={handleLoadSample}
+            onClear={handleClearGuestDrafts}
+          />
+        )}
         <motion.div
           key={
             view === 'experiences'
@@ -267,6 +307,7 @@ export function WorkbenchShell({ session, onLogout }: Props) {
               </>
             ) : (
               <ExperienceHubPanel
+                key={isGuest ? `guest-hub-${guestRevision}` : 'hub-experiences'}
                 session={session}
                 onSelectExperience={handleSelectExperience}
               />
@@ -278,9 +319,9 @@ export function WorkbenchShell({ session, onLogout }: Props) {
               <div className="page-heading">
                 <div>
                   <p className="eyebrow">个人职业工作台</p>
-                  <h2 className="workbench-title">{session.user.email}</h2>
+                  <h2 className="workbench-title">{isGuest ? '游客工作台' : session.user.email}</h2>
                 </div>
-                <p className="page-context">查看最近编辑的内容</p>
+                <p className="page-context">{isGuest ? '本地草稿 · 未登录' : '查看最近编辑的内容'}</p>
               </div>
               <Card>
                 <Card.Header>
@@ -319,7 +360,10 @@ export function WorkbenchShell({ session, onLogout }: Props) {
           )}
 
           {view === 'plans' && (
-            activePlan ? (
+            isGuest ? (
+              /* 简历方案是账号能力（ADR 008 §2.3）：游客态只给入口与登录引导 */
+              <GuestPlanGate onRequestAuth={onRequestAuth} />
+            ) : activePlan ? (
               <PlanEditor
                 session={session}
                 plan={activePlan}

@@ -4,9 +4,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { api } from './api'
 import { pasteMarkdown } from './test/pasteMarkdown'
+import { GUEST_TOKEN } from './session'
 
 vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn(), deleteWorkContent: vi.fn(), resumeHighlights: vi.fn(), createResumeHighlight: vi.fn(), updateResumeHighlight: vi.fn(), copyResumeHighlight: vi.fn(), archiveResumeHighlight: vi.fn(), restoreResumeHighlight: vi.fn(), deleteResumeHighlight: vi.fn(), resumePlans: vi.fn(), createResumePlan: vi.fn(), resumePlan: vi.fn(), updateResumePlan: vi.fn(), archiveResumePlan: vi.fn(), restoreResumePlan: vi.fn(), deleteResumePlan: vi.fn(), addPlanBlock: vi.fn(), updatePlanBlock: vi.fn(), removePlanBlock: vi.fn(), reorderPlanBlocks: vi.fn(), addPlanItem: vi.fn(), updatePlanItem: vi.fn(), removePlanItem: vi.fn(), reorderPlanItems: vi.fn(), planCandidates: vi.fn(), planDocument: vi.fn(), planArchives: vi.fn(), restorePlanArchive: vi.fn(), forkResumePlan: vi.fn() }, isReferenceBlocked: (error: { status?: number } | undefined) => Boolean(error?.status === 409) }))
 const mocked = vi.mocked(api)
+
+/**
+ * 认证页已不是默认入口（ADR 008）：未登录先落到游客工作台，
+ * 从侧栏底部的「登录 / 注册」进入认证页。
+ */
+function renderAppAtAuth() {
+  render(<App />)
+  const sidebar = screen.getByRole('complementary', { name: '主导航' })
+  fireEvent.click(within(sidebar).getByRole('button', { name: '登录 / 注册' }))
+}
 
 beforeEach(() => { localStorage.clear(); vi.resetAllMocks(); vi.spyOn(window, 'scrollTo').mockImplementation(() => {}); mocked.experienceGroups.mockResolvedValue([]); mocked.workContents.mockResolvedValue([]); mocked.resumeHighlights.mockResolvedValue([]); mocked.resumePlans.mockResolvedValue([]) })
 afterEach(cleanup)
@@ -14,7 +25,7 @@ afterEach(cleanup)
 describe('认证后的工作台', () => {
   it('登录后直接进入个人职业工作台', async () => {
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'a@example.com' } })
-    render(<App />); fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'a@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
+    renderAppAtAuth(); fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'a@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByText('a@example.com')).toBeInTheDocument())
     expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument()
     expect(screen.queryByRole('combobox', { name: '当前工作区' })).not.toBeInTheDocument()
@@ -24,7 +35,7 @@ describe('认证后的工作台', () => {
     mocked.register.mockResolvedValue({ token: 'token', user: { id: 1, email: 'new@example.com' } })
     mocked.logout.mockResolvedValue(undefined)
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.click(screen.getByRole('button', { name: '还没有账号？注册' }))
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'new@example.com' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
@@ -32,13 +43,15 @@ describe('认证后的工作台', () => {
 
     await waitFor(() => expect(screen.getByText('new@example.com')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: '退出登录' }))
-    await waitFor(() => expect(screen.getByRole('heading', { name: '登录工作台' })).toBeInTheDocument())
+    // 退出登录回到游客工作台，而不是回到登录页（ADR 008 §2.1）
+    await waitFor(() => expect(screen.getByText('游客模式：数据只保存在这台浏览器')).toBeInTheDocument())
+    expect(screen.queryByRole('heading', { name: '登录工作台' })).not.toBeInTheDocument()
   })
 
   it('通过模块导航切换工作台、经历内容和简历方案页面', async () => {
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'navigation@example.com' } })
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'navigation@example.com' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
@@ -60,7 +73,7 @@ describe('认证后的工作台', () => {
     const createdContent = { id: 20, experience_group_id: 10, title: '梳理状态流转', detailed_record: '重构下单与支付链路', technical_materials: 'React、TypeScript', result_data: '异常率降低 40%', supplementary_notes: null, position: 0, archived: false, created_at: '', updated_at: '' }
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'creator@example.com' } })
     mocked.createExperienceGroup.mockResolvedValue(createdGroup); mocked.createWorkContent.mockResolvedValue(createdContent)
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'creator@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByText('经历分组')).toBeInTheDocument())
 
@@ -89,7 +102,7 @@ describe('认证后的工作台', () => {
     mocked.experienceGroups.mockResolvedValue([group]); mocked.workContents.mockResolvedValue([first, second]); mocked.updateWorkContent.mockResolvedValue({ ...first, title: '第一项（已编辑）' }); mocked.deleteWorkContent.mockResolvedValue(undefined as any)
     vi.spyOn(window, 'confirm').mockReturnValue(true)
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'content-actions@example.com' } }); fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } }); fireEvent.click(screen.getByRole('button', { name: '登录' }))
     await waitFor(() => expect(screen.getByText('平台项目')).toBeInTheDocument())
     fireEvent.click(screen.getByText('平台项目'))
@@ -118,7 +131,7 @@ describe('认证后的工作台', () => {
     mocked.experienceGroups.mockResolvedValue([group])
     mocked.workContents.mockImplementation(async (_token, _groupId, includeArchived) => includeArchived ? [first, archived, second] : [first, second])
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'visible-order@example.com' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
@@ -139,7 +152,7 @@ describe('认证后的工作台', () => {
     mocked.archiveExperienceGroup.mockResolvedValue(archivedGroup)
     mocked.deleteExperienceGroup.mockResolvedValue(undefined as any)
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'archive-group@example.com' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
@@ -169,7 +182,7 @@ describe('认证后的工作台', () => {
   it('侧栏可折叠为图标态：导航项仍可按可访问名查到，并写入本地持久化（04h）', async () => {
     mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'collapse@example.com' } })
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'collapse@example.com' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
@@ -194,7 +207,7 @@ describe('认证后的工作台', () => {
     mocked.workContents.mockResolvedValue([item])
     mocked.updateWorkContent.mockResolvedValue({ ...item, title: '第一项（改）' })
 
-    render(<App />)
+    renderAppAtAuth()
     fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'focus-region@example.com' } })
     fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
     fireEvent.click(screen.getByRole('button', { name: '登录' }))
@@ -261,3 +274,30 @@ describe('认证后的工作台', () => {
   })
 })
 
+
+describe('身份切换（ADR 008 §2.4）', () => {
+  it('退出登录清空工作台状态：账号里的经历不会带进游客态', async () => {
+    const group = { id: 10, user_id: 1, name: '账号专属经历', type: 'project' as const, organization: null, start_date: null, end_date: null, description: null, archived: false, created_at: '', updated_at: '' }
+    mocked.login.mockResolvedValue({ token: 'token', user: { id: 1, email: 'privacy@example.com' } })
+    mocked.logout.mockResolvedValue(undefined as any)
+    // api 按 token 分派：游客令牌不会拿到账号数据（与真实 api 的分派行为一致）
+    mocked.experienceGroups.mockImplementation(async (token) => (token === GUEST_TOKEN ? [] : [group]))
+    mocked.workContents.mockResolvedValue([])
+
+    renderAppAtAuth()
+    fireEvent.change(screen.getByLabelText('邮箱'), { target: { value: 'privacy@example.com' } })
+    fireEvent.change(screen.getByLabelText('密码'), { target: { value: 'password123' } })
+    fireEvent.click(screen.getByRole('button', { name: '登录' }))
+
+    await waitFor(() => expect(screen.getByText('账号专属经历')).toBeInTheDocument())
+    fireEvent.click(screen.getByText('账号专属经历'))
+    await waitFor(() => expect(screen.getByRole('button', { name: '返回经历内容' })).toBeInTheDocument())
+
+    fireEvent.click(screen.getByRole('button', { name: '退出登录' }))
+
+    await waitFor(() => expect(screen.getByText('游客模式：数据只保存在这台浏览器')).toBeInTheDocument())
+    expect(screen.queryByText('账号专属经历')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: '返回经历内容' })).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument()
+  })
+})
