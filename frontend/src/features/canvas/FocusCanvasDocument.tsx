@@ -37,10 +37,7 @@ export type FocusCanvasDocumentProps = {
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
   /** 就地编辑的保存态上抛（由卡片的保存队列发布，与顶栏 Chip 同口径，issue #8） */
   onSaveStatusChange?: (workContentId: number, status: SaveStatus) => void
-  /**
-   * 唯一的排序入口：拖拽结束与方向键都交出「完整的新顺序」。
-   * 不再有 index ↔ index 的中间层，两套入口只会让「到底哪一套生效」不可证伪。
-   */
+  /** 唯一的排序入口：拖拽结束与方向键都交出「完整的新顺序」，不存在 index ↔ index 的中间层 */
   onReorderContents?: (newContents: WorkContent[]) => void
   onDeleteContent: (item: WorkContent) => void
   onArchiveContent?: (item: WorkContent) => void
