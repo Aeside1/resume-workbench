@@ -34,19 +34,12 @@ export type WorkContentBlockProps = {
   onSave: (draft: ContentDraft) => Promise<void> | void
   /** 把本卡片的保存态上抛给容器（顶栏 Chip 与卡片徽章共用同一套口径） */
   onSaveStatusChange?: (status: SaveStatus) => void
-  onMove?: (direction: -1 | 1) => void
   onDelete?: () => void
   onArchive?: () => void
   onOpenDrawer?: () => void
   onOpenZenMode?: () => void
   isActive?: boolean
-  isDragging?: boolean
-  dragOverPosition?: 'top' | 'bottom' | null
-  onDragStart?: (e: React.DragEvent) => void
-  onDragOver?: (e: React.DragEvent) => void
-  onDragLeave?: (e: React.DragEvent) => void
-  onDrop?: (e: React.DragEvent) => void
-  onDragEnd?: (e: React.DragEvent) => void
+  /** 拖拽只走 framer-motion（带 handle 指针拖动），不再有原生 HTML5 拖放的中间态样式（issue #9） */
   onDragHandlePointerDown?: (e: React.PointerEvent) => void
 }
 
@@ -150,13 +143,6 @@ export function WorkContentBlock({
   onOpenDrawer,
   onOpenZenMode,
   isActive = false,
-  isDragging = false,
-  dragOverPosition = null,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDragEnd,
   onDragHandlePointerDown
 }: WorkContentBlockProps) {
   const parsedData = useMemo(
@@ -273,18 +259,21 @@ export function WorkContentBlock({
     [item, parsedData.note]
   )
 
+  /** 键盘等价路径：上下方向键把本卡片移动一格。手柄既宣称为按钮，就必须真的能被键盘操作 */
+  const handleDragHandleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+    e.preventDefault()
+    onKeyboardReorder?.(e.key === 'ArrowUp' ? -1 : 1)
+  }
+
   return (
     <>
       <article
         ref={cardRef}
         id={`work-content-${item.id}`}
-        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : ''} ${isActive ? 'work-content-card--active' : ''} ${isDragging ? 'work-content-card--dragging' : ''} ${dragOverPosition === 'top' ? 'work-content-card--drag-over-top' : ''} ${dragOverPosition === 'bottom' ? 'work-content-card--drag-over-bottom' : ''}`}
-      aria-label={`工作项 ${index + 1}: ${item.title}`}
-      onDragOver={onDragOver}
-      onDragLeave={onDragLeave}
-      onDrop={onDrop}
-      onDragEnd={onDragEnd}
-    >
+        className={`work-content-card ${item.archived ? 'archived' : ''} ${isEditing ? 'editing' : ''} ${isActive ? 'work-content-card--active' : ''}`}
+        aria-label={`工作项 ${index + 1}: ${item.title}`}
+      >
       {isEditing ? (
         <form className="work-content-edit-form" onSubmit={handleSubmit}>
           <div className="edit-form-header">
@@ -323,12 +312,12 @@ export function WorkContentBlock({
               {!readOnly && (
                 <span
                   className="work-content-drag-handle"
-                  draggable={!isEditing}
-                  onDragStart={onDragStart}
                   onPointerDown={onDragHandlePointerDown}
+                  onKeyDown={handleDragHandleKeyDown}
                   style={{ touchAction: 'none' }}
-                  title="按住拖拽调整排序"
+                  title="按住拖拽调整排序，或用方向键上移、下移"
                   aria-label="拖拽调整排序"
+                  aria-keyshortcuts="ArrowUp ArrowDown"
                   role="button"
                   tabIndex={0}
                 >
@@ -393,7 +382,7 @@ export function WorkContentBlock({
           <div
             className="work-content-typography-body work-content-card-body"
             onClick={() => {
-              if (!readOnly && !isDragging) {
+              if (!readOnly) {
                 onStartEdit()
               }
             }}
