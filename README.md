@@ -187,7 +187,7 @@ docker compose run --rm --volume "$PWD:/repo" --workdir /repo/backend api pytest
 ```bash
 cd frontend
 npm run typecheck   # tsc -b
-npm run test        # vitest run（26 个测试文件 / 187 条用例）
+npm run test        # vitest run（34 个测试文件 / 252 条用例）
 npm run build       # 生产构建
 ```
 
@@ -201,10 +201,15 @@ npm run build       # 生产构建
 cd frontend
 npm run test:editor:e2e   # 富文本编辑器（接口用请求拦截替身）
 
+# 拖拽排序的唯一证伪手段（issue #9）：自带 vite dev server，无需先手动起前端
+npm run test:reorder:e2e
+
 # 游客工作台（ADR 008）：不需要后端，验证只读示例内容 / 简历方案门禁 / 不出网
 npm run dev -- --port 5175
 GUEST_E2E_BASE_URL=http://localhost:5175 npm run test:guest:e2e
 ```
+
+**为什么拖拽必须走真浏览器**：卡片排序是 framer-motion 的指针拖拽（按住手柄才启动），jsdom 里没有真实布局与指针捕获，`getBoundingClientRect` 全为 0，拖出来的顺序是假的。因此「拖拽后顺序翻转 + 排序请求带完整新顺序落库」这两条断言只在 `scripts/reorder.e2e.mjs` 里，单测层面只保留「手柄存在、没有上下移按钮」这类静态约定。
 
 ## 项目结构
 

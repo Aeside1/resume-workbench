@@ -9,7 +9,8 @@
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:editor:e2e": "node scripts/live-editor.e2e.mjs",
-    "test:guest:e2e": "node scripts/guest-mode.e2e.mjs"
+    "test:guest:e2e": "node scripts/guest-mode.e2e.mjs",
+    "test:reorder:e2e": "node scripts/reorder.e2e.mjs"
   },
   "dependencies": {
     "@heroui/react": "^3.2.4",

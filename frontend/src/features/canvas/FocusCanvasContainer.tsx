@@ -363,6 +363,11 @@ export function FocusCanvasContainer({
       ?.scrollIntoView({ behavior: shouldReduceMotion ? 'auto' : 'smooth', block: 'nearest' })
   }, [zenModeWorkContentId, shouldReduceMotion])
 
+  /**
+   * 排序的唯一入口（issue #9）：接收拖拽结束后的完整新顺序。
+   * 原本还有 index → index 的 handleReorderContent / handleMoveContent，那是给原生 HTML5
+   * 拖放与上下移按钮用的，两条老路径已删——保留两套入口只会让「拖动到底生效哪一套」不可证伪。
+   */
   const handleReorderContents = async (newContents: WorkContent[]) => {
     setContents(newContents)
     try {
@@ -384,29 +389,6 @@ export function FocusCanvasContainer({
       setError((e as Error).message)
       setContents(contents)
     }
-  }
-
-  const handleReorderContent = async (sourceIndex: number, targetIndex: number) => {
-    if (
-      sourceIndex === targetIndex ||
-      sourceIndex < 0 ||
-      targetIndex < 0 ||
-      sourceIndex >= contents.length ||
-      targetIndex >= contents.length
-    ) {
-      return
-    }
-
-    const reordered = [...contents]
-    const [moved] = reordered.splice(sourceIndex, 1)
-    reordered.splice(targetIndex, 0, moved)
-    await handleReorderContents(reordered)
-  }
-
-  const handleMoveContent = async (index: number, direction: -1 | 1) => {
-    const targetIndex = index + direction
-    if (targetIndex < 0 || targetIndex >= contents.length) return
-    await handleReorderContent(index, targetIndex)
   }
 
   const zenWorkContent = useMemo(
@@ -484,8 +466,6 @@ export function FocusCanvasContainer({
               onSaveStatusChange={(workContentId, status) =>
                 reportSaveStatus(`card:${workContentId}`, status)
               }
-              onMoveContent={handleMoveContent}
-              onReorderContent={handleReorderContent}
               onReorderContents={handleReorderContents}
               onDeleteContent={handleDeleteContent}
               onArchiveContent={handleArchiveContent}

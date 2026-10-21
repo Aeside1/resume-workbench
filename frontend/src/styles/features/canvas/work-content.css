@@ -89,20 +89,6 @@
   border-bottom: 1px solid var(--separator);
 }
 
-.work-content-card--dragging {
-  opacity: 0.45;
-  border: 1.5px dashed var(--accent);
-  transform: scale(0.99);
-}
-
-.work-content-card--drag-over-top {
-  border-top: 3px solid var(--accent);
-}
-
-.work-content-card--drag-over-bottom {
-  border-bottom: 3px solid var(--accent);
-}
-
 .work-content-title-meta {
   display: flex;
   align-items: center;

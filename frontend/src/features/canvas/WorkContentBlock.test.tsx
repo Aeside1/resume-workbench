@@ -49,7 +49,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
         onStartEdit={vi.fn()}
         onCancelEdit={vi.fn()}
         onSave={vi.fn()}
-        onMove={vi.fn()}
         onArchive={vi.fn()}
         onOpenDrawer={vi.fn()}
         onOpenZenMode={vi.fn()}
@@ -196,7 +195,6 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
         onStartEdit={vi.fn()}
         onCancelEdit={handleCancel}
         onSave={handleSave}
-        onMove={vi.fn()}
       />
     )
 

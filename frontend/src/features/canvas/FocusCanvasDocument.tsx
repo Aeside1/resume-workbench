@@ -20,8 +20,11 @@ export type FocusCanvasDocumentProps = {
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
   /** 就地编辑的保存态上抛（由卡片的保存队列发布，与顶栏 Chip 同口径，issue #8） */
   onSaveStatusChange?: (workContentId: number, status: SaveStatus) => void
-  onMoveContent?: (index: number, direction: -1 | 1) => void
-  onReorderContent?: (sourceIndex: number, targetIndex: number) => void
+  /**
+   * 唯一的排序入口：拖拽结束后把「新顺序」整份交出去。
+   * 不再有 index ↔ index 的 onReorderContent / onMoveContent——那是原生 HTML5 拖放与
+   * 上下移按钮时代的两条老路径，2026-10 已随本票删除（issue #9）。
+   */
   onReorderContents?: (newContents: WorkContent[]) => void
   onDeleteContent: (item: WorkContent) => void
   onArchiveContent?: (item: WorkContent) => void
@@ -51,8 +54,6 @@ export function FocusCanvasDocument({
   onCancelEdit,
   onSaveContent,
   onSaveStatusChange,
-  onMoveContent,
-  onReorderContent,
   onReorderContents,
   onDeleteContent,
   onArchiveContent,
@@ -65,50 +66,6 @@ export function FocusCanvasDocument({
 }: FocusCanvasDocumentProps) {
 
   const [newDraft, setNewDraft] = useState<ContentDraft>(emptyNewDraft)
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null)
-  const [dragOverInfo, setDragOverInfo] = useState<{ index: number; position: 'top' | 'bottom' } | null>(null)
-
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    setDraggedIndex(index)
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', String(index))
-  }
-
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault()
-    e.dataTransfer.dropEffect = 'move'
-    if (draggedIndex === null || draggedIndex === index) {
-      setDragOverInfo(null)
-      return
-    }
-    const rect = e.currentTarget.getBoundingClientRect()
-    const midY = rect.top + rect.height / 2
-    const position = e.clientY < midY ? 'top' : 'bottom'
-    setDragOverInfo({ index, position })
-  }
-
-  const handleDragLeave = (_e: React.DragEvent, index: number) => {
-    if (dragOverInfo?.index === index) {
-      setDragOverInfo(null)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault()
-    if (draggedIndex === null || draggedIndex === targetIndex) {
-      setDraggedIndex(null)
-      setDragOverInfo(null)
-      return
-    }
-    onReorderContent?.(draggedIndex, targetIndex)
-    setDraggedIndex(null)
-    setDragOverInfo(null)
-  }
-
-  const handleDragEnd = () => {
-    setDraggedIndex(null)
-    setDragOverInfo(null)
-  }
 
   const handleCreateSubmit = (e: FormEvent) => {
     e.preventDefault()
@@ -151,24 +108,15 @@ export function FocusCanvasDocument({
                 index={index}
                 totalCount={contents.length}
                 editingId={editingId}
-                draggedIndex={draggedIndex}
-                dragOverInfo={dragOverInfo}
                 onStartEdit={onStartEdit}
                 onCancelEdit={onCancelEdit}
                 onSaveContent={onSaveContent}
                 onSaveStatusChange={onSaveStatusChange}
-                onMoveContent={onMoveContent}
                 onDeleteContent={onDeleteContent}
                 onArchiveContent={onArchiveContent}
                 activeDrawerWorkContentId={activeDrawerWorkContentId}
                 onOpenDrawer={onOpenDrawer}
                 onOpenZenMode={onOpenZenMode}
-                onDragStart={handleDragStart}
-
-                onDragOver={handleDragOver}
-                onDragLeave={handleDragLeave}
-                onDrop={handleDrop}
-                onDragEnd={handleDragEnd}
               />
             ))}
           </Reorder.Group>
@@ -228,46 +176,30 @@ function FocusWorkContentItem({
   totalCount,
   readOnly,
   editingId,
-  draggedIndex,
-  dragOverInfo,
   onStartEdit,
   onCancelEdit,
   onSaveContent,
   onSaveStatusChange,
-  onMoveContent,
   onDeleteContent,
   onArchiveContent,
   activeDrawerWorkContentId,
   onOpenDrawer,
-  onOpenZenMode,
-  onDragStart,
-  onDragOver,
-  onDragLeave,
-  onDrop,
-  onDragEnd
+  onOpenZenMode
 }: {
   item: WorkContent
   index: number
   totalCount: number
   readOnly: boolean
   editingId: number | null
-  draggedIndex: number | null
-  dragOverInfo: { index: number; position: 'top' | 'bottom' } | null
   onStartEdit: (item: WorkContent) => void
   onCancelEdit: () => void
   onSaveContent: (draft: ContentDraft, editingId: number | null) => Promise<void> | void
   onSaveStatusChange?: (workContentId: number, status: SaveStatus) => void
-  onMoveContent?: (index: number, direction: -1 | 1) => void
   onDeleteContent: (item: WorkContent) => void
   onArchiveContent?: (item: WorkContent) => void
   activeDrawerWorkContentId?: number | null
   onOpenDrawer?: (item: WorkContent) => void
   onOpenZenMode?: (item: WorkContent) => void
-  onDragStart: (e: React.DragEvent, index: number) => void
-  onDragOver: (e: React.DragEvent, index: number) => void
-  onDragLeave: (e: React.DragEvent, index: number) => void
-  onDrop: (e: React.DragEvent, index: number) => void
-  onDragEnd: () => void
 }) {
   const dragControls = useDragControls()
   const isEditing = editingId === item.id
@@ -288,24 +220,16 @@ function FocusWorkContentItem({
         readOnly={readOnly}
         isEditing={isEditing}
         isActive={isActive}
-        isDragging={draggedIndex === index}
-        dragOverPosition={dragOverInfo?.index === index ? dragOverInfo.position : null}
         onStartEdit={() => onStartEdit(item)}
         onCancelEdit={onCancelEdit}
         onSave={(draft) => onSaveContent(draft, item.id)}
         onSaveStatusChange={
           onSaveStatusChange ? (status) => onSaveStatusChange(item.id, status) : undefined
         }
-        onMove={(direction) => onMoveContent?.(index, direction)}
         onDelete={() => onDeleteContent(item)}
         onArchive={() => onArchiveContent?.(item)}
         onOpenDrawer={() => onOpenDrawer?.(item)}
         onOpenZenMode={() => onOpenZenMode?.(item)}
-        onDragStart={(e) => onDragStart(e, index)}
-        onDragOver={(e) => onDragOver(e, index)}
-        onDragLeave={(e) => onDragLeave(e, index)}
-        onDrop={(e) => onDrop(e, index)}
-        onDragEnd={onDragEnd}
         onDragHandlePointerDown={(e) => {
           if (!isEditing && !readOnly) {
             dragControls.start(e)
