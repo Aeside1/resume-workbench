@@ -1,59 +1,11 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { App } from './App'
 import { api } from './api'
-import { GUEST_STORAGE_KEY, readGuestWorkspace } from './guest/workspace'
+import { GUEST_STORAGE_KEY, loadSampleWorkspace, readGuestWorkspace } from './guest/workspace'
 
-vi.mock('./api', () => ({
-  api: {
-    login: vi.fn(),
-    register: vi.fn(),
-    logout: vi.fn(),
-    me: vi.fn(),
-    experienceGroups: vi.fn(),
-    createExperienceGroup: vi.fn(),
-    updateExperienceGroup: vi.fn(),
-    archiveExperienceGroup: vi.fn(),
-    restoreExperienceGroup: vi.fn(),
-    deleteExperienceGroup: vi.fn(),
-    workContents: vi.fn(),
-    createWorkContent: vi.fn(),
-    updateWorkContent: vi.fn(),
-    reorderWorkContents: vi.fn(),
-    archiveWorkContent: vi.fn(),
-    restoreWorkContent: vi.fn(),
-    deleteWorkContent: vi.fn(),
-    resumeHighlights: vi.fn(),
-    createResumeHighlight: vi.fn(),
-    updateResumeHighlight: vi.fn(),
-    copyResumeHighlight: vi.fn(),
-    archiveResumeHighlight: vi.fn(),
-    restoreResumeHighlight: vi.fn(),
-    deleteResumeHighlight: vi.fn(),
-    resumePlans: vi.fn(),
-    createResumePlan: vi.fn(),
-    resumePlan: vi.fn(),
-    updateResumePlan: vi.fn(),
-    archiveResumePlan: vi.fn(),
-    restoreResumePlan: vi.fn(),
-    deleteResumePlan: vi.fn(),
-    addPlanBlock: vi.fn(),
-    updatePlanBlock: vi.fn(),
-    removePlanBlock: vi.fn(),
-    reorderPlanBlocks: vi.fn(),
-    addPlanItem: vi.fn(),
-    updatePlanItem: vi.fn(),
-    removePlanItem: vi.fn(),
-    reorderPlanItems: vi.fn(),
-    planCandidates: vi.fn(),
-    planDocument: vi.fn(),
-    planArchives: vi.fn(),
-    restorePlanArchive: vi.fn(),
-    forkResumePlan: vi.fn()
-  },
-  isReferenceBlocked: (error: { status?: number } | undefined) => Boolean(error?.status === 409)
-}))
+vi.mock('./api', async () => (await import('./test/apiMock')).apiModuleMock())
 
 const mocked = vi.mocked(api)
 
@@ -142,6 +94,18 @@ describe('游客工作台（未登录也能进入，ADR 008）', () => {
     await waitFor(() => expect(screen.queryByRole('button', { name: '清空本地草稿' })).not.toBeInTheDocument())
     expect(localStorage.getItem(GUEST_STORAGE_KEY)).toBeNull()
     expect(readGuestWorkspace().groups).toHaveLength(0)
+  })
+
+  it('本地草稿变化后横幅实时出现「清空本地草稿」，不需要刷新页面', async () => {
+    render(<App />)
+    expect(screen.queryByRole('button', { name: '清空本地草稿' })).not.toBeInTheDocument()
+
+    // 模拟游客刚在列表里写下第一个分组：写入本地草稿会广播变更事件
+    await act(async () => {
+      loadSampleWorkspace()
+    })
+
+    await waitFor(() => expect(screen.getByRole('button', { name: '清空本地草稿' })).toBeInTheDocument())
   })
 
   it('登录成功后游客横幅与游客身份消失，回到账号工作台', async () => {

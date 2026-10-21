@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import {
   GUEST_STORAGE_KEY,
+  GUEST_WORKSPACE_EVENT,
   clearGuestWorkspace,
   isGuestWorkspaceEmpty,
   loadSampleWorkspace,
@@ -65,6 +66,19 @@ describe('游客本地草稿存储（ADR 008 §2.5）', () => {
     clearGuestWorkspace()
     expect(localStorage.getItem(GUEST_STORAGE_KEY)).toBeNull()
     expect(isGuestWorkspaceEmpty()).toBe(true)
+  })
+
+  it('写入与清空都会广播变更事件（横幅据此实时刷新）', () => {
+    const events: string[] = []
+    const listener = () => events.push('changed')
+    window.addEventListener(GUEST_WORKSPACE_EVENT, listener)
+    try {
+      writeGuestWorkspace({ version: 1, nextId: 1, groups: [], workContents: [], highlights: [] })
+      clearGuestWorkspace()
+    } finally {
+      window.removeEventListener(GUEST_WORKSPACE_EVENT, listener)
+    }
+    expect(events).toHaveLength(2)
   })
 
   it('示例内容以「示例」命名，且覆盖完整的三层经历资产', () => {

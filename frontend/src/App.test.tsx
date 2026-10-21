@@ -6,7 +6,7 @@ import { api } from './api'
 import { pasteMarkdown } from './test/pasteMarkdown'
 import { GUEST_TOKEN } from './session'
 
-vi.mock('./api', () => ({ api: { login: vi.fn(), register: vi.fn(), logout: vi.fn(), me: vi.fn(), experienceGroups: vi.fn(), createExperienceGroup: vi.fn(), updateExperienceGroup: vi.fn(), archiveExperienceGroup: vi.fn(), restoreExperienceGroup: vi.fn(), deleteExperienceGroup: vi.fn(), workContents: vi.fn(), createWorkContent: vi.fn(), updateWorkContent: vi.fn(), reorderWorkContents: vi.fn(), archiveWorkContent: vi.fn(), restoreWorkContent: vi.fn(), deleteWorkContent: vi.fn(), resumeHighlights: vi.fn(), createResumeHighlight: vi.fn(), updateResumeHighlight: vi.fn(), copyResumeHighlight: vi.fn(), archiveResumeHighlight: vi.fn(), restoreResumeHighlight: vi.fn(), deleteResumeHighlight: vi.fn(), resumePlans: vi.fn(), createResumePlan: vi.fn(), resumePlan: vi.fn(), updateResumePlan: vi.fn(), archiveResumePlan: vi.fn(), restoreResumePlan: vi.fn(), deleteResumePlan: vi.fn(), addPlanBlock: vi.fn(), updatePlanBlock: vi.fn(), removePlanBlock: vi.fn(), reorderPlanBlocks: vi.fn(), addPlanItem: vi.fn(), updatePlanItem: vi.fn(), removePlanItem: vi.fn(), reorderPlanItems: vi.fn(), planCandidates: vi.fn(), planDocument: vi.fn(), planArchives: vi.fn(), restorePlanArchive: vi.fn(), forkResumePlan: vi.fn() }, isReferenceBlocked: (error: { status?: number } | undefined) => Boolean(error?.status === 409) }))
+vi.mock('./api', async () => (await import('./test/apiMock')).apiModuleMock())
 const mocked = vi.mocked(api)
 
 /**

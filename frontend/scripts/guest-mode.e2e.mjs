@@ -153,13 +153,62 @@ try {
   check('游客新建经历分组成功（写入本地草稿）')
   await page.screenshot({ path: path.join(artifacts, '05-guest-created-group.png'), fullPage: true })
 
-  // ---------------------------------------------------------------- 5. 刷新后仍在（本地持久化）
+  // ------------------------------------------------ 4b. 新建具体工作内容（真实画布 + Milkdown）
+  await clickByText('添加具体工作内容')
+  await page.waitForSelector('#new-wc-title')
+  await page.type('#new-wc-title', 'E2E 工作内容')
+  const editor = await page.$('.milkdown-live-content[contenteditable="true"]')
+  assert.ok(editor, '新建卡片里没有富文本编辑器')
+  await editor.click()
+  await page.keyboard.type('E2E 草稿正文：验证游客态能真正写下内容', { delay: 5 })
+  await sleep(300)
+  await clickByText('添加工作内容')
+  await waitForText('E2E 工作内容')
+  workspace = await guestWorkspace()
+  assert.ok(
+    workspace.workContents.some((content) => content.title === 'E2E 工作内容'),
+    '具体工作内容未写入本地草稿'
+  )
+  check('游客在画布新建具体工作内容成功')
+
+  // ------------------------------------------------ 4c. 新建简历亮点（抽屉）
+  await clickByText('简历亮点提炼')
+  await page.waitForSelector('[aria-label="简历亮点提炼抽屉"]')
+  await clickByText('新建简历亮点')
+  // 新建后直接进入编辑态：标题在输入框里（不是文本节点），用卡片可访问名 + 输入框值断言
+  await page.waitForSelector('[aria-label="简历亮点: 新的简历亮点"]')
+  const labelValue = await page.$eval('[aria-label="新的简历亮点 名称"]', (element) => element.value)
+  assert.equal(labelValue, '新的简历亮点')
+  workspace = await guestWorkspace()
+  assert.ok(
+    workspace.highlights.some((highlight) => highlight.label === '新的简历亮点'),
+    '简历亮点未写入本地草稿'
+  )
+  await clickByText('关闭抽屉')
+  check('游客在抽屉新建简历亮点成功')
+  await page.screenshot({ path: path.join(artifacts, '06-guest-highlight.png'), fullPage: true })
+
+  // ------------------------------------------------ 5. 刷新后仍在（本地持久化）
   await page.reload({ waitUntil: 'networkidle2' })
   await page.waitForSelector('.guest-banner')
   await waitForText('E2E 游客本地草稿')
   workspace = await guestWorkspace()
-  assert.ok(workspace.groups.some((group) => group.name === 'E2E 游客本地草稿'), '刷新后本地草稿丢失')
-  check('刷新后本地草稿仍在（localStorage 持久化）')
+  assert.ok(workspace.groups.some((group) => group.name === 'E2E 游客本地草稿'), '刷新后分组丢失')
+  assert.ok(
+    workspace.workContents.some((content) => content.title === 'E2E 工作内容'),
+    '刷新后具体工作内容丢失'
+  )
+  assert.ok(workspace.highlights.some((highlight) => highlight.label === '新的简历亮点'), '刷新后简历亮点丢失')
+
+  // UI 也要读得回来：分组 → 画布 → 抽屉
+  await clickByText('E2E 游客本地草稿', 'h3')
+  await waitForText('E2E 工作内容')
+  await clickByText('简历亮点提炼')
+  await waitForText('新的简历亮点')
+  await clickByText('关闭抽屉')
+  await clickByText('返回经历内容')
+  await waitForText('经历分组')
+  check('刷新后分组 / 工作内容 / 亮点都在，UI 也能读回')
 
   // ---------------------------------------------------------------- 6. 简历方案需要登录（范围门禁）
   await clickByText('简历方案')
@@ -167,13 +216,13 @@ try {
   text = await bodyText()
   assert.ok(!text.includes('新建简历方案'), '游客态不应渲染简历方案的创建入口')
   check('简历方案在游客态只给登录引导')
-  await page.screenshot({ path: path.join(artifacts, '06-guest-plans-gate.png'), fullPage: true })
+  await page.screenshot({ path: path.join(artifacts, '07-guest-plans-gate.png'), fullPage: true })
 
   // ---------------------------------------------------------------- 7. 认证页可返回游客态
   await clickByText('登录 / 注册')
   await waitForText('登录工作台')
   check('游客可以从工作台进入认证页')
-  await page.screenshot({ path: path.join(artifacts, '07-auth-page.png'), fullPage: true })
+  await page.screenshot({ path: path.join(artifacts, '08-auth-page.png'), fullPage: true })
   await clickByText('先以游客身份继续')
   await page.waitForSelector('.guest-banner')
   await waitForText('经历分组')

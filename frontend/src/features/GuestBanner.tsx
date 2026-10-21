@@ -26,7 +26,7 @@ export function GuestBanner({ hasLocalDrafts, onRequestAuth, onLoadSample, onCle
         <div className="guest-banner-text">
           <p className="guest-banner-title">游客模式：数据只保存在这台浏览器</p>
           <p className="guest-banner-copy">
-            不用注册就能试写经历分组、具体工作内容与简历亮点；简历方案需要登录后才能使用。本地草稿不会自动同步到账号。
+            不用注册就能试写经历分组、具体工作内容与简历亮点；简历方案需要登录后才能使用。本地草稿不会自动同步到账号；「载入示例内容」写入的分组以「示例」开头，可随时清空。
           </p>
         </div>
         <div className="guest-banner-actions">

@@ -154,7 +154,7 @@ export function AuthPage({ onAuthenticated, onContinueAsGuest }: Props) {
                 </Button>
               </form>
             </Card.Content>
-            <Card.Footer className="auth-card-footer">
+            <Card.Footer>
               <Button
                 variant="ghost"
                 onPress={() => {

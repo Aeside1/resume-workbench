@@ -15,14 +15,16 @@ const guestPayload = {
 beforeEach(() => localStorage.clear())
 
 describe('游客本地后端（api 按 token 分派，ADR 008 §2.5）', () => {
-  it('身份：游客令牌不出网，me 返回游客身份', async () => {
+  it('身份：游客令牌不出网，me 返回游客身份，logout 不把本地令牌送去服务端', async () => {
     await expect(api.me(GUEST_TOKEN)).resolves.toEqual({ id: 0, email: '游客模式' })
+    await expect(api.logout(GUEST_TOKEN)).resolves.toBeUndefined()
   })
 
   it('经历分组：创建 / 更新 / 归档过滤 / 恢复', async () => {
     const created = await api.createExperienceGroup(GUEST_TOKEN, guestPayload)
     expect(created.id).toBeGreaterThan(0)
-    expect(created.user_id).toBe(0)
+    // 游客对象不属于任何服务端用户：不编造 user_id 哨兵值（ADR 008 §2.2）
+    expect(created.user_id).toBeUndefined()
     expect(created.archived).toBe(false)
 
     await expect(api.experienceGroups(GUEST_TOKEN)).resolves.toEqual([created])
@@ -131,8 +133,8 @@ describe('游客本地后端（api 按 token 分派，ADR 008 §2.5）', () => {
   it('本地草稿跨调用持久化：新的一次会话仍能读到', async () => {
     const group = await api.createExperienceGroup(GUEST_TOKEN, guestPayload)
     // 直接读 localStorage 模拟「刷新页面后重新装载」
-    const persisted = JSON.parse(localStorage.getItem('resume-guest-workspace') ?? '{}')
-    expect(persisted.groups?.[0]?.id).toBe(group.id)
+    expect(localStorage.getItem('resume-guest-workspace')).toBeTruthy()
+    expect(readGuestWorkspace().groups.map((item) => item.id)).toEqual([group.id])
 
     await expect(api.experienceGroups(GUEST_TOKEN)).resolves.toHaveLength(1)
   })
