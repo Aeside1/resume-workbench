@@ -10,6 +10,8 @@ import { ReferenceBlockedModal } from '../ReferenceBlockedModal'
 export type ResumeHighlightsFeedProps = {
   workContent: WorkContent | null
   session: Session
+  /** 游客态只读示例内容 */
+  readOnly?: boolean
   className?: string
 }
 
@@ -25,6 +27,7 @@ type HighlightPatch = Partial<Pick<ResumeHighlight, 'label' | 'content'>>
 export function ResumeHighlightsFeed({
   workContent,
   session,
+  readOnly = false,
   className = ''
 }: ResumeHighlightsFeedProps) {
   const [highlights, setHighlights] = useState<ResumeHighlight[]>([])
@@ -191,7 +194,11 @@ export function ResumeHighlightsFeed({
               <FileText size={28} strokeWidth={1.5} />
             </div>
             <p className="empty-heading">暂无简历亮点</p>
-            <p className="empty-subtext">为这条工作内容沉淀几种可直接放进简历的写法，之后在简历方案里按岗位组合。</p>
+            <p className="empty-subtext">
+              {readOnly
+                ? '登录后可以为这条工作内容沉淀多种直接放进简历的写法。'
+                : '为这条工作内容沉淀几种可直接放进简历的写法，之后在简历方案里按岗位组合。'}
+            </p>
           </div>
         ) : (
           <div className="resume-versions-list" role="feed" aria-label="简历亮点列表">
@@ -222,6 +229,8 @@ export function ResumeHighlightsFeed({
                           }
                         }}
                       />
+                    ) : readOnly ? (
+                      <Card.Title className="version-label-text">{highlight.label || '未命名亮点'}</Card.Title>
                     ) : (
                       <div
                         className="version-label-display"
@@ -241,7 +250,8 @@ export function ResumeHighlightsFeed({
                       </div>
                     )}
 
-                    <div className="version-actions">
+                    {!readOnly && (
+                      <div className="version-actions">
                       {isEditing ? (
                         <Button
                           size="sm"
@@ -287,7 +297,8 @@ export function ResumeHighlightsFeed({
                       >
                         <Trash2 size={13} aria-hidden="true" />
                       </Button>
-                    </div>
+                      </div>
+                    )}
                   </Card.Header>
 
                   {isEditing ? (
@@ -300,6 +311,10 @@ export function ResumeHighlightsFeed({
                         placeholder="编写这条写法的完整正文（支持 Markdown，包含行动动词、量化结果与核心技术细节）..."
                         onChange={(val) => handleUpdateContent(highlight.id, val)}
                       />
+                    </Card.Content>
+                  ) : readOnly ? (
+                    <Card.Content className="version-content-preview-container">
+                      <MilkdownView content={highlight.content} placeholder="暂无描述内容" />
                     </Card.Content>
                   ) : (
                     <Card.Content
@@ -328,18 +343,20 @@ export function ResumeHighlightsFeed({
         )}
       </div>
 
-      <footer className="resume-versions-footer">
-        <Button
-          type="button"
-          variant="secondary"
-          fullWidth
-          onPress={() => void handleAddHighlight()}
-          aria-label="新建简历亮点"
-        >
-          <Plus className="add-version-icon" size={16} aria-hidden="true" />
-          <span>新建简历亮点</span>
-        </Button>
-      </footer>
+      {!readOnly && (
+        <footer className="resume-versions-footer">
+          <Button
+            type="button"
+            variant="secondary"
+            fullWidth
+            onPress={() => void handleAddHighlight()}
+            aria-label="新建简历亮点"
+          >
+            <Plus className="add-version-icon" size={16} aria-hidden="true" />
+            <span>新建简历亮点</span>
+          </Button>
+        </footer>
+      )}
 
       <ReferenceBlockedModal
         isOpen={blockedDelete !== null}

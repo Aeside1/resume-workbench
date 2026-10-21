@@ -44,7 +44,7 @@ describe('认证后的工作台', () => {
     await waitFor(() => expect(screen.getByText('new@example.com')).toBeInTheDocument())
     fireEvent.click(screen.getByRole('button', { name: '退出登录' }))
     // 退出登录回到游客工作台，而不是回到登录页（ADR 008 §2.1）
-    await waitFor(() => expect(screen.getByText('游客模式：数据只保存在这台浏览器')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('示例内容 · 只读')).toBeInTheDocument())
     expect(screen.queryByRole('heading', { name: '登录工作台' })).not.toBeInTheDocument()
   })
 
@@ -295,7 +295,7 @@ describe('身份切换（ADR 008 §2.4）', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '退出登录' }))
 
-    await waitFor(() => expect(screen.getByText('游客模式：数据只保存在这台浏览器')).toBeInTheDocument())
+    await waitFor(() => expect(screen.getByText('示例内容 · 只读')).toBeInTheDocument())
     expect(screen.queryByText('账号专属经历')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: '返回经历内容' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '经历分组' })).toBeInTheDocument()

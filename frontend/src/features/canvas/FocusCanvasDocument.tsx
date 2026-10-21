@@ -10,6 +10,8 @@ import type { SaveStatus } from '../useTransientSaveStatus'
 
 export type FocusCanvasDocumentProps = {
   group: ExperienceGroup
+  /** 游客态只读示例内容 */
+  readOnly?: boolean
   contents: WorkContent[]
   editingId: number | null
   isCreatingNew: boolean
@@ -41,6 +43,7 @@ const emptyNewDraft: ContentDraft = {
 
 export function FocusCanvasDocument({
   group,
+  readOnly = false,
   contents,
   editingId,
   isCreatingNew,
@@ -121,7 +124,7 @@ export function FocusCanvasDocument({
 
   return (
     <div className="focus-canvas-document">
-      <ExperienceOverviewSection group={group} onUpdate={onUpdateGroup} />
+      <ExperienceOverviewSection group={group} onUpdate={readOnly ? undefined : onUpdateGroup} />
 
       <section className="focus-work-contents-section" aria-label="具体工作内容列表">
         <div className="work-contents-header">
@@ -142,6 +145,7 @@ export function FocusCanvasDocument({
           >
             {contents.map((item, index) => (
               <FocusWorkContentItem
+                readOnly={readOnly}
                 key={item.id}
                 item={item}
                 index={index}
@@ -169,7 +173,7 @@ export function FocusCanvasDocument({
             ))}
           </Reorder.Group>
 
-          {isCreatingNew ? (
+          {!readOnly && (isCreatingNew ? (
             <Card className="creating-new-card" aria-label="新建具体工作内容">
               <form className="work-content-edit-form" onSubmit={handleCreateSubmit}>
                 <div className="edit-form-header">
@@ -211,7 +215,7 @@ export function FocusCanvasDocument({
               <Plus size={18} aria-hidden="true" />
               <span>添加具体工作内容</span>
             </Button>
-          )}
+          ))}
         </div>
       </section>
     </div>
@@ -222,6 +226,7 @@ function FocusWorkContentItem({
   item,
   index,
   totalCount,
+  readOnly,
   editingId,
   draggedIndex,
   dragOverInfo,
@@ -244,6 +249,7 @@ function FocusWorkContentItem({
   item: WorkContent
   index: number
   totalCount: number
+  readOnly: boolean
   editingId: number | null
   draggedIndex: number | null
   dragOverInfo: { index: number; position: 'top' | 'bottom' } | null
@@ -279,6 +285,7 @@ function FocusWorkContentItem({
         item={item}
         index={index}
         totalCount={totalCount}
+        readOnly={readOnly}
         isEditing={isEditing}
         isActive={isActive}
         isDragging={draggedIndex === index}
@@ -300,7 +307,7 @@ function FocusWorkContentItem({
         onDrop={(e) => onDrop(e, index)}
         onDragEnd={onDragEnd}
         onDragHandlePointerDown={(e) => {
-          if (!isEditing) {
+          if (!isEditing && !readOnly) {
             dragControls.start(e)
           }
         }}

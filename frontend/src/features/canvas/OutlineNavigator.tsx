@@ -7,7 +7,8 @@ export type OutlineNavigatorProps = {
   contents: WorkContent[]
   activeId: string | null
   onNavigate: (targetId: string) => void
-  onAddNew: () => void
+  /** 缺省时不渲染「新增工作内容」（游客态只读） */
+  onAddNew?: () => void
 }
 
 export function OutlineNavigator({
@@ -74,15 +75,17 @@ export function OutlineNavigator({
         </nav>
 
         <div className="outline-action-section">
-          <Button
-            size="sm"
-            variant="outline"
-            fullWidth
-            onPress={onAddNew}
-          >
-            <Plus size={14} aria-hidden="true" />
-            新增工作内容
-          </Button>
+          {onAddNew && (
+            <Button
+              size="sm"
+              variant="outline"
+              fullWidth
+              onPress={onAddNew}
+            >
+              <Plus size={14} aria-hidden="true" />
+              新增工作内容
+            </Button>
+          )}
         </div>
       </Card>
     </aside>

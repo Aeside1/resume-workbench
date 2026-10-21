@@ -18,6 +18,8 @@ import type { ContentDraft } from './WorkContentBlock'
 type Props = {
   session: Session
   group: ExperienceGroup
+  /** 游客态只读示例内容 */
+  readOnly?: boolean
   onSaveStatusChange?: (status: SaveStatus) => void
   onDirtyChange?: (isDirty: boolean) => void
   onUpdateGroup?: (group: ExperienceGroup) => void
@@ -37,6 +39,7 @@ export type ZenTopbarState = { isOpen: boolean; title: string }
 export function FocusCanvasContainer({
   session,
   group,
+  readOnly = false,
   onSaveStatusChange,
   onDirtyChange,
   onUpdateGroup,
@@ -472,6 +475,7 @@ export function FocusCanvasContainer({
             <FocusCanvasDocument
               group={currentGroup}
               contents={contents}
+              readOnly={readOnly}
               editingId={editingContentId}
               isCreatingNew={isCreatingNew}
               onStartEdit={handleStartEdit}
@@ -503,18 +507,22 @@ export function FocusCanvasContainer({
               contents={contents}
               activeId={activeNavId}
               onNavigate={handleNavigate}
-              onAddNew={() => {
-                if (editingContentId !== null) {
-                  const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
-                  if (!confirmed) return
-                }
-                setEditingContentId(null)
-                setIsCreatingNew(true)
-                setTimeout(() => {
-                  const el = document.querySelector('.creating-new-card')
-                  el?.scrollIntoView({ behavior: 'smooth' })
-                }, 50)
-              }}
+              onAddNew={
+                readOnly
+                  ? undefined
+                  : () => {
+                      if (editingContentId !== null) {
+                        const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
+                        if (!confirmed) return
+                      }
+                      setEditingContentId(null)
+                      setIsCreatingNew(true)
+                      setTimeout(() => {
+                        const el = document.querySelector('.creating-new-card')
+                        el?.scrollIntoView({ behavior: 'smooth' })
+                      }, 50)
+                    }
+              }
             />
           </aside>
         </div>
@@ -525,6 +533,7 @@ export function FocusCanvasContainer({
         isOpen={activeDrawerWorkContentId !== null}
         workContent={contents.find((item) => item.id === activeDrawerWorkContentId) ?? null}
         session={session}
+        readOnly={readOnly}
         onClose={handleCloseDrawer}
       />
 

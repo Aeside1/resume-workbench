@@ -208,7 +208,7 @@ describe('AppShell 游客态（ADR 008）', () => {
 
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
     expect(within(sidebar).getByText('游客工作台')).toBeInTheDocument()
-    expect(within(sidebar).getByText('本地草稿 · 未登录')).toBeInTheDocument()
+    expect(within(sidebar).getByText('未登录 · 示例只读')).toBeInTheDocument()
     expect(within(sidebar).queryByRole('button', { name: '退出登录' })).not.toBeInTheDocument()
 
     fireEvent.click(within(sidebar).getByRole('button', { name: '登录 / 注册' }))
@@ -224,7 +224,7 @@ describe('AppShell 游客态（ADR 008）', () => {
 
     const sidebar = screen.getByRole('complementary', { name: '主导航' })
     expect(sidebar).toHaveClass('app-sidebar--collapsed')
-    expect(within(sidebar).queryByText('本地草稿 · 未登录')).not.toBeInTheDocument()
+    expect(within(sidebar).queryByText('未登录 · 示例只读')).not.toBeInTheDocument()
     expect(within(sidebar).getByRole('button', { name: '登录 / 注册' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('switch', { name: '深色模式' })).toBeInTheDocument()
   })

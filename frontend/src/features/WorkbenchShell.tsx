@@ -4,7 +4,6 @@ import { ArrowRight, FileText, LayoutGrid, Layers, PanelRight, PanelRightClose }
 import { motion } from 'framer-motion'
 import type { ExperienceGroup, ResumePlan } from '../api'
 import { isGuestSession, type Session } from '../session'
-import { useGuestWorkspace } from '../guest/useGuestWorkspace'
 import { AppShell, type AppShellMode } from './AppShell'
 import { FocusTopbar, type FocusBreadcrumbLevel } from './FocusTopbar'
 import { GuestBanner } from './GuestBanner'
@@ -126,16 +125,6 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
   // 而不是由外壳直接卸载，否则会绕过 flush 保存（ADR 004 §2.4）。
   const handleBackToCanvas = useCallback(() => setZenExitSignal((n) => n + 1), [])
 
-  // 游客工作台的本地草稿（ADR 008）：载入示例 / 清空后回到列表并重挂面板，
-  // 避免画布拿着已经消失的分组；「有没有草稿」由 useGuestWorkspace 实时跟踪。
-  const handleGuestDataReplaced = useCallback(() => {
-    setView('experiences')
-    setStage('hub')
-    setActiveExperience(null)
-    setActivePlan(null)
-    resetZenState()
-  }, [resetZenState])
-  const guestWorkspace = useGuestWorkspace(isGuest, handleGuestDataReplaced)
 
   const toggleSidebar = useCallback(() => {
     setIsSidebarCollapsed((current) => {
@@ -233,14 +222,7 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
         mode={shellMode}
         isFocusOpen={isFocusOpen}
       >
-        {isGuest && (
-          <GuestBanner
-            hasLocalDrafts={guestWorkspace.hasDrafts}
-            onRequestAuth={onRequestAuth}
-            onLoadSample={guestWorkspace.loadSample}
-            onClear={guestWorkspace.clear}
-          />
-        )}
+        {isGuest && <GuestBanner onRequestAuth={onRequestAuth} />}
         <motion.div
           key={
             view === 'experiences'
@@ -280,6 +262,7 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
                 <FocusCanvasContainer
                   session={session}
                   group={activeExperience}
+                  readOnly={isGuest}
                   onSaveStatusChange={setSaveStatus}
                   onDirtyChange={updateCanvasDirty}
                   onUpdateGroup={setActiveExperience}
@@ -291,8 +274,8 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
               </>
             ) : (
               <ExperienceHubPanel
-                key={isGuest ? `guest-hub-${guestWorkspace.revision}` : 'hub-experiences'}
                 session={session}
+                readOnly={isGuest}
                 onSelectExperience={handleSelectExperience}
               />
             )
@@ -305,7 +288,7 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
                   <p className="eyebrow">个人职业工作台</p>
                   <h2 className="workbench-title">{isGuest ? '游客工作台' : session.user.email}</h2>
                 </div>
-                <p className="page-context">{isGuest ? '本地草稿 · 未登录' : '查看最近编辑的内容'}</p>
+                <p className="page-context">{isGuest ? '未登录 · 示例只读' : '查看最近编辑的内容'}</p>
               </div>
               <Card>
                 <Card.Header>
@@ -345,7 +328,7 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
 
           {view === 'plans' && (
             isGuest ? (
-              /* 简历方案是账号能力（ADR 008 §2.3）：游客态只给入口与登录引导 */
+              /* 游客态只给简历方案入口与登录引导 */
               <GuestPlanGate onRequestAuth={onRequestAuth} />
             ) : activePlan ? (
               <PlanEditor
