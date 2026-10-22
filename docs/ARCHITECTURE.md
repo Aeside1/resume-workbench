@@ -21,6 +21,7 @@ Web 前端（React + TypeScript + Vite）
   ├── 用户身份模块
   ├── 经历内容模块
   ├── 简历方案模块
+  ├── AI 写作模块（Agent 提案，见 ADR 009）
   └── 导出模块
         ↓
       PostgreSQL
@@ -71,6 +72,7 @@ User
 - `ResumeDescriptionService`：简历描述创建、复制、更新、归档、恢复和回滚。
 - `ResumePlanService`：简历方案、描述引用、描述切换和排序。
 - `ExportService`：解析引用、生成完整内容、写入不可变快照。
+- `AuthoringAgent`：按场景装配上下文、运行 Agent 循环，产出待用户采纳的写作提案；不直接写入资产（见 [ADR 009](adr/009-adopt-pydantic-ai-agent-engine.md)）。
 
 ### 4.3 仓储与适配器
 
@@ -165,5 +167,6 @@ GET        /api/resume-plans/:id/exports
 | 部署形态 | 单台云服务器 + Docker Compose | 适配 100～1000 用户的小规模在线服务 |
 | 导出 | 独立适配器 | 避免导出工具侵入简历领域 |
 | 多用户隔离 | 第一阶段必须具备 | 所有用户数据按用户账号进行隔离 |
+| Agent 引擎 | Pydantic AI（进程内隐式循环） | 见 [ADR 009](adr/009-adopt-pydantic-ai-agent-engine.md)；不引入第二个运行时或托管平台 |
 
 这些是架构建议，不会反向改变 PRD 的产品范围；最终技术选型需在项目初始化前单独确认。
