@@ -6,6 +6,7 @@
 
 ## 约定
 
+- **起草纪律**：issue 正文先在本地草稿里定稿并经用户 review，才可 `gh issue create` / `gh issue edit --title/--body`；GitHub issue 不是草稿本。详见 `AGENTS.md` 的「Issue 起草与发布纪律」。
 - **创建 issue**：`gh issue create --title "..." --body "..."`。多行正文用 heredoc 传入。
 - **读取 issue**：`gh issue view <number> --comments`，用 `jq` 过滤评论，并一并取回 labels。
 - **列出 issue**：`gh issue list --state open --json number,title,body,labels,comments --jq '[.[] | {number, title, body, labels: [.labels[].name], comments: [.comments[].body]}]'`，配合 `--label` 与 `--state` 过滤。

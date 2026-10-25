@@ -6,6 +6,23 @@
 
 本仓库使用 **GitHub Issues** 管理需求规格和开发任务（仓库 `Aeside1/resume-workbench`），所有操作走 `gh` CLI。原先的 `.scratch/` 本地 Markdown 约定**已废弃**，不要再往那里写规格或任务。详见 `docs/agents/issue-tracker.md`。
 
+### Issue 起草与发布纪律
+
+**GitHub issue 是协作方的正式文档，不是草稿本。** 严禁边想边建、边建边改：先建票再连续 `gh issue edit` 换标题、扩范围、重写正文，视为违规。
+
+1. **起草只在本地**：草稿写在 `.worktrees/issue-drafts/<slug>.md`（已被 `.gitignore` 忽略），反复推演、增删都在这个文件里完成，不触碰 GitHub。
+2. **定稿自检**（发布前逐条确认，给自己看）：
+   - 问题能用一句话复述，且与草稿标题一致；
+   - 事实与证据可复现（命令、实测数字、取值时间与提交号）；
+   - 范围写清楚，**不做什么**也写清楚；
+   - 验收项是可执行、可判定的，不是「优化一下」；
+   - 「待明确」已收敛为可决策的问题（最好带默认建议），发布后不会被结构性推翻；
+   - 术语与 `docs/CONTEXT.md`、相关 ADR 口径一致，冲突处显式标注；
+   - 标签、关联票、依赖关系已确定。
+3. **发布前必须经用户 review**：把标题 + 全文（或 `--body-file` 的实际内容）交付用户确认，得到明确同意后才可 `gh issue create` / `gh issue edit --title/--body`。
+4. **发布后的内容修改同样要先 review**：改范围、改验收、补结论都先给对方看 diff 或整段新旧对照，同意后再写入；只有用户明确说「直接改 / 直接发」才可跳过一次确认，且不构成后续默认。
+5. **例外（流程性写入）**：认领 --add-assignee 默认允许；triage 标签、回填 ## Answer、关闭票面按下一节「写权限」执行（需当轮授权，或由用户自己动手）。除此之外的 GitHub 写入一律先 review。
+
 ### Issue / PR 写权限（硬约束：默认只读）
 
 GitHub 上的 **issue 与 PR（标题、正文、评论、review、标签、状态、关联）是仓库资产，不是 Agent 的草稿本或工作日志**。过程记录、推演、待办、验收笔记一律留在本地（`.worktrees/issue-drafts/`、`.worktrees/` 下的探针产物）或交付汇报里，**不要往票面 / PR 上贴**。
@@ -35,6 +52,8 @@ GitHub 上的 **issue 与 PR（标题、正文、评论、review、标签、状�
 
 **误写后的处理**：一旦发现自己已经越权写入（擅自关闭 / 擅自评论 / 擅自改标签 / 往 PR 上贴进展），立即停止一切后续 GitHub 写入，把「当前状态 + 我写了什么（逐条链接）+ 可选回滚方式（重开、删除评论、改回标签）」列给用户，由用户选；不许为了「收拾干净」再写一次。
 
+
+### Triage labels
 
 本仓库使用 5 个标准 triage 标签：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。详见 `docs/agents/triage-labels.md`。
 
