@@ -1,6 +1,6 @@
 ---
 name: issue-delivery
-description: 认领并交付本仓库的一个 GitHub issue：fork branch + git worktree 隔离主工作区、独立 compose 栈与端口、全绿关卡、交付前跑 code-review、回填 Answer 并关闭票面。当用户说「认领 #n」「完成这个 issue」「按 issue 交付流程做」，或给出 Aeside1/resume-workbench 的 issue 链接要求处理时使用。
+description: 认领并交付本仓库的一个 GitHub issue：fork branch + git worktree 隔离主工作区、独立 compose 栈与端口、全绿关卡、交付前跑 code-review、推分支开 PR 交用户验收（票面写入默认只读，关票需授权）。当用户说「认领 #n」「完成这个 issue」「按 issue 交付流程做」，或给出 Aeside1/resume-workbench 的 issue 链接要求处理时使用。
 ---
 
 # Issue 交付流程
@@ -17,12 +17,13 @@ description: 认领并交付本仓库的一个 GitHub issue：fork branch + git 
 4. **独立运行栈**：compose 项目名 `-p resume-workbench-<slug>`，端口从 5174 / 8001 / 5433 起顺延，覆盖配置写成独立完整 compose 文件放 `.worktrees/` 下（叠加 `-f` 时 ports 会追加）。开工前 `docker ps` 查占用，收工只 `down` 自己的项目名。
 5. **关卡必须真跑**：`npm run typecheck`、`npm run test`、`npm run build`、`python -m pytest -q backend/tests`（`TEST_DATABASE_URL` 指本工作区 db 端口）。UI 改动补浏览器取证。数字照实写。
 6. **交付前必过 `code-review` skill**：基准点 `git merge-base origin/main HEAD`，看 Standards 与 Spec 两轴；阻断项修完复查。
-7. **收口**：票面回填 `## Answer`（改动清单 + 关卡数字 + 证据）→ `gh issue close <n> --reason completed --comment "<Answer>"`；父票 `Part of #<m>` 勾选并更新状态行。
-8. **不越权**：不 push、不合 `main`、不动他人分支与容器，除非用户明确要求。
+7. **票面默认只读**：只有认领（`--add-assignee`）是默认允许的写入；标签、评论（含 `## Answer`）、标题 / 正文、**关闭 / 重开** 都必须用户当轮明确授权。先推分支开 PR 交用户验收。误写（擅自关票 / 擅自评论）后立即停手，把当前状态与可选回滚方式列给用户，不得自行回滚。
+8. **收口在验收之后**：用户验收通过后才回填 `## Answer`（改动清单 + 关卡数字 + 四档实测 + 截图 + ADR 编号）并 `gh issue close <n> --reason completed`；父票 `Part of #<m>` 勾选与状态行同样先问。
+9. **不越权**：不 push、不合 `main`、不动他人分支与容器，除非用户明确要求（让开 PR 才算授权 push）。
 
 ## 执行顺序
 
-0 读票 → 1 认领 → 2 worktree+branch → 3 起独立栈 → 4 实现（行为变更测试先行）→ 5 关卡 → 6 中文 commit → 7 code-review → 8 回填 Answer 并关闭 → 9 汇报与清理。
+0 读票 → 1 认领（唯一默认写入）→ 2 worktree+branch → 3 起独立栈 → 4 实现（行为变更测试先行）→ 5 关卡 → 6 中文 commit → 7 code-review → 8 推分支开 PR → 9 用户验收 → 10 回填 Answer 并关闭 → 11 汇报与清理。
 
 实现细节遵守根目录 `AGENTS.md`：HeroUI / React Aria 用 `onPress`、卡片操作区与主体点击解耦、不用 `!important` 对抗框架、图标统一、全项目禁 Emoji、语义色适配深浅色；领域术语以 `docs/CONTEXT.md` 为准。
 

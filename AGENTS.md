@@ -6,7 +6,31 @@
 
 本仓库使用 **GitHub Issues** 管理需求规格和开发任务（仓库 `Aeside1/resume-workbench`），所有操作走 `gh` CLI。原先的 `.scratch/` 本地 Markdown 约定**已废弃**，不要再往那里写规格或任务。详见 `docs/agents/issue-tracker.md`。
 
-### Triage labels
+### Issue 写权限（硬约束：默认只读）
+
+GitHub issue 是本仓库协作方的正式记录。**Agent 对 issue 默认只有读权限**；任何写入都必须由用户在当轮明确授权，逐条执行，不得推断、不得「顺手」、不得从「把这张票做完」推导出「可以改票面」。
+
+| 操作 | 默认 | 允许的情形 |
+|---|---|---|
+| 读票面 / 评论 / 依赖 / 标签 | 允许 | — |
+| `--add-assignee @me`（认领） | 允许 | 用户说「认领 #n」「做这张票」 |
+| triage 标签（`needs-triage` → `ready-for-agent` 等） | **需授权** | 用户明确说「放行 / 打标签」；否则先问 |
+| 新建 issue / 子 issue | **需授权** | 用户明确要求新建 |
+| 评论（包括 `## Answer`） | **需授权** | 用户明确说「回填 / 发评论」 |
+| 改标题 / 改正文 | **需授权** | 用户明确说「直接改」 |
+| **关闭 / 重开** | **禁止自动执行** | 只能用户自己在验收后动手，或用户明确说「关掉 #n」 |
+| 删除 / 编辑已有评论 | **禁止**（除非用户要求） | 用户明确要求撤销 |
+
+**验收顺序固定，不可跳步**：
+
+```text
+实现 → 关卡全绿 → 推分支 + 开 PR（截图/证据在 PR 里可看） → 用户验收 → 用户（或经明确授权的 Agent）关闭票面、回填 Answer
+```
+
+**「实现完成」不等于「可以关票」。** 无论交付目标里怎么写「完成定义」，只要用户还没验收，Agent 就不许把票关掉、不许自作主张回填 Answer、不许把标签改成「已完成」一类状态。目标文本里的「关闭」只能理解为「验收通过后的收口动作」，不是 Agent 可以自行触发的权限。
+
+**误写后的处理**：一旦发现自己已经越权写入（擅自关闭 / 擅自评论 / 擅自改标签），立即停止一切后续 GitHub 写入，把「当前状态 + 我写了什么 + 可选回滚方式（重开、删除评论、改回标签）」列给用户，由用户选；不许为了「收拾干净」再写一次。
+
 
 本仓库使用 5 个标准 triage 标签：`needs-triage`、`needs-info`、`ready-for-agent`、`ready-for-human`、`wontfix`。详见 `docs/agents/triage-labels.md`。
 
@@ -16,11 +40,11 @@
 
 ### Issue 交付流程
 
-认领并交付一张票的完整流程（读票与放行判断 → `gh` 认领 → fork branch + `git worktree` 隔离 → 独立 compose 栈与端口 → 全绿关卡 → 中文 commit → `code-review` → 回填 `## Answer` 并关闭 → 汇报与清理）见 `docs/agents/issue-delivery.md`。
+认领并交付一张票的完整流程（读票与放行判断 → `gh` 认领 → fork branch + `git worktree` 隔离 → 独立 compose 栈与端口 → 全绿关卡 → 中文 commit → `code-review` → 推分支开 PR → **用户验收** → 回填 `## Answer` 并关闭）见 `docs/agents/issue-delivery.md`。
 
 - Agent 侧强制版：`.pi/skills/issue-delivery/SKILL.md`（skills 自动加载，也可 `/skill:issue-delivery`）。
 - 一句话启动：pi 里 `/claim-issue <编号或 URL>`（模板 `.pi/prompts/claim-issue.md`）。
-- 硬约束：一个 issue 一条 fork 分支（`<type>/<n>-<slug>`）一个 worktree（`.worktrees/issue<n>-<slug>`）；不动主工作区检出、容器与端口；关卡必须真跑；交付前必过 `code-review`。
+- 硬约束：一个 issue 一条 fork 分支（`<type>/<n>-<slug>`）一个 worktree（`.worktrees/issue<n>-<slug>`）；不动主工作区检出、容器与端口；关卡必须真跑；交付前必过 `code-review`；**票面写入（尤其是关闭与评论）以「Issue 写权限」那节的授权表为准**。
 
 ## 前端组件与样式规范（HeroUI / React Aria）
 
