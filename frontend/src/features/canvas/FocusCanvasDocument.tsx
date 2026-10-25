@@ -1,5 +1,5 @@
 import { FormEvent, ReactNode, useState } from 'react'
-import { Button, Card, Chip } from '@heroui/react'
+import { Button, Card } from '@heroui/react'
 import { Plus } from 'lucide-react'
 import { Reorder, useDragControls } from 'framer-motion'
 import type { ExperienceGroup, WorkContent } from '../../api'
@@ -113,9 +113,6 @@ export function FocusCanvasDocument({
         <div className="work-contents-header">
           <div className="work-contents-header-title">
             <h3 className="section-title">具体工作内容</h3>
-            <Chip size="sm" className="section-badge">
-              <Chip.Label>{contents.length} 条</Chip.Label>
-            </Chip>
           </div>
         </div>
 

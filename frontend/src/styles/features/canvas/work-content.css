@@ -36,11 +36,6 @@
   color: var(--foreground);
 }
 
-.section-badge {
-  font-size: 12px;
-  font-weight: 600;
-}
-
 .work-contents-list {
   display: flex;
   flex-direction: column;
