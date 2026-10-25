@@ -1,0 +1,455 @@
+{
+  "baseUrl": "http://localhost:5174",
+  "browser": "Edg/156.0.4314.42",
+  "tiers": [
+    {
+      "name": "390",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "name": "768",
+      "width": 768,
+      "height": 1024
+    },
+    {
+      "name": "1024",
+      "width": 1024,
+      "height": 768
+    },
+    {
+      "name": "1440",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "results": [
+    {
+      "name": "390 经历列表：不左右滑，卡片不越界",
+      "passed": true
+    },
+    {
+      "name": "390 经历画布：不左右滑，正文列 ≥ 320",
+      "passed": true
+    },
+    {
+      "name": "390 大纲栏：窄屏落到正文下方，宽屏并排",
+      "passed": true
+    },
+    {
+      "name": "390 排序入口：手机上给上下移按钮，桌面只有拖拽手柄",
+      "passed": true
+    },
+    {
+      "name": "390 简历亮点抽屉：不越界、版本行不撑破、铅笔常显",
+      "passed": true
+    },
+    {
+      "name": "390 简历方案列表：不左右滑",
+      "passed": true
+    },
+    {
+      "name": "390 方案编辑器：不左右滑，条目行不撑破",
+      "passed": true
+    },
+    {
+      "name": "390 历史版本面板：窄屏浮层不越界，宽屏并排一栏",
+      "passed": true
+    },
+    {
+      "name": "390 文稿预览：长串不撑破",
+      "passed": true
+    },
+    {
+      "name": "390 新建经历弹窗：贴边不溢出",
+      "passed": true
+    },
+    {
+      "name": "390 触控目标：可见交互元素不小于 44×44",
+      "passed": true
+    },
+    {
+      "name": "390 抽屉内的触控目标也达标",
+      "passed": true
+    },
+    {
+      "name": "390 页面高度：底部内容可达（画布页可滚到底）",
+      "passed": true
+    },
+    {
+      "name": "390 无浏览器运行错误",
+      "passed": true
+    },
+    {
+      "name": "768 经历列表：不左右滑，卡片不越界",
+      "passed": true
+    },
+    {
+      "name": "768 经历画布：不左右滑，正文列 ≥ 320",
+      "passed": true
+    },
+    {
+      "name": "768 大纲栏：窄屏落到正文下方，宽屏并排",
+      "passed": true
+    },
+    {
+      "name": "768 排序入口：手机上给上下移按钮，桌面只有拖拽手柄",
+      "passed": true
+    },
+    {
+      "name": "768 简历亮点抽屉：不越界、版本行不撑破、铅笔常显",
+      "passed": true
+    },
+    {
+      "name": "768 简历方案列表：不左右滑",
+      "passed": true
+    },
+    {
+      "name": "768 方案编辑器：不左右滑，条目行不撑破",
+      "passed": true
+    },
+    {
+      "name": "768 历史版本面板：窄屏浮层不越界，宽屏并排一栏",
+      "passed": true
+    },
+    {
+      "name": "768 文稿预览：长串不撑破",
+      "passed": true
+    },
+    {
+      "name": "768 新建经历弹窗：贴边不溢出",
+      "passed": true
+    },
+    {
+      "name": "768 触控目标：可见交互元素不小于 44×44",
+      "passed": true
+    },
+    {
+      "name": "768 抽屉内的触控目标也达标",
+      "passed": true
+    },
+    {
+      "name": "768 无浏览器运行错误",
+      "passed": true
+    },
+    {
+      "name": "1024 经历列表：不左右滑，卡片不越界",
+      "passed": true
+    },
+    {
+      "name": "1024 经历画布：不左右滑，正文列 ≥ 320",
+      "passed": true
+    },
+    {
+      "name": "1024 大纲栏：窄屏落到正文下方，宽屏并排",
+      "passed": true
+    },
+    {
+      "name": "1024 排序入口：手机上给上下移按钮，桌面只有拖拽手柄",
+      "passed": true
+    },
+    {
+      "name": "1024 简历亮点抽屉：不越界、版本行不撑破、铅笔常显",
+      "passed": true
+    },
+    {
+      "name": "1024 简历方案列表：不左右滑",
+      "passed": true
+    },
+    {
+      "name": "1024 方案编辑器：不左右滑，条目行不撑破",
+      "passed": true
+    },
+    {
+      "name": "1024 历史版本面板：窄屏浮层不越界，宽屏并排一栏",
+      "passed": true
+    },
+    {
+      "name": "1024 文稿预览：长串不撑破",
+      "passed": true
+    },
+    {
+      "name": "1024 新建经历弹窗：贴边不溢出",
+      "passed": true
+    },
+    {
+      "name": "1024 触控目标：可见交互元素不小于 44×44",
+      "passed": true
+    },
+    {
+      "name": "1024 抽屉内的触控目标也达标",
+      "passed": true
+    },
+    {
+      "name": "1024 无浏览器运行错误",
+      "passed": true
+    },
+    {
+      "name": "1440 经历列表：不左右滑，卡片不越界",
+      "passed": true
+    },
+    {
+      "name": "1440 经历画布：不左右滑，正文列 ≥ 320",
+      "passed": true
+    },
+    {
+      "name": "1440 大纲栏：窄屏落到正文下方，宽屏并排",
+      "passed": true
+    },
+    {
+      "name": "1440 排序入口：手机上给上下移按钮，桌面只有拖拽手柄",
+      "passed": true
+    },
+    {
+      "name": "1440 简历亮点抽屉：不越界、版本行不撑破、铅笔常显",
+      "passed": true
+    },
+    {
+      "name": "1440 简历方案列表：不左右滑",
+      "passed": true
+    },
+    {
+      "name": "1440 方案编辑器：不左右滑，条目行不撑破",
+      "passed": true
+    },
+    {
+      "name": "1440 历史版本面板：窄屏浮层不越界，宽屏并排一栏",
+      "passed": true
+    },
+    {
+      "name": "1440 文稿预览：长串不撑破",
+      "passed": true
+    },
+    {
+      "name": "1440 新建经历弹窗：贴边不溢出",
+      "passed": true
+    },
+    {
+      "name": "1440 无浏览器运行错误",
+      "passed": true
+    }
+  ],
+  "measurements": [
+    {
+      "step": "390 经历列表",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 经历画布",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 经历画布正文列宽",
+      "mainColumnWidth": 342
+    },
+    {
+      "step": "390 亮点抽屉",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 简历方案列表",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 方案编辑器",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 历史版本面板",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 文稿预览",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "390 新建经历弹窗",
+      "scrollWidth": 390,
+      "innerWidth": 390,
+      "clientWidth": 390
+    },
+    {
+      "step": "768 经历列表",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 经历画布",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 经历画布正文列宽",
+      "mainColumnWidth": 598
+    },
+    {
+      "step": "768 亮点抽屉",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 简历方案列表",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 方案编辑器",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 历史版本面板",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 文稿预览",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "768 新建经历弹窗",
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "clientWidth": 768
+    },
+    {
+      "step": "1024 经历列表",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 经历画布",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 经历画布正文列宽",
+      "mainColumnWidth": 839
+    },
+    {
+      "step": "1024 亮点抽屉",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 简历方案列表",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 方案编辑器",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 历史版本面板",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 文稿预览",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1024 新建经历弹窗",
+      "scrollWidth": 1024,
+      "innerWidth": 1024,
+      "clientWidth": 1024
+    },
+    {
+      "step": "1440 经历列表",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 经历画布",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 经历画布正文列宽",
+      "mainColumnWidth": 794
+    },
+    {
+      "step": "1440 亮点抽屉",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 简历方案列表",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 方案编辑器",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 历史版本面板",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 文稿预览",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    },
+    {
+      "step": "1440 新建经历弹窗",
+      "scrollWidth": 1440,
+      "innerWidth": 1440,
+      "clientWidth": 1440
+    }
+  ],
+  "errors": [],
+  "reorderRequests": [
+    [
+      21,
+      20,
+      22
+    ],
+    [
+      21,
+      20,
+      22
+    ]
+  ]
+}
