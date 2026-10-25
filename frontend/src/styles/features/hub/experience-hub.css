@@ -3,12 +3,18 @@
 
    卡片与按钮外观由 HeroUI Card / Button 承载；
    此处只保留布局骨架与语义变量色值。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：标题区与操作条在
+   内容区 < 768 换行，标题字号在 < 640 降一档。
    ========================================================================== */
 
 .experience-hub-panel {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  /* 本面板是「内容区还剩多少」的查询容器（见 app-shell.css 文件头） */
+  container-type: inline-size;
+  container-name: content;
 }
 
 .hub-top-bar {
@@ -61,6 +67,47 @@
    会被挤到换行。这里仅做布局修正，保持标签单行；外观仍由框架负责。 */
 .hub-tabs .tabs__tab {
   white-space: nowrap;
+}
+
+/* 窄屏：标题区与操作条上下堆叠，操作条允许换行；标题字号降一档 */
+@container content (max-width: 1024px) {
+  .hub-top-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding-bottom: 14px;
+  }
+
+  .hub-title-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .hub-actions-bar {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  /* 两道 Tab 加计数徽章在手机上容不下时不撑破内容区，内部横滚 */
+  .hub-tabs {
+    max-width: 100%;
+    min-width: 0;
+    overflow-x: auto;
+  }
+}
+
+@container content (max-width: 640px) {
+  .hub-heading {
+    font-size: 20px;
+  }
+
+  .hub-subtitle {
+    font-size: 13px;
+  }
+
+  .experience-hub-panel {
+    gap: 16px;
+  }
 }
 
 /* ==========================================================================

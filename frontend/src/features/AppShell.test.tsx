@@ -1,8 +1,9 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { AppShell } from './AppShell'
 import { GUEST_SESSION, type Session } from '../session'
+import { restoreMatchMedia, stubViewportWidth } from '../test/matchMedia'
 
 const mockSession: Session = {
   token: 'test-token',
@@ -227,5 +228,80 @@ describe('AppShell 游客态（ADR 008）', () => {
     expect(within(sidebar).queryByText('未登录 · 示例只读')).not.toBeInTheDocument()
     expect(within(sidebar).getByRole('button', { name: '登录 / 注册' })).toBeInTheDocument()
     expect(within(sidebar).getByRole('switch', { name: '深色模式' })).toBeInTheDocument()
+  })
+})
+
+describe('AppShell 窄屏（issue 19 / ADR 010）', () => {
+  afterEach(() => {
+    restoreMatchMedia()
+    cleanup()
+  })
+
+  const navButtons = (
+    <>
+      <button type="button" aria-label="经历内容">经历内容</button>
+      <button type="button" aria-label="简历方案">简历方案</button>
+    </>
+  )
+
+  it('窗口 ≤1280：侧栏自动收成图标条，身份文本不渲染', () => {
+    stubViewportWidth(1100)
+    render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
+
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(sidebar).toHaveClass('app-sidebar--collapsed')
+    expect(within(sidebar).queryByText('个人职业工作台')).not.toBeInTheDocument()
+    // 还没到滑出面板那一档，顶部条不出现
+    expect(screen.queryByRole('button', { name: '打开导航菜单' })).not.toBeInTheDocument()
+  })
+
+  it('窗口 ≤768：顶部条提供菜单按钮，点开后侧栏变成可见面板，点导航项再收起', () => {
+    stubViewportWidth(390)
+    render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
+
+    const sidebar = screen.getByRole('complementary', { hidden: true })
+    // 面板态要能看见文字（它是窄屏唯一的导航入口），所以不是图标条
+    expect(sidebar).not.toHaveClass('app-sidebar--collapsed')
+    expect(sidebar).toHaveClass('app-sidebar--panel')
+    expect(sidebar).toHaveAttribute('aria-hidden', 'true')
+
+    const menuButton = screen.getByRole('button', { name: '打开导航菜单' })
+    fireEvent.click(menuButton)
+
+    expect(sidebar).toHaveClass('app-sidebar--panel-open')
+    expect(sidebar).not.toHaveAttribute('aria-hidden')
+
+    // 点完导航项就收起：窄屏没有「侧栏常驻」这回事
+    fireEvent.click(within(sidebar).getByRole('button', { name: '简历方案' }))
+    expect(sidebar).not.toHaveClass('app-sidebar--panel-open')
+  })
+
+  it('窗口 ≤768：Esc 与关闭按钮都能收起面板', () => {
+    stubViewportWidth(390)
+    render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
+
+    const sidebar = screen.getByRole('complementary', { hidden: true })
+    fireEvent.click(screen.getByRole('button', { name: '打开导航菜单' }))
+    expect(sidebar).toHaveClass('app-sidebar--panel-open')
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+    expect(sidebar).not.toHaveClass('app-sidebar--panel-open')
+
+    fireEvent.click(screen.getByRole('button', { name: '打开导航菜单' }))
+    fireEvent.click(within(sidebar).getByRole('button', { name: '关闭导航菜单' }))
+    expect(sidebar).not.toHaveClass('app-sidebar--panel-open')
+  })
+
+  it('窗口变宽回到图标条档时，面板自动收起', () => {
+    const viewport = stubViewportWidth(390)
+    render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
+
+    const sidebar = screen.getByRole('complementary', { hidden: true })
+    fireEvent.click(screen.getByRole('button', { name: '打开导航菜单' }))
+    expect(sidebar).toHaveClass('app-sidebar--panel-open')
+
+    act(() => viewport.set(1100))
+    expect(sidebar).toHaveClass('app-sidebar--collapsed')
+    expect(sidebar).not.toHaveClass('app-sidebar--panel-open')
   })
 })

@@ -1,6 +1,6 @@
 import { FormEvent, useEffect, useState, useMemo, useRef } from 'react'
 import { Button, Chip, Tooltip } from '@heroui/react'
-import { Check, ChevronRight, FileText, GripVertical, Maximize2, Trash2 } from 'lucide-react'
+import { ArrowDown, ArrowUp, Check, ChevronRight, FileText, GripVertical, Maximize2, Trash2 } from 'lucide-react'
 import type { WorkContent } from '../../api'
 import { MilkdownView, clearMilkdownEditorCache } from '../../components/ui/MilkdownView'
 import { WorkContentFormFields } from './WorkContentFormFields'
@@ -44,6 +44,12 @@ export type WorkContentBlockProps = {
    */
   onDragHandlePointerDown?: (e: React.PointerEvent) => void
   onKeyboardReorder?: (direction: -1 | 1) => void
+  /**
+   * 窄屏的上下移按钮：手指拖拽在手机上不可靠，卡片上直接给两个按钮（issue 19）。
+   * 按钮在桌面被 CSS 隐藏（`.work-content-move-actions`），拖拽与方向键照常可用。
+   */
+  canMoveUp?: boolean
+  canMoveDown?: boolean
 }
 
 export {
@@ -147,7 +153,9 @@ export function WorkContentBlock({
   onOpenZenMode,
   isActive = false,
   onDragHandlePointerDown,
-  onKeyboardReorder
+  onKeyboardReorder,
+  canMoveUp = false,
+  canMoveDown = false
 }: WorkContentBlockProps) {
   const parsedData = useMemo(
     () => parseSupplementaryNotes(item.supplementary_notes),
@@ -326,6 +334,32 @@ export function WorkContentBlock({
                   tabIndex={0}
                 >
                   <GripVertical size={14} aria-hidden="true" />
+                </span>
+              )}
+              {/* 窄屏排序（ADR 010）：手指拖拽在手机上不可靠，给两个按钮代替；
+                  桌面由 CSS 隐藏，拖拽与方向键不变 */}
+              {!readOnly && onKeyboardReorder && (
+                <span className="work-content-move-actions">
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label="上移工作内容"
+                    isDisabled={!canMoveUp}
+                    onPress={() => onKeyboardReorder(-1)}
+                  >
+                    <ArrowUp size={14} aria-hidden="true" />
+                  </Button>
+                  <Button
+                    isIconOnly
+                    size="sm"
+                    variant="ghost"
+                    aria-label="下移工作内容"
+                    isDisabled={!canMoveDown}
+                    onPress={() => onKeyboardReorder(1)}
+                  >
+                    <ArrowDown size={14} aria-hidden="true" />
+                  </Button>
                 </span>
               )}
               {item.archived && (

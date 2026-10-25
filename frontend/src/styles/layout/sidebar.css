@@ -1,14 +1,17 @@
 /* ==========================================================================
-   App Sidebar Topology (侧边栏与用户卡片；支持折叠为图标态)
+   App Sidebar Topology (侧边栏与用户卡片；支持折叠为图标态、窄屏滑出面板)
 
    视觉实体已交由 HeroUI Card / Avatar / Button 承载；
-   此处只保留布局骨架与语义变量色值，不再自研组件外观。
+   此处只保留布局骨架与语义变量色值。
+
+   宽度分界（全站统一）：1280 → 收图标条；768 → 变滑出面板（ADR 010）。
    ========================================================================== */
 
 .app-sidebar {
   width: 240px;
   flex: 0 0 240px;
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--surface);
   border-right: 1px solid var(--border);
   display: flex;
@@ -16,11 +19,14 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   user-select: none;
   transition: width 0.18s cubic-bezier(0.4, 0, 0.2, 1), flex-basis 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* 折叠态：只剩图标（文本节点由组件条件渲染，避免隐藏文本影响可访问名） */
+/* 折叠态：只剩图标（文本节点由组件条件渲染，避免隐藏文本影响可访问名）。
+   1280 以下由组件按媒体查询强制进入这个形态，图标条 76px 在平板与
+   笔记本窄窗下都能既留住导航、又把宽度还给内容区。 */
 .app-sidebar--collapsed {
   width: 76px;
   flex: 0 0 76px;
@@ -120,4 +126,45 @@
 .app-sidebar--collapsed .sidebar-footer {
   padding: 10px;
   align-items: center;
+}
+
+/* --------------------------------------------------------------------------
+   窄屏滑出面板（窗口 < 768，ADR 010）
+
+   侧栏不再占位，默认整体移出视口左侧；点顶部条菜单按钮后滑入，
+   点导航项 / 关闭按钮 / Esc / 遮罩收起。
+   这一档里文字必须保留（面板就是给窄屏补导航的），所以组件不会进入图标态。
+   -------------------------------------------------------------------------- */
+.app-nav-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: var(--backdrop);
+}
+
+@media (max-width: 767px) {
+  .app-sidebar--panel {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    width: min(280px, 86vw);
+    flex: 0 0 auto;
+    height: 100dvh;
+    min-height: 100dvh;
+    overflow-y: auto;
+    transform: translateX(-100%);
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .app-sidebar--panel-open {
+    transform: none;
+    box-shadow: var(--overlay-shadow), 0 12px 32px -8px var(--backdrop);
+  }
+
+  /* 面板内边距略微放宽，手指更容易点中 */
+  .app-sidebar--panel .sidebar-nav {
+    padding: 10px 16px;
+  }
 }

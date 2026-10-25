@@ -3,11 +3,15 @@
 
    卡片外观由 HeroUI Card 承载，徽章由 HeroUI Chip 承载；
    此处只保留布局骨架与语义变量色值。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：栅格用
+   `minmax(min(320px, 100%), 1fr)`——容器不足 320 时自动退成单列，
+   不需要再写一条固定宽度的媒体查询。
    ========================================================================== */
 
 .experience-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -96,6 +100,51 @@
   text-overflow: ellipsis;
   line-height: 18px;
   height: 18px;
+}
+
+/* 窄屏：标题不再一行塞满（卡片标题与徽章各占一行），字号降一档 */
+@container content (max-width: 640px) {
+  .experience-group-card {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .group-card-top-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .group-card-name {
+    flex-basis: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    font-size: 16px;
+  }
+
+  .group-card-org {
+    white-space: normal;
+    height: auto;
+    overflow-wrap: anywhere;
+  }
+
+  .group-card-description {
+    height: auto;
+    min-height: 0;
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* 窄屏：底部「项数 + 操作」不再并排抢宽度，操作排自动换行 */
+@container content (max-width: 1024px) {
+  .group-card-footer {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .group-card-actions {
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
 }
 
 .group-card-content {

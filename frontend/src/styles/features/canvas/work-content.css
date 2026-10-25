@@ -4,6 +4,11 @@
    色值一律读取 HeroUI 语义变量；已移除 canvas-field / plus-symbol /
    typography-section / typography-label / highlight-result / btn-delete-ghost
    等失去引用或改由 HeroUI 变体承载的规则。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：
+   - 内容区 < 1024：标题与操作排不再抢一行，卡片上出现「上移 / 下移」按钮
+     （手机上没法用手指拖拽，拖拽只在桌面保留）；
+   - 内容区 < 640：单列、内边距收紧、长串断行。
    ========================================================================== */
 
 .focus-work-contents-section {
@@ -127,12 +132,23 @@
   font-weight: 650;
   color: var(--foreground);
   line-height: 1.4;
+  min-width: 0;
+  /* 工作项标题里也可能粘进长串，不能把卡片顶破 */
+  overflow-wrap: anywhere;
 }
 
 .work-content-actions {
   display: flex;
   align-items: center;
   gap: 6px;
+  flex-shrink: 0;
+}
+
+/* 手机上替代拖拽的排序按钮：桌面隐藏（拖拽 + 方向键已经够用） */
+.work-content-move-actions {
+  display: none;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
 }
 
@@ -150,6 +166,8 @@
   line-height: 1.6;
   color: var(--muted);
   white-space: pre-wrap;
+  /* 粘进来的长 URL / 日志 / 代码标识符不撑破卡片 */
+  overflow-wrap: anywhere;
 }
 
 .work-content-card-footer {
@@ -223,4 +241,79 @@
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-soft);
+}
+
+/* --------------------------------------------------------------------------
+   内容区 < 1024：卡片头不再“标题 + 三个按钮”挤一行，操作排换到第二行；
+   同时把排序交给上移 / 下移按钮（触屏没有悬停可依赖的拖拽手柄）。
+   -------------------------------------------------------------------------- */
+/* --------------------------------------------------------------------------
+   内容区 < 1024：卡片头不再“标题 + 三个按钮”挤一行，操作排换到第二行
+   -------------------------------------------------------------------------- */
+@container content (max-width: 1024px) {
+  .work-content-card-header {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .work-content-title-meta {
+    flex: 1 1 100%;
+  }
+
+  .work-content-actions {
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+}
+
+@container content (max-width: 640px) {
+  /* 手机：手指拖拽不可靠，用上移 / 下移按钮代替（桌面仍是拖拽 + 方向键） */
+  .work-content-move-actions {
+    display: inline-flex;
+  }
+
+  .work-content-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px 16px 12px;
+  }
+
+  .work-content-title-meta {
+    align-items: flex-start;
+  }
+
+  .work-content-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .work-content-typography-body {
+    padding: 12px 16px 16px;
+  }
+
+  .work-content-card-footer {
+    padding: 10px 16px;
+  }
+
+  .resume-desc-trigger-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .work-content-edit-form {
+    padding: 16px;
+  }
+
+  .edit-form-actions {
+    flex-wrap: wrap;
+  }
+
+  .work-contents-header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .section-title {
+    font-size: 16px;
+  }
 }

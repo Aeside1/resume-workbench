@@ -3,6 +3,12 @@
 
    排版与外观尽量交回 HeroUI（Card / Button / Chip / Switch）；此处只做
    两栏骨架、条目行布局与语义变量色值，不写 !important。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：
+   - 内容区 < 1024（容器查询）：条目行 / 块头不再挤一行，操作排换行；
+   - 窗口 ≤ 1024：历史版本从并排栏变成点按钮滑出的浮层（它必须相对视口
+     定位，所以用窗口媒体查询而不是容器查询，见 app-shell.css 文件头）；
+   - 内容区 < 640：正文与预览的内边距收紧，长串断行。
    ========================================================================== */
 
 /* 页头已由 WorkAreaHeader 承担（04g），此处只保留编排区自身的骨架 */
@@ -19,6 +25,10 @@
   gap: 16px;
   flex: 1;
   min-width: 0;
+  /* 编辑器正文是「内容区还剩多少」的查询容器：历史版本面板是它的兄弟节点，
+     放在容器外面，才能用 position: fixed 相对视口浮出（见 app-shell.css 文件头） */
+  container-type: inline-size;
+  container-name: content;
 }
 
 /* 两栏：编排区 + 可收起的非模态历史版本面板（ADR 005 §2.5） */
@@ -34,11 +44,46 @@
   position: sticky;
   top: 16px;
   max-height: calc(100vh - 140px);
+  max-height: calc(100dvh - 140px);
   overflow-y: auto;
   padding: 14px;
   border: 1px solid var(--separator);
   border-radius: 12px;
   background: var(--surface);
+}
+
+/* --------------------------------------------------------------------------
+   窗口 ≤ 1024：历史版本不再占一栏，改成点按钮从右侧滑出的浮层
+   （开合仍由页头的「历史版本」按钮控制，面板自带收起按钮）
+   -------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
+  .plan-editor-layout {
+    flex-direction: column;
+    /* 列向时不能再用 flex-start：正文列会被压成内容的 min-content 宽 */
+    align-items: stretch;
+  }
+
+  .plan-history-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    width: min(340px, 88vw);
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 16px;
+    border-radius: 0;
+    border-right: none;
+    box-shadow: var(--overlay-shadow);
+  }
+
+  .plan-history-list {
+    overflow-y: auto;
+    min-height: 0;
+  }
 }
 
 .plan-history-header {
@@ -78,6 +123,8 @@
   padding: 8px 10px;
   border: 1px solid var(--separator);
   border-radius: 8px;
+  /* 条目名与摘要都可能很长（工作项标题 + 亮点名称），窄了就换行 */
+  flex-wrap: wrap;
 }
 
 .plan-history-row-main {
@@ -85,6 +132,7 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .plan-history-time {
@@ -95,6 +143,7 @@
 .plan-history-summary {
   font-size: 0.82rem;
   color: var(--foreground);
+  overflow-wrap: anywhere;
 }
 
 .plan-editor-toolbar {
@@ -199,6 +248,7 @@
   border-radius: 10px;
   background: var(--surface-secondary);
   cursor: grab;
+  flex-wrap: wrap;
 }
 
 .plan-item-drag {
@@ -211,8 +261,9 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  flex: 1;
-  min-width: 0;
+  flex: 1 1 auto;
+  /* 条目正文低于这个宽度就没法读，宁可让操作排换到下一行 */
+  min-width: min(180px, 100%);
 }
 
 /* 条目名 = 具体工作内容标题 · 简历亮点名称（04g），允许换行 */
@@ -220,6 +271,7 @@
   font-size: 0.9rem;
   font-weight: 550;
   color: var(--foreground);
+  overflow-wrap: anywhere;
 }
 
 /* 亮点正文常驻显示：不再需要切「预览」才看得到内容 */
@@ -227,6 +279,12 @@
   font-size: 0.86rem;
   color: var(--foreground);
   opacity: 0.88;
+  min-width: 0;
+}
+
+/* 粘进来的长 URL / 日志不撑破条目行 */
+.plan-item-content .markdown-body-render {
+  overflow-wrap: anywhere;
 }
 
 .plan-item-empty {
@@ -304,4 +362,67 @@
   border-radius: 12px;
   background: var(--surface);
   color: var(--foreground);
+  /* 文稿里可能有用户粘进来的长串，不能把整页撑出横向滚动 */
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.plan-document-view .markdown-body-render pre {
+  max-width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   内容区 < 1024：块头与条目行不再抢一行，操作排换行
+   -------------------------------------------------------------------------- */
+@container content (max-width: 1024px) {
+  .plan-block-header {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+
+  .plan-block-actions,
+  .plan-item-actions {
+    flex-wrap: wrap;
+    margin-left: auto;
+  }
+
+  .plan-picker-row {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   内容区 < 640：干净单列，内边距与字号各降一档（预览仍可读）
+   -------------------------------------------------------------------------- */
+@container content (max-width: 640px) {
+  .plan-block-card {
+    padding: 12px;
+  }
+
+  .plan-block-name {
+    font-size: 0.95rem;
+    overflow-wrap: anywhere;
+  }
+
+  .plan-item-row {
+    padding: 8px 10px;
+    cursor: default;
+  }
+
+  .plan-editor-section-title {
+    font-size: 0.9rem;
+  }
+
+  .plan-document-view {
+    padding: 14px 16px;
+  }
+
+  .plan-document-view .markdown-body-render {
+    font-size: 13.5px;
+  }
+
+  .plan-picker-list {
+    max-height: 60vh;
+  }
 }

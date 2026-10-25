@@ -31,11 +31,15 @@
    定位、遮罩、焦点陷阱由 HeroUI Drawer 负责；这里只补面板宽度与内部排版。
    面板底色走 --background：HeroUI 的 --overlay 与卡片 --surface 同值，
    会让版本卡片在深浅两色下都与面板同色而"消失"。
+
+   宽度：跟随框架的响应式宽度（窄屏 320 / 次屏 384 / 视口 85% 上限），
+   绝不超过容器——旧值写死 480px 时会比 HeroUI 的抽屉内容盒还宽，
+   在窄屏上直接撑出横向滚动（issue 19）。
    -------------------------------------------------------------------------- */
 
 .resume-drawer-panel {
-  width: 480px;
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   background: var(--background);
 }
 
@@ -175,6 +179,8 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  /* 亮点名 + 三个操作按钮在窄屏里一行放不下，允许换行而不是被裁掉 */
+  flex-wrap: wrap;
 }
 
 .resume-version-card--editing {
@@ -187,7 +193,7 @@
   align-items: center;
   gap: 6px;
   min-width: 0;
-  max-width: calc(100% - 12px);
+  max-width: 100%;
   padding: 3px 8px;
   border-radius: var(--radius);
   cursor: pointer;
@@ -216,6 +222,25 @@
   transition: opacity 0.15s ease;
 }
 
+/* 窄屏没有悬停：改名铅筆等“悬停才出现”的功能一律常显（ADR 010） */
+@media (max-width: 1024px) {
+  .edit-pencil-icon {
+    opacity: 1;
+  }
+
+  .version-actions {
+    flex-wrap: wrap;
+  }
+
+  .resume-versions-list {
+    gap: 12px;
+  }
+
+  .resume-version-card .milkdown-live-content {
+    font-size: 14px;
+  }
+}
+
 .version-label-input {
   flex: 1;
   min-width: 0;
@@ -235,6 +260,8 @@
 .version-content-preview-container {
   min-height: 28px;
   cursor: pointer;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .version-content-preview-container .milkdown-view-container {

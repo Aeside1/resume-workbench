@@ -3,6 +3,9 @@
 
    卡片外观由 HeroUI Card 提供，条目由 HeroUI Button 承载；
    本文件只保留树的缩进/连线布局与选中态的语义色。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）见 focus-canvas.css：
+   内容区 < 1024 时本栏落到正文下方，这里只负责“落下去之后”的排版。
    ========================================================================== */
 
 .outline-navigator-container {
@@ -145,4 +148,22 @@
   padding-top: 8px;
   margin-top: 4px;
   border-top: 1px solid var(--separator);
+}
+
+/* 落到正文下方后不再需要“吸附高度”概念：列表超过 40vh 才滚 */
+@container content (max-width: 1024px) {
+  .outline-nav-list {
+    max-height: 40vh;
+  }
+}
+
+@container content (max-width: 640px) {
+  .outline-nav-list {
+    max-height: none;
+  }
+
+  .outline-item-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }

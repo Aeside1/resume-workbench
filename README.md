@@ -187,11 +187,23 @@ docker compose run --rm --volume "$PWD:/repo" --workdir /repo/backend api pytest
 ```bash
 cd frontend
 npm run typecheck   # tsc -b
-npm run test        # vitest run（33 个测试文件 / 245 条用例）
+npm run test        # vitest run（33 个测试文件 / 252 条用例）
 npm run build       # 生产构建
 ```
 
-当前基线（`v0.1.0`）：后端 **33 passed**，前端 **245 passed / 33 files**，`typecheck` 与 `build` 无错。
+当前基线（`v0.1.0`）：后端 **33 passed**，前端 **252 passed / 33 files**，`typecheck` 与 `build` 无错。
+
+**固定关卡矩阵**（一张票交付前这七条必须全绿）：
+
+| 关卡 | 命令（目录） | 守住什么 |
+|---|---|---|
+| 类型 | `npm run typecheck`（`frontend/`） | 组件契约与类型不漂 |
+| 单测 | `npm run test`（`frontend/`） | 行为契约（含窄屏导航面板、上下移按钮） |
+| 构建 | `npm run build`（`frontend/`） | 生产构建可通过 |
+| 后端 | `python -m pytest -q backend/tests`（仓库根） | 接口与契约快照 |
+| 拖拽 | `npm run test:reorder:e2e`（`frontend/`） | 桌面拖拽仍可用、排序真的落库 |
+| 自适应 | `npm run test:responsive:e2e`（`frontend/`） | 390 / 768 / 1024 / 1440 四档不横滑、正文 ≥ 320、长串不撑破、触控 ≥ 44 |
+| 编辑器 | `npm run test:editor:e2e` + `npm run test:guest:e2e`（`frontend/`） | 富文本与游客工作台不回退 |
 
 **契约测试**：后端 `backend/tests/test_openapi_contract.py` 把方案与亮点相关路由固化为快照 `frontend/src/contracts/openapi-plan-paths.json`，前端 `src/api.contract.test.ts` 断言 `api.ts` 的每个调用都真实存在、且后端每条路由都被前端覆盖 —— 任何一侧单独改路径或字段都会红，而不是静默 404。
 
@@ -204,6 +216,11 @@ npm run test:editor:e2e   # 富文本编辑器（接口用请求拦截替身）
 # 拖拽排序的唯一证伪手段（issue #9）：自带 vite dev server，无需先手动起前端
 npm run test:reorder:e2e
 
+# 自适应与弹性布局的四档验收（issue #19 / ADR 010）：390 / 768 / 1024 / 1440 各跑
+# 列表 → 画布（含亮点抽屉）→ 方案列表 → 方案编辑器（含历史版本）→ 文稿预览，
+# 并断言不左右滑 + 正文列 ≥ 320 + 长串不撑破 + 触控尺寸，自带 dev server 并留截图
+npm run test:responsive:e2e
+
 # 游客工作台（ADR 008）：不需要后端，验证只读示例内容 / 简历方案门禁 / 不出网
 npm run dev -- --port 5175
 GUEST_E2E_BASE_URL=http://localhost:5175 npm run test:guest:e2e
@@ -211,7 +228,9 @@ GUEST_E2E_BASE_URL=http://localhost:5175 npm run test:guest:e2e
 
 **为什么拖拽必须走真浏览器**：卡片排序是 framer-motion 的指针拖拽（按住手柄才启动），jsdom 里没有真实布局与指针捕获，`getBoundingClientRect` 全为 0，拖出来的顺序是假的。所以「拖后顺序翻转 + 排序请求带完整新顺序落库」只能由 `scripts/reorder.e2e.mjs` 断言；单测层面只能覆盖键盘等价路径（手柄聚焦后上下方向键，见 `FocusCanvasContainer.test.tsx`）。
 
-探针可调环境变量：`REORDER_BASE_URL`（不传则自起 dev server）、`REORDER_PORT`（默认 5273）、`REORDER_ARTIFACTS`、`EDGE_PATH`（默认 `C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`）。
+探针可调环境变量：`REORDER_BASE_URL`（不传则自起 dev server）、`REORDER_PORT`（默认 5273）、`REORDER_ARTIFACTS`、`EDGE_PATH`（默认 `C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`）。`responsive.e2e.mjs` 同名一套：`RESPONSIVE_BASE_URL` / `RESPONSIVE_PORT`（默认 5283）/ `RESPONSIVE_ARTIFACTS`。
+
+**为什么自适应布局也必须真浏览器**：验收断言的是排版结果——`documentElement.scrollWidth ≤ innerWidth`、正文列宽度、长串是否断行、触控目标尺寸、悬停才出现的铅笔是否常显；jsdom 没有布局，量不出来。四档实测数字与各栏让位规则见 [ADR 010](docs/adr/010-responsive-and-flexible-layout.md)。
 
 ## 项目结构
 
@@ -240,6 +259,7 @@ frontend/
     contracts/openapi-plan-paths.json       前后端契约快照（由后端测试生成并提交）
   scripts/live-editor.e2e.mjs               真实浏览器端到端探针（富文本编辑器）
   scripts/reorder.e2e.mjs                  拖拽排序的证伪探针（自带 dev server）
+  scripts/responsive.e2e.mjs               四档宽度的自适应验收探针（自带 dev server）
 docs/
   PRD.md                                    产品需求
   ARCHITECTURE.md                           系统架构与前后端分工

@@ -3,17 +3,23 @@
 
    卡片与徽章外观由 HeroUI 承载；此处只保留布局骨架与语义变量色值
    （AGENTS.md 第 3 条：严禁对抗式覆盖框架外观）。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：栅格用
+   `minmax(min(320px, 100%), 1fr)`——容器不足 320 时自动退成单列。
    ========================================================================== */
 
 .plan-hub-panel {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  /* 内容区宽度的查询容器（见 app-shell.css 文件头） */
+  container-type: inline-size;
+  container-name: content;
 }
 
 .plan-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
   gap: 20px;
 }
 
@@ -66,6 +72,7 @@
   font-size: 1.05rem;
   font-weight: 600;
   color: var(--foreground);
+  overflow-wrap: anywhere;
 }
 
 .plan-card-purpose {
@@ -113,4 +120,25 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+/* 窄屏：卡片内边距与栅格间距收紧，标题字号降一档 */
+@container content (max-width: 640px) {
+  .plan-card-grid {
+    gap: 12px;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .plan-card {
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .plan-card-name {
+    font-size: 1rem;
+  }
+
+  .plan-card-footer {
+    margin-top: 12px;
+  }
 }

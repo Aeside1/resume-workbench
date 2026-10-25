@@ -4,6 +4,10 @@
    HeroUI Modal 已提供 backdrop / container / dialog（含尺寸变体）/
    header / body / footer / close-trigger 的完整外观与定位，
    此处只保留应用自身的布局类与语义变量色值。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：窄屏只收紧内边距与
+   堆叠按钮，不改框架的遮罩 / 圆角 / 阴影。弹窗节点由框架挂到 body，
+   所以这里用窗口媒体查询而不是容器查询。
    ========================================================================== */
 
 .create-experience-form {
@@ -42,4 +46,29 @@
   font-size: 13px;
   color: var(--danger-soft-foreground);
   line-height: 1.5;
+}
+
+/* 窄屏：弹窗贴边留白（框架已给 p-4），内部块收紧，长标题 / 长说明不撑破 */
+@media (max-width: 640px) {
+  .delete-warning-box {
+    padding: 12px;
+  }
+
+  .delete-warning-text {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  .delete-warning-subtext {
+    overflow-wrap: anywhere;
+  }
+
+  .create-experience-form {
+    gap: 12px;
+  }
+
+  /* 表单里的双栏（如有）在手机上不要硬挤 */
+  .modal-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }

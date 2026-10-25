@@ -4,10 +4,21 @@
    04g 口径：分组画布与简历方案编辑器在壳内展开（侧栏常驻）。
    04k 口径：展开专注也不再整屏接管，同样在内容区展开（侧栏可手工折叠）；
    页面里只有 hub 与 workspace 两种形态，focus 是内容区的一种高度模式。
+
+   自适应与弹性布局（issue 19 / ADR 010）：
+   - 宽度分界全站只有 640 / 1024 / 1280 三条：
+     * 1280：窗口不足则侧栏收成图标条（媒体查询，见 sidebar.css）；
+     * 1024：内容区里的侧栏（画布大纲 / 方案历史版本）让位；
+     * 640：单列、字号降一档、触控尺寸放大。
+   - 「内容区还剩多少」用**容器查询**量，不靠窗口宽度猜：`.app-main` 是名为
+     `workspace` 的查询容器，features 层的让位规则都写 `@container content (...)`。
+     侧栏是内容区的兄弟节点，量不到内容区宽度，只能按窗口宽度判断。
+   - 页面高度用 `dvh`（移动浏览器地址栏伸缩时跟着变），不再用整屏 `vh` 固定死。
    ========================================================================== */
 
 .app-shell {
   min-height: 100vh;
+  min-height: 100dvh;
   background: var(--background);
 }
 
@@ -39,15 +50,49 @@
   padding: 0;
 }
 
+/* 内容区的「栏位让位」判据容器。注意：`contain: layout`（container-type 的副作用）
+   会让里面的 `position: fixed` 相对它定位而不是视口，所以容器不能放在 `.app-main`
+   这种包住全部内容的位置；而是分别放在各功能块根节点上（同一个容器名 `content`）：
+   - 经历 / 方案列表：`.experience-hub-panel` / `.plan-hub-panel`
+   - 经历画布：`.focus-canvas-wrapper`
+   - 方案编辑器：`.plan-editor-body`
+   需要相对视口浮出的层（滑出面板 / 弹窗 / 抽屉）一律用媒体查询，见各自文件。 */
+
+/* --------------------------------------------------------------------------
+   窄屏（窗口 < 768）：顶部条 + 滑出面板，内容区独占整行
+   AppShell 在这一档渲染 `.app-topbar` 并把侧栏切成 `.app-sidebar--panel`。
+   -------------------------------------------------------------------------- */
+.app-shell--panel-nav {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.app-shell--panel-nav .app-main--hub,
+.app-shell--panel-nav .app-main--workspace {
+  padding: 16px 16px calc(48px + env(safe-area-inset-bottom));
+}
+
+/* 手机上再收紧一档：正文列必须在 320 以上，页面留白不能把它吃掉 */
+@media (max-width: 640px) {
+  .app-shell--panel-nav .app-main--hub,
+  .app-shell--panel-nav .app-main--workspace {
+    padding: 12px 12px calc(40px + env(safe-area-inset-bottom));
+  }
+}
+
 /* --------------------------------------------------------------------------
    专注写作区的非模态区域展开（ADR 004 §2.1，04k 改到内容区）
 
    视口高度锁在 shell 上（禁止页面级滚动），把「内容区页头以下的剩余高度」
    整块交给写作区，由写作区自己的滚动容器滚动。因此页头（含保存态 Chip）与
    面包屑在写作全程始终可见可点，且左侧导航不再被切断。
+
+   高度用 `dvh`：移动浏览器收起 / 展开地址栏、软键盘弹起时视口高度会变，
+   `100vh` 不跟着变，底部内容就会被顶到视口之外。
    -------------------------------------------------------------------------- */
 .app-shell--focus {
   height: 100vh;
+  height: 100dvh;
   overflow: hidden;
 }
 

@@ -3,6 +3,9 @@
 
    卡片与徽章外观由 HeroUI Card / Chip 承载；
    此处只保留布局骨架与语义变量色值。
+
+   宽度分界（全站统一 640 / 1024 / 1280，ADR 010）：右侧大纲按**内容区宽度**
+   让位（@container content），不足 1024 时落到正文下方；正文列最小 320。
    ========================================================================== */
 
 .focus-canvas-wrapper,
@@ -14,8 +17,12 @@
 
 .focus-canvas-wrapper {
   min-height: calc(100vh - 56px);
+  min-height: calc(100dvh - 56px);
   background: var(--background);
   padding: 32px 24px 80px;
+  /* 画布是「内容区还剩多少」的查询容器（见 app-shell.css 文件头） */
+  container-type: inline-size;
+  container-name: content;
 }
 
 /* 画布落位包裹层（04m）：与 .focus-canvas-wrapper 共用上面的居中骨架，
@@ -103,6 +110,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* HeroUI Separator 提供竖线与分隔色，这里只定高度 */
@@ -123,4 +131,74 @@
 .overview-description-box p {
   margin: 0;
   white-space: pre-wrap;
+  /* 粘进来的长 URL / 日志 / 代码标识符不能把卡片撑破 */
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------------------------
+   内容区 < 1024：右侧大纲不再并排，落到正文下方（它只是导航，不做抽屉）
+   -------------------------------------------------------------------------- */
+@container content (max-width: 1024px) {
+  .focus-canvas-layout {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .focus-canvas-main-col {
+    max-width: none;
+    width: 100%;
+    /* 正文列不得小于 320：这是可读性堰塞湖，不是排版偏好 */
+    min-width: min(320px, 100%);
+  }
+
+  .focus-canvas-side-col {
+    width: 100%;
+    flex: 0 0 auto;
+    position: static;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   内容区 < 640：单列、字号降一档、边距收紧（正文仍是整宽，不会小于 320）
+   -------------------------------------------------------------------------- */
+/* 容器自己的内边距不能写在自己的容器查询里（元素查不到自己），这一条按窗口宽 */
+@media (max-width: 640px) {
+  .focus-canvas-wrapper {
+    padding: 16px 12px calc(56px + env(safe-area-inset-bottom));
+    min-height: 0;
+  }
+}
+
+@container content (max-width: 640px) {
+  .focus-canvas-layout {
+    gap: 16px;
+  }
+
+  .focus-canvas-main-col {
+    gap: 16px;
+  }
+
+  .overview-title {
+    font-size: 22px;
+    overflow-wrap: anywhere;
+  }
+
+  .overview-header-row {
+    flex-wrap: wrap;
+    row-gap: 10px;
+  }
+
+  .overview-edit-form {
+    gap: 12px;
+  }
+
+  /* 双列表单在手机上挤成一条细缝，改单列 */
+  .overview-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .focus-canvas-document {
+    gap: 18px;
+  }
 }
