@@ -419,19 +419,41 @@ try {
       await page.screenshot({ path: path.join(artifacts, `${prefix}-02-canvas.png`), fullPage: true })
     })
 
-    await check(`${prefix} 大纲栏：窄屏落到正文下方，宽屏并排`, async () => {
+    await check(`${prefix} 大纲栏：窄屏插到正文中间，宽屏右侧伴随`, async () => {
+      const containerWidth = await canvasContainerWidth()
       const layout = await page.$eval('.focus-canvas-layout', (el) => getComputedStyle(el).flexDirection)
-      const bodyWidth = await page.$eval('.focus-canvas-main-col', (el) => el.getBoundingClientRect().width)
-      const sideBox = await page.$eval('.focus-canvas-side-col', (el) => {
-        const rect = el.getBoundingClientRect()
-        return { width: rect.width, position: getComputedStyle(el).position }
-      })
-      if (tier.width <= 1024) {
-        assert.notEqual(layout, 'row', `${prefix}：内容区不足 1024 时大纲栏不该还并排`)
-        assert.equal(sideBox.position, 'static', `${prefix}：大纲栏落到正文下方后不该还是 sticky`)
+      const side = await page.$('.focus-canvas-side-col')
+      const inline = await page.$('.focus-canvas-inline-nav')
+      if (containerWidth < 1024) {
+        // 用户反馈：大纲落在整页底部要多滚一趟，改成插在「经历概况」与「具体工作内容」之间
+        assert.equal(side, null, `${prefix}：内容区 ${Math.round(containerWidth)}px（<1024）不该再渲染右侧伴随栏`)
+        assert.ok(inline, `${prefix}：窄屏应把大纲插到正文中间`)
+        const order = await page.evaluate(() => {
+          const top = (sel) => {
+            const el = document.querySelector(sel)
+            return el ? Math.round(el.getBoundingClientRect().top + window.scrollY) : null
+          }
+          return {
+            overview: top('.overview-card'),
+            outline: top('.focus-canvas-inline-nav'),
+            workSection: top('.focus-work-contents-section')
+          }
+        })
+        assert.ok(
+          order.overview !== null && order.outline !== null && order.workSection !== null,
+          `找不到概览 / 大纲 / 工作内容中的一个：${JSON.stringify(order)}`
+        )
+        assert.ok(
+          order.overview < order.outline && order.outline < order.workSection,
+          `大纲应插在经历概况与具体工作内容之间，实际顺序：${JSON.stringify(order)}`
+        )
       } else {
+        assert.ok(side, `${prefix}：宽屏应保留右侧伴随栏`)
+        assert.equal(inline, null, `${prefix}：宽屏不该再插一份正文内大纲`)
         assert.equal(layout, 'row', `${prefix}：桌面应保持左右双栏`)
-        assert.ok(sideBox.width < bodyWidth, `${prefix}：大纲栏不该比正文还宽`)
+        const bodyWidth = await page.$eval('.focus-canvas-main-col', (el) => el.getBoundingClientRect().width)
+        const sideWidth = await page.$eval('.focus-canvas-side-col', (el) => el.getBoundingClientRect().width)
+        assert.ok(sideWidth < bodyWidth, `${prefix}：大纲栏不该比正文还宽`)
       }
     })
 

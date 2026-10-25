@@ -1,4 +1,4 @@
-import { FormEvent, useState } from 'react'
+import { FormEvent, ReactNode, useState } from 'react'
 import { Button, Card, Chip } from '@heroui/react'
 import { Plus } from 'lucide-react'
 import { Reorder, useDragControls } from 'framer-motion'
@@ -46,6 +46,11 @@ export type FocusCanvasDocumentProps = {
   onOpenZenMode?: (item: WorkContent) => void
   onStartCreateNew: () => void
   onCancelCreateNew: () => void
+  /**
+   * 窄屏（内容区 < 1024）时把大纲插到「经历概况」与「具体工作内容」之间：
+   * 大纲是导航，落到整页最底部就得多滚一趟才能用（用户反馈）。宽屏仍用右侧伴随栏。
+   */
+  navigationSlot?: ReactNode
   onUpdateGroup?: (payload: Partial<Pick<ExperienceGroup, 'name' | 'type' | 'organization' | 'start_date' | 'end_date' | 'description'>>) => Promise<void> | void
 }
 
@@ -75,6 +80,7 @@ export function FocusCanvasDocument({
   onOpenZenMode,
   onStartCreateNew,
   onCancelCreateNew,
+  navigationSlot,
   onUpdateGroup
 }: FocusCanvasDocumentProps) {
 
@@ -100,6 +106,8 @@ export function FocusCanvasDocument({
   return (
     <div className="focus-canvas-document">
       <ExperienceOverviewSection group={group} onUpdate={readOnly ? undefined : onUpdateGroup} />
+
+      {navigationSlot && <div className="focus-canvas-inline-nav">{navigationSlot}</div>}
 
       <section className="focus-work-contents-section" aria-label="具体工作内容列表">
         <div className="work-contents-header">

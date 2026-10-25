@@ -28,6 +28,13 @@
 /* 画布落位包裹层（04m）：与 .focus-canvas-wrapper 共用上面的居中骨架，
    只额外提供 transform/opacity 的落位动画（专注退场后画布重新入场时） */
 
+/* 窄屏（内容区 < 1024）时大纲落在这里：经历概况与具体工作内容之间。
+   放在整页最底部的话，想用一次大纲得先滚到底（用户反馈）。 */
+.focus-canvas-inline-nav {
+  display: flex;
+  flex-direction: column;
+}
+
 .focus-canvas-layout {
   display: flex;
   gap: 32px;
@@ -136,7 +143,9 @@
 }
 
 /* --------------------------------------------------------------------------
-   内容区 < 1024：右侧大纲不再并排，落到正文下方（它只是导航，不做抽屉）
+   内容区 < 1024：右侧大纲不再并排（组件层会把它插到正文中间，见
+   FocusCanvasContainer 的 isCompactCanvas）；这条规则保留给
+   ResizeObserver 首帧未就位的瞬态，避免闪一下双栏。
    -------------------------------------------------------------------------- */
 @container content (max-width: 1024px) {
   .focus-canvas-layout {
