@@ -76,6 +76,26 @@ export function FocusCanvasContainer({
   }, [group])
 
   const containerRef = useRef<HTMLDivElement>(null)
+  /**
+   * 内容区不足 1024 时，大纲不再做右侧伴随栏，而是插到「经历概况」与
+   * 「具体工作内容」之间（落在整页最底部的话，要用一次大纲得先滚到底）。
+   *
+   * 这里用 ResizeObserver 量容器内容盒，而不是再写一条媒体查询：同一个窗口宽度下
+   * 侧栏开合会改变内容区宽度，「窗口宽」不是可用宽（ADR 010 §2.3）。
+   * 无 ResizeObserver（如 jsdom 的默认套）时保持宽屏形态。
+   */
+  const [isCompactCanvas, setIsCompactCanvas] = useState(false)
+
+  useEffect(() => {
+    const element = containerRef.current
+    if (!element || typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0
+      if (width > 0) setIsCompactCanvas(width < 1024)
+    })
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [])
   // Zen 展开时画布被区域内替（卸载 → 重挂），退出后需把视窗恢复到原卡片位置
   const zenReturnScrollRef = useRef(0)
   /** 提交关闭时记下刚关闭的工作项，交给下面的 layout effect 恢复视窗（04m） */
@@ -404,6 +424,32 @@ export function FocusCanvasContainer({
     onZenChange?.({ isOpen: false, title: '' })
   }, [zenWorkContent, onZenChange])
 
+  /** 大纲的单一实例：宽屏放右侧伴随栏，窄屏（isCompactCanvas）插到正文中间 */
+  const outlineNavigator = (
+    <OutlineNavigator
+      group={currentGroup}
+      contents={contents}
+      activeId={activeNavId}
+      onNavigate={handleNavigate}
+      onAddNew={
+        readOnly
+          ? undefined
+          : () => {
+              if (editingContentId !== null) {
+                const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
+                if (!confirmed) return
+              }
+              setEditingContentId(null)
+              setIsCreatingNew(true)
+              setTimeout(() => {
+                const el = document.querySelector('.creating-new-card')
+                el?.scrollIntoView({ behavior: 'smooth' })
+              }, 50)
+            }
+      }
+    />
+  )
+
   return (
     <div
       className={`focus-canvas-wrapper${zenWorkContent ? ' focus-canvas-wrapper--zen' : ''}`}
@@ -474,33 +520,11 @@ export function FocusCanvasContainer({
               }}
               onCancelCreateNew={() => setIsCreatingNew(false)}
               onUpdateGroup={handleUpdateOverview}
+              navigationSlot={isCompactCanvas ? outlineNavigator : undefined}
             />
           </main>
 
-          <aside className="focus-canvas-side-col">
-            <OutlineNavigator
-              group={currentGroup}
-              contents={contents}
-              activeId={activeNavId}
-              onNavigate={handleNavigate}
-              onAddNew={
-                readOnly
-                  ? undefined
-                  : () => {
-                      if (editingContentId !== null) {
-                        const confirmed = window.confirm('当前正在编辑工作内容，确定放弃未保存修改并新建吗？')
-                        if (!confirmed) return
-                      }
-                      setEditingContentId(null)
-                      setIsCreatingNew(true)
-                      setTimeout(() => {
-                        const el = document.querySelector('.creating-new-card')
-                        el?.scrollIntoView({ behavior: 'smooth' })
-                      }, 50)
-                    }
-              }
-            />
-          </aside>
+          {!isCompactCanvas && <aside className="focus-canvas-side-col">{outlineNavigator}</aside>}
         </div>
         </motion.div>
       )}

@@ -134,43 +134,43 @@ export function WorkbenchShell({ session, onLogout, onRequestAuth }: Props) {
     })
   }, [])
 
-  const navigationButtons = (
+  const navigationButtons = (collapsed: boolean) => (
     <>
       {/* HeroUI Button 不接受 title，折叠态的悬停提示放在包裹层上 */}
-      <div className="sidebar-nav-item" title={isSidebarCollapsed ? '工作台概览' : undefined}>
+      <div className="sidebar-nav-item" title={collapsed ? '工作台概览' : undefined}>
         <Button
           variant={view === 'dashboard' ? 'secondary' : 'ghost'}
           fullWidth
-          isIconOnly={isSidebarCollapsed}
+          isIconOnly={collapsed}
           aria-label="工作台概览"
           onPress={() => handleNavClick('dashboard')}
         >
           <LayoutGrid size={18} aria-hidden="true" />
-          {!isSidebarCollapsed && <span>工作台概览</span>}
+          {!collapsed && <span>工作台概览</span>}
         </Button>
       </div>
-      <div className="sidebar-nav-item" title={isSidebarCollapsed ? '经历内容' : undefined}>
+      <div className="sidebar-nav-item" title={collapsed ? '经历内容' : undefined}>
         <Button
           variant={view === 'experiences' ? 'secondary' : 'ghost'}
           fullWidth
-          isIconOnly={isSidebarCollapsed}
+          isIconOnly={collapsed}
           aria-label="经历内容"
           onPress={() => handleNavClick('experiences')}
         >
           <Layers size={18} aria-hidden="true" />
-          {!isSidebarCollapsed && <span>经历内容</span>}
+          {!collapsed && <span>经历内容</span>}
         </Button>
       </div>
-      <div className="sidebar-nav-item" title={isSidebarCollapsed ? '简历方案' : undefined}>
+      <div className="sidebar-nav-item" title={collapsed ? '简历方案' : undefined}>
         <Button
           variant={view === 'plans' ? 'secondary' : 'ghost'}
           fullWidth
-          isIconOnly={isSidebarCollapsed}
+          isIconOnly={collapsed}
           aria-label="简历方案"
           onPress={() => handleNavClick('plans')}
         >
           <FileText size={18} aria-hidden="true" />
-          {!isSidebarCollapsed && <span>简历方案</span>}
+          {!collapsed && <span>简历方案</span>}
         </Button>
       </div>
     </>

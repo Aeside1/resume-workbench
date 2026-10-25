@@ -55,7 +55,7 @@ type Props = {
    * 页面级不滚动、滚动发生在区域内部；侧栏照常可用（用户要更宽就自己折叠）。
    */
   isFocusOpen?: boolean
-  navigationButtons?: ReactNode
+  navigationButtons?: ReactNode | ((isCollapsed: boolean) => ReactNode)
   /** 侧栏折叠为图标态（04h）；状态由调用方持有并持久化 */
   isSidebarCollapsed?: boolean
   onToggleSidebar?: () => void
@@ -85,6 +85,9 @@ export function AppShell({
   // 面板里必须看得到文字（它就是给窄屏补导航的），所以「收成图标条」只管非面板态
   const isCollapsed = !isPanelNav && (isSidebarCollapsed || isIconRail)
   const isPanelOpen = isPanelNav && isNavPanelOpen
+  // 导航项的形态必须跟**实际**折叠态走：窄屏强制图标条时，调用方不能还按自己的
+  // 持久化偏好渲染文字（否则 76px 的图标条里挤着文字，溢出裁切）。
+  const navigation = typeof navigationButtons === 'function' ? navigationButtons(isCollapsed) : navigationButtons
 
   // 窗口变宽回到图标态时自动收掉面板，避免留一个看不见却仍可聚焦的浮层
   useEffect(() => {
@@ -202,7 +205,7 @@ export function AppShell({
           className="sidebar-nav"
           onClick={isPanelNav ? closeNavPanel : undefined}
         >
-          {navigationButtons}
+          {navigation}
         </nav>
 
         <div className="sidebar-footer">
