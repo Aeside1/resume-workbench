@@ -28,7 +28,6 @@ export function ExperienceHubPanel({
   onSelectExperience
 }: ExperienceHubPanelProps) {
   const [groups, setGroups] = useState<ExperienceGroup[]>([])
-  const [counts, setCounts] = useState<Record<number, number>>({})
   const [activeTab, setActiveTab] = useState<'active' | 'archived'>('active')
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [groupToEdit, setGroupToEdit] = useState<ExperienceGroup | null>(null)
@@ -45,28 +44,12 @@ export function ExperienceHubPanel({
     setLoading(true)
     setError('')
 
-    // 拉取全部经历分组（包含已归档），便于在两个 Tab 之间平滑切换与统计徽标
+    // 拉取全部经历分组（包含已归档），便于在两个 Tab 之间平滑切换
     api.experienceGroups(session.token, true)
-      .then(async (result) => {
+      .then((result) => {
         if (isCancelled) return
         setGroups(result)
         setLoading(false)
-
-        // 并发拉取各经历分组的工作项计数
-        const countMap: Record<number, number> = {}
-        await Promise.all(
-          result.map(async (group) => {
-            try {
-              const contents = await api.workContents(session.token, group.id, false)
-              countMap[group.id] = contents.length
-            } catch {
-              countMap[group.id] = 0
-            }
-          })
-        )
-        if (!isCancelled) {
-          setCounts(countMap)
-        }
       })
       .catch((e) => {
         if (!isCancelled) {
@@ -92,7 +75,6 @@ export function ExperienceHubPanel({
       })
 
       setGroups((current) => [created, ...current])
-      setCounts((prev) => ({ ...prev, [created.id]: 0 }))
       setIsCreateOpen(false)
       setActiveTab('active')
       onSelectExperience(created)
@@ -264,7 +246,6 @@ export function ExperienceHubPanel({
               <div key={group.id} style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <ExperienceGroupCard
                   group={group}
-                  workContentCount={counts[group.id] ?? 0}
                   readOnly={readOnly}
                   onSelect={onSelectExperience}
                   onEdit={(target) => setGroupToEdit(target)}
@@ -288,7 +269,6 @@ export function ExperienceHubPanel({
                 >
                   <ExperienceGroupCard
                     group={group}
-                    workContentCount={counts[group.id] ?? 0}
                     readOnly={readOnly}
                     onSelect={onSelectExperience}
                     onEdit={(target) => setGroupToEdit(target)}

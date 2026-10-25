@@ -21,11 +21,10 @@ describe('ExperienceGroupCard', () => {
     updated_at: '2024-09-01T00:00:00Z'
   }
 
-  it('清晰展示名称、组织归属、经历类型、起止日期、整体说明与工作项数量', () => {
+  it('清晰展示名称、组织归属、经历类型、起止日期与整体说明', () => {
     render(
       <ExperienceGroupCard
         group={baseGroup}
-        workContentCount={5}
         onSelect={vi.fn()}
         onArchive={vi.fn()}
         onRestore={vi.fn()}
@@ -38,7 +37,6 @@ describe('ExperienceGroupCard', () => {
     expect(screen.getByText(/2024-03-01/)).toBeInTheDocument()
     expect(screen.getByText(/2024-09-01/)).toBeInTheDocument()
     expect(screen.getByText('负责营销活动体系与收银台组件重构。')).toBeInTheDocument()
-    expect(screen.getByText('5 项具体工作')).toBeInTheDocument()
   })
 
   it('无起止日期与说明时展示优雅兜底文案', () => {
@@ -56,7 +54,6 @@ describe('ExperienceGroupCard', () => {
     render(
       <ExperienceGroupCard
         group={minimalGroup}
-        workContentCount={0}
         onSelect={vi.fn()}
         onArchive={vi.fn()}
         onRestore={vi.fn()}
@@ -68,7 +65,6 @@ describe('ExperienceGroupCard', () => {
     expect(screen.getByText('未填写归属')).toBeInTheDocument()
     expect(screen.getByText('未设置起止时间')).toBeInTheDocument()
     expect(screen.getByText('还没有整体说明。')).toBeInTheDocument()
-    expect(screen.getByText('0 项具体工作')).toBeInTheDocument()
   })
 
   it('点击卡片主体触发 onSelect 回调并传递经历数据', () => {
@@ -76,7 +72,6 @@ describe('ExperienceGroupCard', () => {
     render(
       <ExperienceGroupCard
         group={baseGroup}
-        workContentCount={3}
         onSelect={handleSelect}
         onArchive={vi.fn()}
         onRestore={vi.fn()}
@@ -94,7 +89,6 @@ describe('ExperienceGroupCard', () => {
     render(
       <ExperienceGroupCard
         group={baseGroup}
-        workContentCount={2}
         onSelect={handleSelect}
         onArchive={handleArchive}
         onRestore={vi.fn()}
@@ -116,7 +110,6 @@ describe('ExperienceGroupCard', () => {
     render(
       <ExperienceGroupCard
         group={baseGroup}
-        workContentCount={2}
         onSelect={handleSelect}
         onEdit={handleEdit}
         onArchive={vi.fn()}
@@ -139,7 +132,6 @@ describe('ExperienceGroupCard', () => {
     render(
       <ExperienceGroupCard
         group={archivedGroup}
-        workContentCount={2}
         onSelect={handleSelect}
         onArchive={vi.fn()}
         onRestore={handleRestore}
@@ -163,7 +155,6 @@ describe('ExperienceGroupCard', () => {
     render(
       <ExperienceGroupCard
         group={archivedGroup}
-        workContentCount={2}
         onSelect={handleSelect}
         onArchive={vi.fn()}
         onRestore={vi.fn()}
