@@ -28,7 +28,9 @@ gh api repos/Aeside1/resume-workbench/issues/<n> --jq .issue_dependencies_summar
 gh issue edit <n> --add-assignee @me
 ```
 
-这是本会话的第一次写入；认领后即代表「这张票我做」。同时把票面验收清单抄进 todo 计划，逐条对照。
+这是本会话对票面的唯一默认写入（见根目录 `AGENTS.md` 的「Issue 写权限」）。认领后即代表「这张票我做」。同时把票面验收清单抄进 todo 计划，逐条对照。
+
+标签、评论、标题 / 正文、关闭 / 重开都要用户当轮明确授权；**不要从「做完」推导出「可以关票」**。
 
 ## 2. fork branch + worktree
 
@@ -97,14 +99,28 @@ python -m pytest -q backend/tests
 - 调 `code-review` skill，基准点取分叉处：`git merge-base origin/main HEAD`，要 Standards 与 Spec 两轴报告。
 - 阻断项修完再复查一次；非阻断项记到 issue 评论（或新票），并在汇报里列出。
 
-## 8. 收口
+## 8. 收口（验收之后才做）
 
-- 回填票面 `## Answer`：改动清单 + 关卡数字 + 证据（测试名、命令、输出摘要）。
-- 关闭：`gh issue close <n> --reason completed --comment "<Answer>"`。
-  **注意** `gh issue close` 没有 `--comment-file` 参数，多行正文先落变量/文件再传。
-- 父票（`Part of #<m>`）勾掉对应子任务、更新「当前状态」一行。
+顺序是 **推分支 → 开 PR → 用户验收 → 收口**，不可跳步：
+
+```powershell
+# 推分支（推动前确认用户已要求交付 PR）
+git push -u origin <type>/<n>-<slug>
+gh pr create --base main --head <type>/<n>-<slug> --title "..." --body-file <pr-body.md>
+```
+
+- PR 正文要能独立验收：改动清单、**关卡数字**、四档实测数字与**截图**（截图必须能在 PR 里直接看到，必要时推到专用证据分支用 raw 链接引用）、ADR 编号、未做项。
+- **用户验收通过后**才回填票面 `## Answer` 并关闭：
+
+```powershell
+gh issue comment <n> --body-file <answer.md>
+gh issue close <n> --reason completed
+```
+
+- 回填与关闭本身也是票面写入，需要用户当轮授权；未经授权就把状态改掉属于越权（参见 `AGENTS.md`「Issue 写权限」的误写处理）。
+- 父票（`Part of #<m>`）勾掉对应子任务、更新「当前状态」一行——同样先问。
 - 票面口径被推翻时同步改文档（README / ADR / 流程文档），让仓库里的事实和票面一致。
-- 不再实现的票：`--reason not planned` + `wontfix` 标签（见 `triage-labels.md`）。
+- 不再实现的票：`--reason not planned` + `wontfix` 标签（见 `triage-labels.md`），也要授权。
 
 ## 9. 汇报与清理
 
