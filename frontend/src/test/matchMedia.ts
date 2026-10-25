@@ -43,3 +43,43 @@ export function stubMatchMedia(initialMatches: boolean) {
 export function restoreMatchMedia() {
   stubMatchMedia(false)
 }
+
+/**
+ * 按查询串求值的 `matchMedia` 替身：目前只认 `(max-width: Npx)`。
+ *
+ * 窄屏布局（issue 19）里同一棵组件树会同时问到 1280 / 768 两条分界，
+ * `stubMatchMedia` 的「忽略查询串」语义在这里不够用——否则两条查询会同时真 / 同时假。
+ * 其余查询串（如 prefers-reduced-motion）一律解为 false。
+ */
+export function stubViewportWidth(width: number) {
+  const listeners = new Set<() => void>()
+  const evaluate = (query: string) => {
+    const max = /max-width:\s*(\d+)px/.exec(query)
+    return max ? width <= Number(max[1]) : false
+  }
+
+  window.matchMedia = ((query: string) => ({
+    get matches() {
+      return evaluate(query)
+    },
+    media: query,
+    onchange: null,
+    addEventListener: (_event: string, listener: () => void) => {
+      listeners.add(listener)
+    },
+    removeEventListener: (_event: string, listener: () => void) => {
+      listeners.delete(listener)
+    },
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false
+  })) as unknown as typeof window.matchMedia
+
+  return {
+    /** 改写视口宽度并通知监听者（模拟拖动窗口） */
+    set(next: number) {
+      width = next
+      listeners.forEach((listener) => listener())
+    }
+  }
+}

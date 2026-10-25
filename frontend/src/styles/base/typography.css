@@ -10,6 +10,9 @@
   font-size: 14px;
   line-height: 1.65;
   color: var(--foreground);
+  /* 粘进来的长 URL / 日志 / 代码标识符不得把卡片与预览撑破（issue 19）：
+     anywhere 会同时降低 min-content 宽，flex / grid 子项才能真正收缩 */
+  overflow-wrap: anywhere;
 }
 
 /* 标题层级排版（包含阅读态与写时渲染实时编辑态） */
@@ -149,6 +152,7 @@
   line-height: 1.5;
   margin: 10px 0;
   overflow-x: auto;
+  max-width: 100%;
 }
 
 .markdown-body-render pre code {

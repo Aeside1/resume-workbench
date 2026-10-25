@@ -600,3 +600,64 @@ describe('WorkContentBlock 单项工作卡片（自由 Markdown 草稿本、专�
 })
 
 
+
+describe('WorkContentBlock 窄屏排序按钮（issue 19 / ADR 010）', () => {
+  afterEach(cleanup)
+
+  const item: WorkContent = {
+    id: 7,
+    experience_group_id: 1,
+    title: '一条工作内容',
+    detailed_record: '正文',
+    technical_materials: '',
+    result_data: '',
+    supplementary_notes: '',
+    position: 0,
+    archived: false,
+    created_at: '2024-03-01T00:00:00Z',
+    updated_at: '2024-03-01T00:00:00Z'
+  }
+
+  const renderBlock = (props: Partial<Parameters<typeof WorkContentBlock>[0]> = {}) =>
+    render(
+      <WorkContentBlock
+        item={item}
+        index={1}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={vi.fn()}
+        onKeyboardReorder={vi.fn()}
+        canMoveUp
+        canMoveDown
+        {...props}
+      />
+    )
+
+  it('渲染上移 / 下移按钮，点按交回方向（手机替代拖拽的唯一入口）', () => {
+    const onKeyboardReorder = vi.fn()
+    renderBlock({ onKeyboardReorder })
+
+    fireEvent.click(screen.getByRole('button', { name: '上移工作内容' }))
+    fireEvent.click(screen.getByRole('button', { name: '下移工作内容' }))
+
+    expect(onKeyboardReorder.mock.calls).toEqual([[-1], [1]])
+    // 拖拽手柄照旧存在：桌面仍保留拖拽（可见性由 CSS 决定，DOM 里始终有）
+    expect(screen.getByRole('button', { name: '拖拽调整排序' })).toBeInTheDocument()
+  })
+
+  it('首项禁用上移、末项禁用下移（不给出无效操作）', () => {
+    const onKeyboardReorder = vi.fn()
+    renderBlock({ onKeyboardReorder, canMoveUp: false, canMoveDown: false })
+
+    expect(screen.getByRole('button', { name: '上移工作内容' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: '下移工作内容' })).toBeDisabled()
+    fireEvent.click(screen.getByRole('button', { name: '上移工作内容' }))
+    expect(onKeyboardReorder).not.toHaveBeenCalled()
+  })
+
+  it('只读态不渲染排序按钮（游客态不出现不可用的操作）', () => {
+    renderBlock({ readOnly: true })
+    expect(screen.queryByRole('button', { name: '上移工作内容' })).not.toBeInTheDocument()
+  })
+})
