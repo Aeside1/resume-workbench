@@ -80,8 +80,9 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
       expect(screen.getByText('开源配置中心')).toBeInTheDocument()
     })
 
-    expect(screen.getByText('3 项具体工作')).toBeInTheDocument()
-    expect(screen.getByText('1 项具体工作')).toBeInTheDocument()
+    // 卡片不再展示「N 项具体工作」计数，也就不该为它逐组拉工作项（issue 19 验收）
+    expect(screen.queryByText(/项具体工作/)).not.toBeInTheDocument()
+    expect(mocked.workContents).not.toHaveBeenCalled()
   })
 
   it('列表为空时展示友好的空状态引导', async () => {

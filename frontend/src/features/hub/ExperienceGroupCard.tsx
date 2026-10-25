@@ -1,11 +1,10 @@
 import { MouseEvent } from 'react'
 import { Button, Card, Chip } from '@heroui/react'
-import { Archive, Calendar, FileText, Pencil, RotateCcw, Trash2 } from 'lucide-react'
+import { Archive, Calendar, Pencil, RotateCcw, Trash2 } from 'lucide-react'
 import type { ExperienceGroup } from '../../api'
 
 export type ExperienceGroupCardProps = {
   group: ExperienceGroup
-  workContentCount?: number
   /** 游客态只读：不渲染编辑 / 归档 / 删除 */
   readOnly?: boolean
   onSelect: (group: ExperienceGroup) => void
@@ -17,7 +16,6 @@ export type ExperienceGroupCardProps = {
 
 export function ExperienceGroupCard({
   group,
-  workContentCount = 0,
   readOnly = false,
   onSelect,
   onEdit,
@@ -92,11 +90,6 @@ export function ExperienceGroupCard({
       </div>
 
       <Card.Footer className="group-card-footer">
-        <div className="group-card-count">
-          <FileText size={14} aria-hidden="true" />
-          <span>{workContentCount} 项具体工作</span>
-        </div>
-
         <div className="group-card-actions">
           {!readOnly && (isArchived ? (
             <>
