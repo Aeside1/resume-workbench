@@ -407,7 +407,6 @@
 
   .plan-item-row {
     padding: 8px 10px;
-    cursor: default;
   }
 
   .plan-editor-section-title {
@@ -420,9 +419,5 @@
 
   .plan-document-view .markdown-body-render {
     font-size: 13.5px;
-  }
-
-  .plan-picker-list {
-    max-height: 60vh;
   }
 }

@@ -255,7 +255,20 @@ describe('AppShell 窄屏（issue 19 / ADR 010）', () => {
     expect(screen.queryByRole('button', { name: '打开导航菜单' })).not.toBeInTheDocument()
   })
 
-  it('窗口 ≤768：顶部条提供菜单按钮，点开后侧栏变成可见面板，点导航项再收起', () => {
+  it('窗口 641：仍留在图标条档（顶部条只在 ≤640 出现，分界不重复）', () => {
+    stubViewportWidth(641)
+    render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
+
+    const sidebar = screen.getByRole('complementary', { name: '主导航' })
+    expect(sidebar).toHaveClass('app-sidebar--collapsed')
+    expect(sidebar).not.toHaveClass('app-sidebar--panel')
+    expect(screen.queryByRole('button', { name: '打开导航菜单' })).not.toBeInTheDocument()
+    // 图标条是强制的：折叠开关不渲染（不造点不动的按钮）
+    expect(within(sidebar).queryByRole('button', { name: '收起侧栏' })).not.toBeInTheDocument()
+    expect(within(sidebar).queryByRole('button', { name: '展开侧栏' })).not.toBeInTheDocument()
+  })
+
+  it('窗口 ≤640：顶部条提供菜单按钮，点开后侧栏变成可见面板，点导航项再收起', () => {
     stubViewportWidth(390)
     render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
 
@@ -276,7 +289,7 @@ describe('AppShell 窄屏（issue 19 / ADR 010）', () => {
     expect(sidebar).not.toHaveClass('app-sidebar--panel-open')
   })
 
-  it('窗口 ≤768：Esc 与关闭按钮都能收起面板', () => {
+  it('窗口 ≤640：Esc 与关闭按钮都能收起面板', () => {
     stubViewportWidth(390)
     render(<AppShell session={mockSession} onLogout={vi.fn()} navigationButtons={navButtons}><div>主内容</div></AppShell>)
 

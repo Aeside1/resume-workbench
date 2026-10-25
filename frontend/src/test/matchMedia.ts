@@ -47,7 +47,7 @@ export function restoreMatchMedia() {
 /**
  * 按查询串求值的 `matchMedia` 替身：目前只认 `(max-width: Npx)`。
  *
- * 窄屏布局（issue 19）里同一棵组件树会同时问到 1280 / 768 两条分界，
+ * 窄屏布局（issue 19）里同一棵组件树会同时问到 1280 / 640 两条分界，
  * `stubMatchMedia` 的「忽略查询串」语义在这里不够用——否则两条查询会同时真 / 同时假。
  * 其余查询串（如 prefers-reduced-motion）一律解为 false。
  */

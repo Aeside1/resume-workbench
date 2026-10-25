@@ -661,3 +661,36 @@ describe('WorkContentBlock 窄屏排序按钮（issue 19 / ADR 010）', () => {
     expect(screen.queryByRole('button', { name: '上移工作内容' })).not.toBeInTheDocument()
   })
 })
+
+describe('WorkContentBlock 排序按钮的缺省契约（issue 19）', () => {
+  afterEach(cleanup)
+
+  it('只传 onKeyboardReorder 时上下移按钮是可用的（缺省不是禁用，避免两个死按钮）', () => {
+    render(
+      <WorkContentBlock
+        item={{
+          id: 8,
+          experience_group_id: 1,
+          title: '缺省契约',
+          detailed_record: '正文',
+          technical_materials: '',
+          result_data: '',
+          supplementary_notes: '',
+          position: 0,
+          archived: false,
+          created_at: '2024-03-01T00:00:00Z',
+          updated_at: '2024-03-01T00:00:00Z'
+        }}
+        index={0}
+        isEditing={false}
+        onStartEdit={vi.fn()}
+        onCancelEdit={vi.fn()}
+        onSave={vi.fn()}
+        onKeyboardReorder={vi.fn()}
+      />
+    )
+
+    expect(screen.getByRole('button', { name: '上移工作内容' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: '下移工作内容' })).toBeEnabled()
+  })
+})

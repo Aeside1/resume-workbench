@@ -187,11 +187,11 @@ docker compose run --rm --volume "$PWD:/repo" --workdir /repo/backend api pytest
 ```bash
 cd frontend
 npm run typecheck   # tsc -b
-npm run test        # vitest run（33 个测试文件 / 252 条用例）
+npm run test        # vitest run（33 个测试文件 / 254 条用例）
 npm run build       # 生产构建
 ```
 
-当前基线（`v0.1.0`）：后端 **33 passed**，前端 **252 passed / 33 files**，`typecheck` 与 `build` 无错。
+当前基线（`v0.1.0`）：后端 **33 passed**，前端 **254 passed / 33 files**，`typecheck` 与 `build` 无错。
 
 **固定关卡矩阵**（一张票交付前这七条必须全绿）：
 
@@ -230,7 +230,7 @@ GUEST_E2E_BASE_URL=http://localhost:5175 npm run test:guest:e2e
 
 探针可调环境变量：`REORDER_BASE_URL`（不传则自起 dev server）、`REORDER_PORT`（默认 5273）、`REORDER_ARTIFACTS`、`EDGE_PATH`（默认 `C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe`）。`responsive.e2e.mjs` 同名一套：`RESPONSIVE_BASE_URL` / `RESPONSIVE_PORT`（默认 5283）/ `RESPONSIVE_ARTIFACTS`。
 
-**为什么自适应布局也必须真浏览器**：验收断言的是排版结果——`documentElement.scrollWidth ≤ innerWidth`、正文列宽度、长串是否断行、触控目标尺寸、悬停才出现的铅笔是否常显；jsdom 没有布局，量不出来。四档实测数字与各栏让位规则见 [ADR 010](docs/adr/010-responsive-and-flexible-layout.md)。
+**为什么自适应布局也必须真浏览器**：验收断言的是排版结果——`documentElement.scrollWidth ≤ clientWidth`（票面写的是 `= innerWidth`，`clientWidth` 不含滚动条占位，是更严的等价形式）、正文列宽度、长串是否断行、触控目标尺寸、悬停才出现的铅笔是否常显；jsdom 没有布局，量不出来。四档实测数字与各栏让位规则见 [ADR 010](docs/adr/010-responsive-and-flexible-layout.md)。
 
 ## 项目结构
 

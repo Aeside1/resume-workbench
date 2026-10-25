@@ -13,15 +13,17 @@ import { ThemeToggle } from '../components/ui/ThemeToggle'
 export type AppShellMode = 'hub' | 'workspace'
 
 /**
- * 窄屏分界（全站只有 640 / 1024 / 1280 三条线，见 docs/adr/010-responsive-and-flexible-layout.md）：
+ * 窄屏分界（全站只有 640 / 1024 / 1280 三条线，见
+ * docs/adr/010-responsive-and-flexible-layout.md）：
  * - `(max-width: 1279px)`：窗口不足 1280，侧栏自动收成图标条；
- * - `(max-width: 767px)`：窗口不足 768（内容区已不足 640），侧栏不再占位，改为顶部条 + 滑出面板。
+ * - `(max-width: 640px)`：窗口不足 640（此时内容区已所剩无多），侧栏不再占位，
+ *   改为顶部条 + 滑出面板。
  *
- * 侧栏是内容区的兄弟节点，量不到「内容区还剩多少」，只能按窗口宽度判断；
- * 内容区内部的栏位让位改用容器查询（`.app-main` 是名为 `workspace` 的查询容器）。
+ * 侧栏是内容区的兄弟节点，CSS 量不到「内容区还剩多少」，只能按窗口宽度判；
+ * 内容区内部的栏位让位改用容器查询（容器落在各功能块根节点上，见 app-shell.css 文件头）。
  */
 const RAIL_MEDIA_QUERY = '(max-width: 1279px)'
-const PANEL_MEDIA_QUERY = '(max-width: 767px)'
+const PANEL_MEDIA_QUERY = '(max-width: 640px)'
 
 /** 订阅一条媒体查询；jsdom 里由 test/matchMedia.ts 的替身驱动 */
 function useMediaQuery(query: string): boolean {
@@ -114,7 +116,7 @@ export function AppShell({
     <div
       className={['app-shell', shellLayoutClass, isPanelNav ? 'app-shell--panel-nav' : ''].filter(Boolean).join(' ')}
     >
-      {/* 窄屏顶部条（issue 19）：只在窗口 < 768 出现，承载菜单按钮与身份一行 */}
+      {/* 窄屏顶部条（issue 19）：只在窗口 ≤ 640 出现，承载菜单按钮与身份一行 */}
       {isPanelNav && (
         <header className="app-topbar">
           <Button
@@ -174,6 +176,9 @@ export function AppShell({
               <Button isIconOnly size="sm" variant="ghost" aria-label="关闭导航菜单" onPress={closeNavPanel}>
                 <CloseIcon width={16} height={16} aria-hidden="true" />
               </Button>
+            ) : isIconRail ? (
+              /* 1280 以下图标条是强制的：给开关也改变不了形态，一律不渲染（不造死按钮） */
+              null
             ) : onToggleSidebar ? (
               <Button
                 isIconOnly

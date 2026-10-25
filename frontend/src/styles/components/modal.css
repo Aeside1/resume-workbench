@@ -66,9 +66,4 @@
   .create-experience-form {
     gap: 12px;
   }
-
-  /* 表单里的双栏（如有）在手机上不要硬挤 */
-  .modal-form-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
