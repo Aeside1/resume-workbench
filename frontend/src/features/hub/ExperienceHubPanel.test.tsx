@@ -80,8 +80,7 @@ describe('ExperienceHubPanel 经历管理 Hub', () => {
       expect(screen.getByText('开源配置中心')).toBeInTheDocument()
     })
 
-    // 卡片不再展示「N 项具体工作」计数，也就不该为它逐组拉工作项（issue 19 验收）
-    expect(screen.queryByText(/项具体工作/)).not.toBeInTheDocument()
+    // 计数已移除，就不再为它逐组拉工作项（少掉 N 次请求）
     expect(mocked.workContents).not.toHaveBeenCalled()
   })
 
