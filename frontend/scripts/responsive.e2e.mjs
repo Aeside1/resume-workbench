@@ -251,12 +251,48 @@ async function assertNoHorizontalScroll(label) {
     innerWidth: result.innerWidth,
     clientWidth: result.clientWidth
   })
+  // 票面口径是 `scrollWidth === innerWidth`；用 clientWidth 判是更严的等价形式：
+  // clientWidth 不含滚动条占位，内容真的塞得进可视盒才算过（有经典滚动条时
+  // innerWidth 会比 clientWidth 大十几像素，只比 innerWidth 会放过真实溢出）。
   assert.ok(
-    result.scrollWidth <= result.innerWidth,
-    `${label}：出现横向滚动（scrollWidth=${result.scrollWidth} > innerWidth=${result.innerWidth}）；越界元素：${result.offenders.join(' | ') || '无'}`
+    result.scrollWidth <= result.clientWidth,
+    `${label}：出现横向滚动（scrollWidth=${result.scrollWidth} > clientWidth=${result.clientWidth}，innerWidth=${result.innerWidth}）；越界元素：${result.offenders.join(' | ') || '无'}`
   )
   return result
 }
+
+/** 与 CSS 同一个判据：容器（`.focus-canvas-wrapper`）的内容盒宽度 */
+const canvasContainerWidth = () =>
+  page.evaluate(() => {
+    const el = document.querySelector('.focus-canvas-wrapper')
+    if (!el) return null
+    const style = getComputedStyle(el)
+    return el.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+  })
+
+/** 扫描文档里所有可见交互元素的最小边长（触控尺寸 ≥ 44×44） */
+/** 扫描文档里可见交互元素的最小边长（触控尺寸 ≥ 44×44）。
+ *  按钮类（含 role=button/switch/tab）两个维度都要够；表单字段只看高度——
+ *  CSS 只给它设了 `min-height: 44px`，卡宽度不是本票的口径。 */
+const smallTouchTargets = () =>
+  page.evaluate(() => {
+    const offenders = []
+    const buttonSel = 'button, [role="button"], [role="switch"], [role="tab"]'
+    const fieldSel = 'input, select, textarea'
+    for (const el of document.querySelectorAll(`${buttonSel}, ${fieldSel}`)) {
+      const rect = el.getBoundingClientRect()
+      const style = getComputedStyle(el)
+      if (rect.width <= 0 || rect.height <= 0) continue
+      if (style.visibility === 'hidden' || Number(style.opacity) === 0) continue
+      const isField = el.matches(fieldSel)
+      const tooSmall = isField ? rect.height < 43.5 : rect.width < 43.5 || rect.height < 43.5
+      if (tooSmall) {
+        const name = (el.getAttribute('aria-label') || el.textContent || el.tagName).trim().slice(0, 24)
+        offenders.push(`${name} ${Math.round(rect.width)}x${Math.round(rect.height)}`)
+      }
+    }
+    return offenders
+  })
 
 const visible = async (selector) =>
   page.$eval(
@@ -402,11 +438,12 @@ try {
     await check(`${prefix} 排序入口：手机上给上下移按钮，桌面只有拖拽手柄`, async () => {
       const moveButton = await page.$('.work-content-card .work-content-move-actions button')
       const handle = await page.$('.work-content-card .work-content-drag-handle')
-      const mainWidth = await page.$eval('.focus-canvas-main-col', (el) => el.getBoundingClientRect().width)
+      // 与 CSS 同源判据：容器的内容盒宽度 < 640 才显示按钮（不是窗口宽度，也不拿正文列近似）
+      const containerWidth = await canvasContainerWidth()
       assert.ok(handle, '拖拽手柄必须始终存在（桌面拖拽保留）')
-      // 判据是「正文列还剩多少」，不是窗口多宽（ADR 010）
-      if (mainWidth < 640) {
-        assert.ok(moveButton, `${prefix}：正文列 ${Math.round(mainWidth)}px 时手机上必须能用按钮排序`)
+      const display = await page.$eval('.work-content-card .work-content-move-actions', (el) => getComputedStyle(el).display)
+      if (containerWidth < 640) {
+        assert.ok(moveButton, `${prefix}：内容区 ${Math.round(containerWidth)}px（<640）时必须能用按钮排序`)
         const box = await (await page.$('.work-content-card .work-content-move-actions button')).boundingBox()
         assert.ok(box && box.width >= 44 && box.height >= 44, `${prefix}：上移按钮 ${JSON.stringify(box)} 小于 44×44`)
         // 真的能用：点「下移」后顺序翻转，并且排序请求带着完整新顺序
@@ -420,8 +457,7 @@ try {
         )
         assert.deepEqual(reorderRequests.at(-1), contents.map((item) => item.id), '排序请求必须带着完整的新顺序')
       } else {
-        const display = await page.$eval('.work-content-card .work-content-move-actions', (el) => getComputedStyle(el).display)
-        assert.equal(display, 'none', `${prefix}：桌面不该显示排序按钮（拖拽已够用）`)
+        assert.equal(display, 'none', `${prefix}：内容区 ${Math.round(containerWidth)}px（≥640）时不该显示排序按钮（拖拽已够用）`)
       }
     })
 
@@ -467,6 +503,10 @@ try {
       await assertNoHorizontalScroll(`${prefix} 方案编辑器`)
       const row = await page.$eval('.plan-item-row', (el) => ({ scrollWidth: el.scrollWidth, clientWidth: el.clientWidth }))
       assert.ok(row.scrollWidth <= row.clientWidth + 1, `条目行内容宽 ${row.scrollWidth} 超出自身 ${row.clientWidth}`)
+      if (tier.width <= 1024) {
+        const small = await smallTouchTargets()
+        assert.deepEqual(small, [], `方案编辑器里不达 44×44 的可见交互元素：${small.join(' | ')}`)
+      }
       await page.screenshot({ path: path.join(artifacts, `${prefix}-05-plan-editor.png`), fullPage: true })
     })
 
@@ -500,25 +540,60 @@ try {
       await pause(200)
     })
 
-    /* ---------------- 4. 手指尺寸（只有手机档要求） ---------------- */
-    if (tier.width <= 640) {
-      await check(`${prefix} 触控目标：可见按钮不小于 44×44`, async () => {
-        const small = await page.evaluate(() => {
-          const offenders = []
-          for (const el of document.querySelectorAll('.app-main button, .app-topbar button')) {
-            const rect = el.getBoundingClientRect()
-            const style = getComputedStyle(el)
-            if (rect.width <= 0 || rect.height <= 0) continue
-            if (style.visibility === 'hidden' || Number(style.opacity) === 0) continue
-            if (rect.width < 43.5 || rect.height < 43.5) {
-              offenders.push(`${(el.getAttribute('aria-label') || el.textContent || '').trim().slice(0, 24)} ${Math.round(rect.width)}x${Math.round(rect.height)}`)
-            }
-          }
-          return offenders
+    /* ---------------- 3.5 弹窗（第⑤块的唯一可判定证据） ---------------- */
+    await check(`${prefix} 新建经历弹窗：贴边不溢出`, async () => {
+      await goToExperiences()
+      try {
+        await clickButtonByText('新建经历分组')
+        await page.waitForSelector('.modal__dialog')
+        await pause(300)
+        await assertNoHorizontalScroll(`${prefix} 新建经历弹窗`)
+        const dialog = await page.$eval('.modal__dialog', (el) => {
+          const rect = el.getBoundingClientRect()
+          return { left: rect.left, right: rect.right, width: rect.width }
         })
-        assert.deepEqual(small, [], `小于 44×44 的可见按钮：${small.join(' | ')}`)
+        assert.ok(
+          dialog.left >= -1 && dialog.right <= tier.width + 1,
+          `弹窗越界：${JSON.stringify(dialog)}（视口 ${tier.width}）`
+        )
+        // 弹窗内的控件也要够大（第⑤ + 第⑥块的交集，别只量页面背景）
+        if (tier.width <= 1024) {
+          const small = await smallTouchTargets()
+          assert.deepEqual(small, [], `弹窗打开时不达 44×44 的可见交互元素：${small.join(' | ')}`)
+        }
+        await page.screenshot({ path: path.join(artifacts, `${prefix}-09-modal.png`), fullPage: false })
+      } finally {
+        await page.keyboard.press('Escape')
+        await pause(400)
+      }
+    })
+
+    /* ---------------- 4. 手指尺寸（三档窄屏都要） ---------------- */
+    if (tier.width <= 1024) {
+      await check(`${prefix} 触控目标：可见交互元素不小于 44×44`, async () => {
+        const small = await smallTouchTargets()
+        assert.deepEqual(small, [], `小于 44×44 的可见交互元素：${small.join(' | ')}`)
       })
 
+      await check(`${prefix} 抽屉内的触控目标也达标`, async () => {
+        try {
+          await goToExperiences()
+          await clickElement('.group-card-clickable-area')
+          await page.waitForSelector('.work-content-card')
+          await clickElement('#work-content-20 .resume-desc-trigger-btn')
+          await page.waitForSelector('.resume-version-card')
+          await pause(200)
+          const small = await smallTouchTargets()
+          assert.deepEqual(small, [], `抽屉内小于 44×44 的可见交互元素：${small.join(' | ')}`)
+        } finally {
+          await page.keyboard.press('Escape')
+          await pause(400)
+        }
+      })
+    }
+
+    /* ---------------- 5. 页面高度：底部内容可达 ---------------- */
+    if (tier.width <= 640) {
       await check(`${prefix} 页面高度：底部内容可达（画布页可滚到底）`, async () => {
         await goToExperiences()
         await clickElement('.group-card-clickable-area')

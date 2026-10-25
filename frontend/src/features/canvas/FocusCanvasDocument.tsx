@@ -124,7 +124,8 @@ export function FocusCanvasDocument({
                 key={item.id}
                 item={item}
                 index={index}
-                total={contents.length}
+                canMoveUp={index > 0}
+                canMoveDown={index < contents.length - 1}
                 editingId={editingId}
                 onStartEdit={onStartEdit}
                 onCancelEdit={onCancelEdit}
@@ -192,7 +193,8 @@ export function FocusCanvasDocument({
 function FocusWorkContentItem({
   item,
   index,
-  total,
+  canMoveUp,
+  canMoveDown,
   readOnly,
   editingId,
   onStartEdit,
@@ -208,7 +210,8 @@ function FocusWorkContentItem({
 }: {
   item: WorkContent
   index: number
-  total: number
+  canMoveUp: boolean
+  canMoveDown: boolean
   readOnly: boolean
   editingId: number | null
   onStartEdit: (item: WorkContent) => void
@@ -256,8 +259,8 @@ function FocusWorkContentItem({
           }
         }}
         onKeyboardReorder={(direction) => onKeyboardReorder(index, direction)}
-        canMoveUp={index > 0}
-        canMoveDown={index < total - 1}
+        canMoveUp={canMoveUp}
+        canMoveDown={canMoveDown}
       />
     </Reorder.Item>
   )

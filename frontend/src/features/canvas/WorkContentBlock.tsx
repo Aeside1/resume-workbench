@@ -47,6 +47,8 @@ export type WorkContentBlockProps = {
   /**
    * 窄屏的上下移按钮：手指拖拽在手机上不可靠，卡片上直接给两个按钮（issue 19）。
    * 按钮在桌面被 CSS 隐藏（`.work-content-move-actions`），拖拽与方向键照常可用。
+   * 缺省可移动：调用方只传了 `onKeyboardReorder` 就不应该拿到两个死按钮；
+   * 首项 / 末项由调用方显式传 false 禁用。
    */
   canMoveUp?: boolean
   canMoveDown?: boolean
@@ -154,8 +156,8 @@ export function WorkContentBlock({
   isActive = false,
   onDragHandlePointerDown,
   onKeyboardReorder,
-  canMoveUp = false,
-  canMoveDown = false
+  canMoveUp = true,
+  canMoveDown = true
 }: WorkContentBlockProps) {
   const parsedData = useMemo(
     () => parseSupplementaryNotes(item.supplementary_notes),
