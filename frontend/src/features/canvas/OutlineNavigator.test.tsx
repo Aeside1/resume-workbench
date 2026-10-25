@@ -118,7 +118,7 @@ describe('OutlineNavigator 右侧常驻伴随大纲 TOC Mini-map', () => {
     expect(handleAddNew).toHaveBeenCalledTimes(1)
   })
 
-  it('呈现以经历概况为父级的大纲树状结构并标明具体工作内容子项，且不包含多余统计指标', () => {
+  it('呈现以经历概况为父级的大纲树状结构，子项不显示计数，且不包含多余统计指标', () => {
     render(
       <OutlineNavigator
         group={mockGroup}
@@ -135,7 +135,9 @@ describe('OutlineNavigator 右侧常驻伴随大纲 TOC Mini-map', () => {
 
     // 下属具备具体工作内容分组子树
     expect(screen.getByText('具体工作内容')).toBeInTheDocument()
-    expect(screen.getByText('(2)')).toBeInTheDocument()
+
+    // 子项计数也不展示（issue 19 验收：画布里的具体工作计数一律不出现）
+    expect(screen.queryByText('(2)')).not.toBeInTheDocument()
 
     // 冗余统计数据已彻底移除
     expect(screen.queryByText('已沉淀工作项')).not.toBeInTheDocument()

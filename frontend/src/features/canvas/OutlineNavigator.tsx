@@ -1,4 +1,4 @@
-import { Button, Card, Chip } from '@heroui/react'
+import { Button, Card } from '@heroui/react'
 import { ListTree, Plus } from 'lucide-react'
 import type { ExperienceGroup, WorkContent } from '../../api'
 
@@ -46,7 +46,6 @@ export function OutlineNavigator({
           <div className="outline-tree-branch">
             <div className="outline-branch-label">
               <span className="outline-branch-title">具体工作内容</span>
-              <Chip size="sm">({contents.length})</Chip>
             </div>
 
             <div className="outline-sub-list">
